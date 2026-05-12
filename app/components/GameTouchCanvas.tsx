@@ -1,10 +1,10 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
-import { Physics, RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, Vector2 } from "three";
+import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
+import { MathUtils, Mesh, TextureLoader, Vector2 } from "three";
 
 import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
 import MouseCursor from "./MouseCursor";
@@ -23,9 +23,10 @@ const MOVEMENT_KEYS = new Set(["arrowleft", "arrowright", "arrowup", "arrowdown"
 const CLICK_ARRIVAL_THRESHOLD = 0.15;
 // Angle from horizontal axis above which vertical animation fires (55° = 35° cone around vertical)
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
-const WORLD_HALF_WIDTH = 7.4;
-const DEPTH_FAR_Z = -8.8;
-const DEPTH_NEAR_Z = 3.8;
+const GROUND_WIDTH = 44;
+const GROUND_DEPTH = 34;
+const DEPTH_FAR_Z = -16;
+const DEPTH_NEAR_Z = 8;
 const SPRITE_MIN_SCALE = 1.0;
 const SPRITE_MAX_SCALE = 2.1;
 
@@ -39,29 +40,64 @@ function resolveAction(horizontal: number, vertical: number): MovementAction {
 }
 
 function GroundPlane({ onClickWorld }: { onClickWorld: (x: number, z: number) => void }) {
-  // El plano visual está inclinado: position=[0,-1.15,-1.2] rotation=[-π/2.45,0,0]
-  // El collider trimesh copia la geometría real del plano para colisionar exactamente con la superficie.
+  // Suelo horizontal único: visual, colisión y point-and-click en la misma superficie.
   return (
-    <group>
-      <RigidBody type="fixed" colliders="trimesh">
-        <mesh position={[0, -1.15, -1.2]} rotation={[-Math.PI / 2.45, 0, 0]}>
-          <planeGeometry args={[28, 24]} />
-          <meshStandardMaterial color="#142549" roughness={1} metalness={0.05} />
-        </mesh>
-      </RigidBody>
-
-      {/* Plano invisible horizontal para capturar clicks y convertirlos a coordenadas de suelo */}
+    <RigidBody type="fixed" colliders="trimesh">
       <mesh
+        position={[0, -1.15, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerDown={(e) => {
           e.stopPropagation();
           onClickWorld(e.point.x, e.point.z);
         }}
       >
-        <planeGeometry args={[WORLD_HALF_WIDTH * 2, Math.abs(DEPTH_FAR_Z) + Math.abs(DEPTH_NEAR_Z) + 2]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          <planeGeometry args={[GROUND_WIDTH, GROUND_DEPTH]} />
+          <meshStandardMaterial color="#142549" roughness={1} metalness={0.05} />
       </mesh>
-    </group>
+    </RigidBody>
+  );
+}
+
+function CollisionCube() {
+  return (
+    <RigidBody
+      type="dynamic"
+      colliders={false}
+      position={[1.8, 4.5, -0.6]}
+      gravityScale={1.2}
+      linearDamping={1.2}
+      angularDamping={1.8}
+      ccd
+      enabledRotations={[false, false, false]}
+    >
+      <CuboidCollider args={[0.55, 0.55, 0.55]} friction={2.8} restitution={0} />
+      <mesh>
+        <boxGeometry args={[1.1, 1.1, 1.1]} />
+        <meshStandardMaterial color="#ffb000" roughness={0.7} metalness={0.1} />
+      </mesh>
+    </RigidBody>
+  );
+}
+
+function CollisionSphere() {
+  const globeTexture = useLoader(TextureLoader, "/globe.svg");
+
+  return (
+    <RigidBody
+      type="dynamic"
+      colliders={false}
+      position={[-1.4, 4.2, -1.4]}
+      gravityScale={1.2}
+      linearDamping={1.0}
+      angularDamping={0.8}
+      ccd
+    >
+      <BallCollider args={[0.5]} friction={1.5} restitution={0.05} />
+      <mesh>
+        <sphereGeometry args={[0.5, 48, 48]} />
+        <meshStandardMaterial map={globeTexture} roughness={0.55} metalness={0.02} />
+      </mesh>
+    </RigidBody>
   );
 }
 
@@ -204,6 +240,8 @@ function GameTouchSprite({
   return (
     <>
       <GroundPlane onClickWorld={handleClickWorld} />
+      <CollisionCube />
+      <CollisionSphere />
       <RigidBody
         ref={characterBodyRef}
         type="dynamic"
@@ -253,9 +291,9 @@ export default function GameTouchCanvas() {
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
       <MouseCursor />
       <Canvas>
-        <PerspectiveCamera makeDefault position={[0, 5.8, 10.8]} rotation={[-0.30, 0, 0]} fov={46} near={0.1} far={120} />
+        <PerspectiveCamera makeDefault position={[0, 5.4, 25.0]} rotation={[-0.24, 0, 0]} fov={46} near={0.1} far={120} />
         <color attach="background" args={["#070d1f"]} />
-        <fog attach="fog" args={["#070d1f", 11, 27]} />
+        <fog attach="fog" args={["#070d1f", 11, 50]} />
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
         <Physics gravity={[0, -20, 0]}>
