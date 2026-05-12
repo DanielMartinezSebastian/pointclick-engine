@@ -228,31 +228,38 @@ export default function GameTouchCanvas() {
           flexDirection: "column",
           gap: "10px",
           zIndex: 20,
-          padding: "0.9rem 1rem",
-          borderRadius: "16px",
-          border: "1px solid rgb(255 255 255 / 18%)",
-          background: "rgb(6 10 24 / 72%)",
-          color: "white",
-          backdropFilter: "blur(8px)",
+          padding: "1rem 1.2rem",
+          borderRadius: "2px",
+          border: "3px solid #00ff41",
+          background: "rgb(12 19 48 / 95%)",
+          color: "#00ff41",
+          backdropFilter: "blur(4px)",
           minWidth: "260px",
-          boxShadow: "0 14px 32px rgb(0 0 0 / 28%)",
+          boxShadow: "0 0 16px rgba(0, 255, 65, 0.3), inset 0 0 8px rgba(0, 255, 65, 0.1)",
+          fontFamily: "var(--font-pixel), monospace",
+          fontSize: "13px",
+          letterSpacing: "1px",
+          textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
         }}
       >
-        <label style={{ display: "grid", gap: "6px", fontSize: "0.8rem", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "none" }}>
+        <label style={{ display: "grid", gap: "6px", fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase", cursor: "none", fontWeight: "bold" }}>
           Debug personaje
           <select
             value={selectedCharacter}
             onChange={(event) => setSelectedCharacter(event.target.value as GameCharacterName)}
             style={{
               appearance: "none",
-              borderRadius: "12px",
-              border: "1px solid rgb(255 255 255 / 18%)",
-              background: "rgb(12 19 48 / 82%)",
-              color: "white",
-              padding: "0.7rem 0.8rem",
-              fontSize: "0.98rem",
+              borderRadius: "2px",
+              border: "2px solid #00ff41",
+              background: "rgb(8 12 32 / 90%)",
+              color: "#00ff41",
+              padding: "0.6rem 0.8rem",
+              fontSize: "12px",
               outline: "none",
               cursor: "none",
+              fontFamily: "var(--font-pixel), monospace",
+              letterSpacing: "1px",
+              boxShadow: "inset 0 0 4px rgba(0, 255, 65, 0.2), 0 0 8px rgba(0, 255, 65, 0.2)",
             }}
           >
             {GAME_CHARACTERS.map((character) => (
@@ -262,7 +269,7 @@ export default function GameTouchCanvas() {
             ))}
           </select>
         </label>
-        <strong style={{ fontSize: "0.95rem" }}>{readyMessage}</strong>
+        <strong style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "1px", lineHeight: "1.6" }}>{readyMessage}</strong>
       </div>
     </div>
   );
