@@ -19,8 +19,8 @@ const pixelFont = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Maniac Mansion Movement Test",
-  description: "Prueba de movimiento 2D con Dave usando el atlas de Maniac Mansion.",
+  title: "GAME TEST",
+  description: "A 2D game test built with React Three Fiber and TypeScript",
 };
 
 export default function RootLayout({

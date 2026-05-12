@@ -29,6 +29,7 @@ const DEPTH_FAR_Z = -16;
 const DEPTH_NEAR_Z = 8;
 const SPRITE_MIN_SCALE = 1.0;
 const SPRITE_MAX_SCALE = 2.1;
+const WORLD_BACKGROUND_TEXTURE = "/assets/background/town.jpg";
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -52,7 +53,7 @@ function GroundPlane({ onClickWorld }: { onClickWorld: (x: number, z: number) =>
         }}
       >
           <planeGeometry args={[GROUND_WIDTH, GROUND_DEPTH]} />
-          <meshStandardMaterial color="#142549" roughness={1} metalness={0.05} />
+          <meshStandardMaterial transparent opacity={0} roughness={1} metalness={0.05} depthWrite={false} />
       </mesh>
     </RigidBody>
   );
@@ -289,11 +290,22 @@ export default function GameTouchCanvas() {
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${WORLD_BACKGROUND_TEXTURE})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
       <MouseCursor />
-      <Canvas>
+      <Canvas gl={{ alpha: true }} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
         <PerspectiveCamera makeDefault position={[0, 5.4, 25.0]} rotation={[-0.24, 0, 0]} fov={46} near={0.1} far={120} />
-        <color attach="background" args={["#070d1f"]} />
-        <fog attach="fog" args={["#070d1f", 20, 55]} />
+        {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
         <Physics gravity={[0, -20, 0]}>
