@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Mesh } from "three";
+import { Mesh, Vector2 } from "three";
 
 import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
 import {
@@ -16,6 +16,34 @@ import {
 type MovementAction = ManiacMansionDirection;
 
 const MOVEMENT_KEYS = new Set(["arrowleft", "arrowright", "arrowup", "arrowdown", "a", "d", "w", "s"]);
+const CLICK_ARRIVAL_THRESHOLD = 0.15;
+// Angle from horizontal axis above which vertical animation fires (55° = 35° cone around vertical)
+const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
+
+function resolveAction(horizontal: number, vertical: number): MovementAction {
+  if (horizontal === 0 && vertical === 0) return "idle";
+  const angle = Math.atan2(Math.abs(vertical), Math.abs(horizontal));
+  if (angle >= VERTICAL_ANGLE_THRESHOLD) {
+    return vertical < 0 ? "up" : "down";
+  }
+  return horizontal < 0 ? "left" : "right";
+}
+
+function ClickPlane({ onClickWorld }: { onClickWorld: (x: number, y: number) => void }) {
+  const { viewport } = useThree();
+  return (
+    <mesh
+      position={[0, 0, -0.1]}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        onClickWorld(e.point.x, e.point.y);
+      }}
+    >
+      <planeGeometry args={[viewport.width, viewport.height]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
+  );
+}
 
 function MetalSlugSprite({
   activeCharacter,
@@ -27,9 +55,14 @@ function MetalSlugSprite({
   const spriteRef = useRef<AnimatedSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const keysPressedRef = useRef(new Set<string>());
+  const clickTargetRef = useRef<Vector2 | null>(null);
   const currentActionRef = useRef<MovementAction>("idle");
   const [action, setAction] = useState<MovementAction>("idle");
   const { viewport } = useThree();
+
+  const handleClickWorld = useCallback((x: number, y: number) => {
+    clickTargetRef.current = new Vector2(x, y);
+  }, []);
 
   const characterClips = useMemo(
     () => MANIAC_MANSION_CHARACTER_CLIPS[activeCharacter],
@@ -81,19 +114,39 @@ function MetalSlugSprite({
     const moveUp = pressed.has("arrowup") || pressed.has("w");
     const moveDown = pressed.has("arrowdown") || pressed.has("s");
 
-    const horizontal = Number(moveRight) - Number(moveLeft);
-    const vertical = Number(moveDown) - Number(moveUp);
+    const anyKeyPressed = moveLeft || moveRight || moveUp || moveDown;
 
-    const nextAction: MovementAction =
-      horizontal < 0
-        ? "left"
-        : horizontal > 0
-          ? "right"
-          : vertical < 0
-            ? "up"
-            : vertical > 0
-              ? "down"
-              : "idle";
+    // Keyboard takes priority; cancel click target while keys are held
+    if (anyKeyPressed) {
+      clickTargetRef.current = null;
+    }
+
+    let horizontal = 0;
+    let vertical = 0;
+
+    if (anyKeyPressed) {
+      horizontal = Number(moveRight) - Number(moveLeft);
+      vertical = Number(moveDown) - Number(moveUp);
+    } else if (clickTargetRef.current) {
+      const dx = clickTargetRef.current.x - mesh.position.x;
+      const dy = clickTargetRef.current.y - mesh.position.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const step = 2.5 * delta;
+
+      if (dist <= step || dist < CLICK_ARRIVAL_THRESHOLD) {
+        // Snap to target and stop
+        mesh.position.x = clickTargetRef.current.x;
+        mesh.position.y = clickTargetRef.current.y;
+        clickTargetRef.current = null;
+      } else {
+        // Normalize direction
+        horizontal = dx / dist;
+        // Vertical is inverted vs key convention (world y+ is up)
+        vertical = -(dy / dist);
+      }
+    }
+
+    const nextAction: MovementAction = resolveAction(horizontal, vertical);
 
     if (currentActionRef.current !== nextAction) {
       currentActionRef.current = nextAction;
@@ -105,6 +158,9 @@ function MetalSlugSprite({
     }
 
     const speed = 2.5;
+    const prevX = mesh.position.x;
+    const prevY = mesh.position.y;
+
     mesh.position.x += horizontal * speed * delta;
     mesh.position.y -= vertical * speed * delta;
 
@@ -113,19 +169,30 @@ function MetalSlugSprite({
 
     mesh.position.x = Math.min(maxX, Math.max(-maxX, mesh.position.x));
     mesh.position.y = Math.min(maxY, Math.max(-maxY, mesh.position.y));
+
+    // If the character barely moved (stuck against a boundary), cancel the click target
+    const actualMovement =
+      Math.abs(mesh.position.x - prevX) + Math.abs(mesh.position.y - prevY);
+    const expectedMovement = speed * delta * 0.1;
+    if (clickTargetRef.current && actualMovement < expectedMovement) {
+      clickTargetRef.current = null;
+    }
   });
 
   return (
-    <AnimatedSprite
-      ref={spriteRef}
-      meshRef={meshRef}
-      textureUrl="/assets/sprites/maniac-mansion.png"
-      atlas={ATLAS_SIZE}
-      clip={characterClips[action]}
-      scale={[1.6, 1.6, 1]}
-      flipX={false}
-      isPaused={false}
-    />
+    <>
+      <ClickPlane onClickWorld={handleClickWorld} />
+      <AnimatedSprite
+        ref={spriteRef}
+        meshRef={meshRef}
+        textureUrl="/assets/sprites/maniac-mansion.png"
+        atlas={ATLAS_SIZE}
+        clip={characterClips[action]}
+        scale={[1.6, 1.6, 1]}
+        flipX={false}
+        isPaused={false}
+      />
+    </>
   );
 }
 
@@ -135,7 +202,7 @@ export default function MetalSlugGameCanvas() {
   const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
 
   useEffect(() => {
-    setReadyMessage(`${selectedCharacter} listo para moverse con flechas o WASD`);
+    setReadyMessage(`${selectedCharacter} listo — flechas/WASD o click para moverse`);
   }, [selectedCharacter]);
 
   const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
