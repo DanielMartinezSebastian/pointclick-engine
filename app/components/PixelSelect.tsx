@@ -78,8 +78,9 @@ export default function PixelSelect({
         >
           <span>{selectedOption?.label || "Seleccionar..."}</span>
           <ChevronDown
-            size={16}
-            color="#00ff41"
+            width={16}
+            height={16}
+            fill="#00ff41"
             style={{
               transform: isOpen ? "rotateZ(180deg)" : "rotateZ(0deg)",
               transition: "transform 0.2s",
