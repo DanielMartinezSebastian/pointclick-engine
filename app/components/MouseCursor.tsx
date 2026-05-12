@@ -99,7 +99,7 @@ export default function MouseCursor() {
         zIndex: 9999,
       }}
     >
-      <IconComponent size={24} color="#ffffff" />
+      <IconComponent width={24} height={24} fill="#ffffff" />
     </div>
   );
 }
