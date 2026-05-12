@@ -1,7 +1,7 @@
-import MetalSlugGameCanvas from "./components/MetalSlugGameCanvas";
+import GameTouchCanvas from "./components/GameTouchCanvas";
 
 export default function Home() {
   return (
-    <MetalSlugGameCanvas />
+    <GameTouchCanvas />
   );
 }

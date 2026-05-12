@@ -17,7 +17,7 @@ export const ATLAS_SIZE = {
   height: 628,
 };
 
-export type ManiacMansionCharacterName =
+export type GameCharacterName =
   | "Dave"
   | "Razor"
   | "Bernard"
@@ -28,12 +28,12 @@ export type ManiacMansionCharacterName =
   | "Sandy"
   | "Radiation Suit";
 
-export type ManiacMansionDirection = "idle" | "left" | "right" | "up" | "down";
+export type GameDirection = "idle" | "left" | "right" | "up" | "down";
 
-type CharacterClips = Record<ManiacMansionDirection, AnimationClip>;
+type CharacterClips = Record<GameDirection, AnimationClip>;
 
 type CharacterGridPosition = {
-  name: ManiacMansionCharacterName;
+  name: GameCharacterName;
   column: 0 | 1 | 2;
   row: 0 | 1 | 2;
 };
@@ -113,7 +113,7 @@ const createCharacterClips = ({
   };
 };
 
-export const MANIAC_MANSION_CHARACTERS = [
+export const GAME_CHARACTERS = [
   { name: "Dave", column: 0, row: 0 },
   { name: "Razor", column: 1, row: 0 },
   { name: "Bernard", column: 2, row: 0 },
@@ -125,11 +125,11 @@ export const MANIAC_MANSION_CHARACTERS = [
   { name: "Radiation Suit", column: 2, row: 2 },
 ] as const satisfies ReadonlyArray<CharacterGridPosition>;
 
-export const MANIAC_MANSION_CHARACTER_CLIPS = Object.fromEntries(
-  MANIAC_MANSION_CHARACTERS.map((character) => [
+export const GAME_CHARACTER_CLIPS = Object.fromEntries(
+  GAME_CHARACTERS.map((character) => [
     character.name,
     createCharacterClips(character),
   ]),
-) as Record<ManiacMansionCharacterName, CharacterClips>;
+) as Record<GameCharacterName, CharacterClips>;
 
-export const DAVE_CLIPS = MANIAC_MANSION_CHARACTER_CLIPS.Dave;
+export const DAVE_CLIPS = GAME_CHARACTER_CLIPS.Dave;
