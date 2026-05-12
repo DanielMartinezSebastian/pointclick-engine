@@ -35,6 +35,9 @@ const DEPTH_NEAR_Z = 8;
 const SPRITE_MIN_SCALE = 1.0;
 const SPRITE_MAX_SCALE = 2.1;
 const MIN_WALL_HALF_EXTENT = 0.15;
+const PLAYER_BOUND_MARGIN = 1.55;
+const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
+const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -371,13 +374,34 @@ function GameTouchSprite({
   const wallInteractionRef = useRef<WallInteraction>(null);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
+  const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
   const respawnSignal = useSceneStore((s) => s.respawnSignal);
 
+  const clampToPlayableArea = useCallback((x: number, z: number) => {
+    const minX = ground.minX + PLAYER_BOUND_MARGIN;
+    const maxX = ground.maxX - PLAYER_BOUND_MARGIN;
+    const minZ = ground.minZ + PLAYER_BOUND_MARGIN;
+    const maxZByGround = ground.maxZ - PLAYER_BOUND_MARGIN;
+    const maxZByCamera = CAMERA_POSITION[2] - CAMERA_FRONT_PLAYABLE_MARGIN;
+    const maxZ = Math.min(maxZByGround, maxZByCamera);
+
+    const clampMinX = Math.min(minX, maxX);
+    const clampMaxX = Math.max(minX, maxX);
+    const clampMinZ = Math.min(minZ, maxZ);
+    const clampMaxZ = Math.max(minZ, maxZ);
+
+    return {
+      x: MathUtils.clamp(x, clampMinX, clampMaxX),
+      z: MathUtils.clamp(z, clampMinZ, clampMaxZ),
+    };
+  }, [ground.maxX, ground.maxZ, ground.minX, ground.minZ]);
+
   const handleClickWorld = useCallback((x: number, z: number) => {
     if (wallInteractionRef.current) return;
-    clickTargetRef.current = new Vector2(x, z);
-  }, []);
+    const clamped = clampToPlayableArea(x, z);
+    clickTargetRef.current = new Vector2(clamped.x, clamped.z);
+  }, [clampToPlayableArea]);
 
   const stopWallInteraction = useCallback(() => {
     wallInteractionRef.current = null;
@@ -594,15 +618,23 @@ function GameTouchSprite({
     }
 
     const currentPosition = body.translation();
+    const clampedPosition = clampToPlayableArea(currentPosition.x, currentPosition.z);
+    if (clampedPosition.x !== currentPosition.x || clampedPosition.z !== currentPosition.z) {
+      body.setTranslation({ x: clampedPosition.x, y: currentPosition.y, z: clampedPosition.z }, true);
+      const currentVelocity = body.linvel();
+      body.setLinvel({ x: 0, y: currentVelocity.y, z: 0 }, true);
+    }
+
+    const safePosition = body.translation();
     const depthFactor = MathUtils.clamp(
-      MathUtils.inverseLerp(DEPTH_FAR_Z, DEPTH_NEAR_Z, currentPosition.z),
+      MathUtils.inverseLerp(DEPTH_FAR_Z, DEPTH_NEAR_Z, safePosition.z),
       0,
       1,
     );
 
-    const roundedX = Number(currentPosition.x.toFixed(2));
-    const roundedY = Number(currentPosition.y.toFixed(2));
-    const roundedZ = Number(currentPosition.z.toFixed(2));
+    const roundedX = Number(safePosition.x.toFixed(2));
+    const roundedY = Number(safePosition.y.toFixed(2));
+    const roundedZ = Number(safePosition.z.toFixed(2));
     const lastLogged = lastLoggedPositionRef.current;
     if (!lastLogged || lastLogged.x !== roundedX || lastLogged.y !== roundedY || lastLogged.z !== roundedZ) {
       console.log(`[player] x=${roundedX}, y=${roundedY}, z=${roundedZ}`);
@@ -1013,7 +1045,7 @@ export default function GameTouchCanvas() {
       />
       <MouseCursor />
       <Canvas gl={{ alpha: true }} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
-        <OrthographicCamera makeDefault position={[0, 5.4, 25.0]} rotation={[-0.24, 0, 0]} zoom={56} near={0.1} far={120} />
+        <OrthographicCamera makeDefault position={CAMERA_POSITION} rotation={[-0.24, 0, 0]} zoom={56} near={0.01} far={120} />
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
