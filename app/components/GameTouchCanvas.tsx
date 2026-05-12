@@ -64,7 +64,7 @@ function CollisionCube() {
     <RigidBody
       type="dynamic"
       colliders={false}
-      position={[1.8, 4.5, -0.6]}
+      position={[-3.83, -0.2, 11.01]}
       gravityScale={1.2}
       linearDamping={1.2}
       angularDamping={1.8}
@@ -87,7 +87,7 @@ function CollisionSphere() {
     <RigidBody
       type="dynamic"
       colliders={false}
-      position={[-1.4, 4.2, -1.4]}
+      position={[-1.09, -0.2, 13.01]}
       gravityScale={1.2}
       linearDamping={1.0}
       angularDamping={0.8}
@@ -115,6 +115,7 @@ function GameTouchSprite({
   const keysPressedRef = useRef(new Set<string>());
   const clickTargetRef = useRef<Vector2 | null>(null);
   const currentActionRef = useRef<MovementAction>("idle");
+  const lastLoggedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
 
   const handleClickWorld = useCallback((x: number, z: number) => {
@@ -229,6 +230,16 @@ function GameTouchSprite({
       0,
       1,
     );
+
+    const roundedX = Number(currentPosition.x.toFixed(2));
+    const roundedY = Number(currentPosition.y.toFixed(2));
+    const roundedZ = Number(currentPosition.z.toFixed(2));
+    const lastLogged = lastLoggedPositionRef.current;
+    if (!lastLogged || lastLogged.x !== roundedX || lastLogged.y !== roundedY || lastLogged.z !== roundedZ) {
+      console.log(`[player] x=${roundedX}, y=${roundedY}, z=${roundedZ}`);
+      lastLoggedPositionRef.current = { x: roundedX, y: roundedY, z: roundedZ };
+    }
+
     const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
     if (meshRef.current) {
       meshRef.current.scale.set(spriteScale, spriteScale, 1);
@@ -247,7 +258,7 @@ function GameTouchSprite({
         ref={characterBodyRef}
         type="dynamic"
         colliders={false}
-        position={[0, 7, 0]}
+        position={[3.08, -0.2, 13.44]}
         gravityScale={1.2}
         linearDamping={7}
         angularDamping={20}

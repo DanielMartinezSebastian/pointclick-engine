@@ -57,6 +57,7 @@ function GameTouchSprite({
   const keysPressedRef = useRef(new Set<string>());
   const clickTargetRef = useRef<Vector2 | null>(null);
   const currentActionRef = useRef<MovementAction>("idle");
+  const lastLoggedPositionRef = useRef<{ x: number; y: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
   const { viewport } = useThree();
 
@@ -169,6 +170,14 @@ function GameTouchSprite({
 
     mesh.position.x = Math.min(maxX, Math.max(-maxX, mesh.position.x));
     mesh.position.y = Math.min(maxY, Math.max(-maxY, mesh.position.y));
+
+    const roundedX = Number(mesh.position.x.toFixed(2));
+    const roundedY = Number(mesh.position.y.toFixed(2));
+    const lastLogged = lastLoggedPositionRef.current;
+    if (!lastLogged || lastLogged.x !== roundedX || lastLogged.y !== roundedY) {
+      console.log(`[player] x=${roundedX}, y=${roundedY}`);
+      lastLoggedPositionRef.current = { x: roundedX, y: roundedY };
+    }
 
     // If the character barely moved (stuck against a boundary), cancel the click target
     const actualMovement =
