@@ -124,11 +124,18 @@ const AnimatedSprite = forwardRef<AnimatedSpriteHandle, AnimatedSpriteProps>(
       applyFrame(texture, atlas, clip, frameCursorRef.current);
     });
 
+    // Memoizar el array de escala para que R3F no re-aplique el prop en cada render
+    // y no sobreescriba la escala imperativa que gestiona el padre desde useFrame.
+    const [sx, sy, sz] = scale;
+    const meshScale = useMemo<[number, number, number]>(
+      () => [flipX ? -Math.abs(sx) : Math.abs(sx), sy, sz],
+      [flipX, sx, sy, sz],
+    );
+
     return (
       <mesh
         ref={targetRef}
-        scale={[flipX ? -Math.abs(scale[0]) : Math.abs(scale[0]), scale[1], scale[2]]}
-        position={[0, 0, 0]}
+        scale={meshScale}
       >
         <planeGeometry args={[2, 2]} />
         <meshBasicMaterial map={texture} transparent toneMapped={false} side={FrontSide} />

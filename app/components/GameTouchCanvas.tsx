@@ -1,8 +1,10 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Mesh, Vector2 } from "three";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { PerspectiveCamera } from "@react-three/drei";
+import { Physics, RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
+import { MathUtils, Mesh, Vector2 } from "three";
 
 import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
 import MouseCursor from "./MouseCursor";
@@ -21,6 +23,11 @@ const MOVEMENT_KEYS = new Set(["arrowleft", "arrowright", "arrowup", "arrowdown"
 const CLICK_ARRIVAL_THRESHOLD = 0.15;
 // Angle from horizontal axis above which vertical animation fires (55° = 35° cone around vertical)
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
+const WORLD_HALF_WIDTH = 7.4;
+const DEPTH_FAR_Z = -8.8;
+const DEPTH_NEAR_Z = 3.8;
+const SPRITE_MIN_SCALE = 1.0;
+const SPRITE_MAX_SCALE = 2.1;
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -31,19 +38,30 @@ function resolveAction(horizontal: number, vertical: number): MovementAction {
   return horizontal < 0 ? "left" : "right";
 }
 
-function ClickPlane({ onClickWorld }: { onClickWorld: (x: number, y: number) => void }) {
-  const { viewport } = useThree();
+function GroundPlane({ onClickWorld }: { onClickWorld: (x: number, z: number) => void }) {
+  // El plano visual está inclinado: position=[0,-1.15,-1.2] rotation=[-π/2.45,0,0]
+  // El collider trimesh copia la geometría real del plano para colisionar exactamente con la superficie.
   return (
-    <mesh
-      position={[0, 0, -0.1]}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        onClickWorld(e.point.x, e.point.y);
-      }}
-    >
-      <planeGeometry args={[viewport.width, viewport.height]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-    </mesh>
+    <group>
+      <RigidBody type="fixed" colliders="trimesh">
+        <mesh position={[0, -1.15, -1.2]} rotation={[-Math.PI / 2.45, 0, 0]}>
+          <planeGeometry args={[28, 24]} />
+          <meshStandardMaterial color="#142549" roughness={1} metalness={0.05} />
+        </mesh>
+      </RigidBody>
+
+      {/* Plano invisible horizontal para capturar clicks y convertirlos a coordenadas de suelo */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          onClickWorld(e.point.x, e.point.z);
+        }}
+      >
+        <planeGeometry args={[WORLD_HALF_WIDTH * 2, Math.abs(DEPTH_FAR_Z) + Math.abs(DEPTH_NEAR_Z) + 2]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+    </group>
   );
 }
 
@@ -56,14 +74,14 @@ function GameTouchSprite({
 }) {
   const spriteRef = useRef<AnimatedSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
+  const characterBodyRef = useRef<RapierRigidBody>(null);
   const keysPressedRef = useRef(new Set<string>());
   const clickTargetRef = useRef<Vector2 | null>(null);
   const currentActionRef = useRef<MovementAction>("idle");
   const [action, setAction] = useState<MovementAction>("idle");
-  const { viewport } = useThree();
 
-  const handleClickWorld = useCallback((x: number, y: number) => {
-    clickTargetRef.current = new Vector2(x, y);
+  const handleClickWorld = useCallback((x: number, z: number) => {
+    clickTargetRef.current = new Vector2(x, z);
   }, []);
 
   const characterClips = useMemo(
@@ -104,9 +122,9 @@ function GameTouchSprite({
   }, []);
 
   useFrame((_, delta) => {
-    const mesh = meshRef.current;
+    const body = characterBodyRef.current;
 
-    if (!mesh) {
+    if (!body) {
       return;
     }
 
@@ -130,21 +148,20 @@ function GameTouchSprite({
       horizontal = Number(moveRight) - Number(moveLeft);
       vertical = Number(moveDown) - Number(moveUp);
     } else if (clickTargetRef.current) {
-      const dx = clickTargetRef.current.x - mesh.position.x;
-      const dy = clickTargetRef.current.y - mesh.position.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const currentPosition = body.translation();
+      const dx = clickTargetRef.current.x - currentPosition.x;
+      const dz = clickTargetRef.current.y - currentPosition.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
       const step = 2.5 * delta;
 
       if (dist <= step || dist < CLICK_ARRIVAL_THRESHOLD) {
         // Snap to target and stop
-        mesh.position.x = clickTargetRef.current.x;
-        mesh.position.y = clickTargetRef.current.y;
+        body.setTranslation({ x: clickTargetRef.current.x, y: currentPosition.y, z: clickTargetRef.current.y }, true);
         clickTargetRef.current = null;
       } else {
         // Normalize direction
         horizontal = dx / dist;
-        // Vertical is inverted vs key convention (world y+ is up)
-        vertical = -(dy / dist);
+        vertical = dz / dist;
       }
     }
 
@@ -155,52 +172,67 @@ function GameTouchSprite({
       setAction(nextAction);
     }
 
+    const speed = 3.5;
+    const currentVelocity = body.linvel();
+    const targetVelocity = {
+      x: horizontal * speed,
+      y: currentVelocity.y,
+      z: vertical * speed,
+    };
+
     if (horizontal === 0 && vertical === 0) {
-      return;
+      body.setLinvel({ x: 0, y: currentVelocity.y, z: 0 }, true);
+    } else {
+      body.setLinvel(targetVelocity, true);
     }
 
-    const speed = 2.5;
-    const prevX = mesh.position.x;
-    const prevY = mesh.position.y;
-
-    mesh.position.x += horizontal * speed * delta;
-    mesh.position.y -= vertical * speed * delta;
-
-    const maxX = Math.max(0, viewport.width / 2 - 2.8);
-    const maxY = Math.max(0, viewport.height / 2 - 2.8);
-
-    mesh.position.x = Math.min(maxX, Math.max(-maxX, mesh.position.x));
-    mesh.position.y = Math.min(maxY, Math.max(-maxY, mesh.position.y));
-
-    // If the character barely moved (stuck against a boundary), cancel the click target
-    const actualMovement =
-      Math.abs(mesh.position.x - prevX) + Math.abs(mesh.position.y - prevY);
-    const expectedMovement = speed * delta * 0.1;
-    if (clickTargetRef.current && actualMovement < expectedMovement) {
-      clickTargetRef.current = null;
+    const currentPosition = body.translation();
+    const depthFactor = MathUtils.clamp(
+      MathUtils.inverseLerp(DEPTH_FAR_Z, DEPTH_NEAR_Z, currentPosition.z),
+      0,
+      1,
+    );
+    const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
+    if (meshRef.current) {
+      meshRef.current.scale.set(spriteScale, spriteScale, 1);
+      // El centro del collider queda en el medio del cuerpo; el sprite debe subir
+      // exactamente su semialtura menos la semialtura del collider para apoyar los pies.
+      meshRef.current.position.y = spriteScale - 0.95;
     }
   });
 
   return (
     <>
-      <ClickPlane onClickWorld={handleClickWorld} />
-      <AnimatedSprite
-        ref={spriteRef}
-        meshRef={meshRef}
-        textureUrl="/assets/sprites/maniac-mansion.png"
-        atlas={ATLAS_SIZE}
-        clip={characterClips[action]}
-        scale={[1.6, 1.6, 1]}
-        flipX={false}
-        isPaused={false}
-      />
+      <GroundPlane onClickWorld={handleClickWorld} />
+      <RigidBody
+        ref={characterBodyRef}
+        type="dynamic"
+        colliders={false}
+        position={[0, 7, 0]}
+        gravityScale={1.2}
+        linearDamping={7}
+        angularDamping={20}
+        ccd
+        enabledRotations={[false, false, false]}
+      >
+        <CuboidCollider args={[0.55, 0.95, 0.18]} friction={2.2} restitution={0} />
+        <AnimatedSprite
+          ref={spriteRef}
+          meshRef={meshRef}
+          textureUrl="/assets/sprites/maniac-mansion.png"
+          atlas={ATLAS_SIZE}
+          clip={characterClips[action]}
+          scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
+          flipX={false}
+          isPaused={false}
+        />
+      </RigidBody>
     </>
   );
 }
 
 export default function GameTouchCanvas() {
   const [selectedCharacter, setSelectedCharacter] = useState<GameCharacterName>("Dave");
-  const [readyMessage, setReadyMessage] = useState("Dave cargando...");
 
   const characterOptions = useMemo(
     () =>
@@ -211,10 +243,7 @@ export default function GameTouchCanvas() {
     [],
   );
   const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
-
-  useEffect(() => {
-    setReadyMessage(`${selectedCharacter} listo — flechas/WASD o click para moverse`);
-  }, [selectedCharacter]);
+  const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
   const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
@@ -223,10 +252,17 @@ export default function GameTouchCanvas() {
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
       <MouseCursor />
-      <Canvas orthographic camera={{ position: [0, 0, 10], zoom: 72 }}>
-        <Suspense fallback={null}>
-          <GameTouchSprite activeCharacter={selectedCharacter} onSpriteReady={handleSpriteReady} />
-        </Suspense>
+      <Canvas>
+        <PerspectiveCamera makeDefault position={[0, 5.8, 10.8]} rotation={[-0.30, 0, 0]} fov={46} near={0.1} far={120} />
+        <color attach="background" args={["#070d1f"]} />
+        <fog attach="fog" args={["#070d1f", 11, 27]} />
+        <ambientLight intensity={1.1} color="#8bc2ff" />
+        <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
+        <Physics gravity={[0, -20, 0]}>
+          <Suspense fallback={null}>
+            <GameTouchSprite activeCharacter={selectedCharacter} onSpriteReady={handleSpriteReady} />
+          </Suspense>
+        </Physics>
       </Canvas>
 
       <div

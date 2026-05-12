@@ -198,12 +198,8 @@ function GameTouchSprite({
 
 export default function GameTouchCanvas() {
   const [selectedCharacter, setSelectedCharacter] = useState<GameCharacterName>("Dave");
-  const [readyMessage, setReadyMessage] = useState("Dave cargando...");
+  const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
   const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
-
-  useEffect(() => {
-    setReadyMessage(`${selectedCharacter} listo — flechas/WASD o click para moverse`);
-  }, [selectedCharacter]);
 
   const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
@@ -211,7 +207,7 @@ export default function GameTouchCanvas() {
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
-      <Canvas orthographic camera={{ position: [0, 0, 10], zoom: 72 }}>
+      <Canvas  camera={{ position: [0, 2, 10], zoom: 72 }}>
         <Suspense fallback={null}>
           <GameTouchSprite activeCharacter={selectedCharacter} onSpriteReady={handleSpriteReady} />
         </Suspense>
