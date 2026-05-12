@@ -293,7 +293,7 @@ export default function GameTouchCanvas() {
       <Canvas>
         <PerspectiveCamera makeDefault position={[0, 5.4, 25.0]} rotation={[-0.24, 0, 0]} fov={46} near={0.1} far={120} />
         <color attach="background" args={["#070d1f"]} />
-        <fog attach="fog" args={["#070d1f", 11, 50]} />
+        <fog attach="fog" args={["#070d1f", 20, 55]} />
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
         <Physics gravity={[0, -20, 0]}>
