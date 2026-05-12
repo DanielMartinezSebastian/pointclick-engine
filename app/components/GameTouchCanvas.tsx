@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Mesh, Vector2 } from "three";
 
 import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
+import MouseCursor from "./MouseCursor";
 import {
   ATLAS_SIZE,
   GAME_CHARACTER_CLIPS,
@@ -210,7 +211,8 @@ export default function GameTouchCanvas() {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
+      <MouseCursor />
       <Canvas orthographic camera={{ position: [0, 0, 10], zoom: 72 }}>
         <Suspense fallback={null}>
           <GameTouchSprite activeCharacter={selectedCharacter} onSpriteReady={handleSpriteReady} />
@@ -236,7 +238,7 @@ export default function GameTouchCanvas() {
           boxShadow: "0 14px 32px rgb(0 0 0 / 28%)",
         }}
       >
-        <label style={{ display: "grid", gap: "6px", fontSize: "0.8rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+        <label style={{ display: "grid", gap: "6px", fontSize: "0.8rem", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "none" }}>
           Debug personaje
           <select
             value={selectedCharacter}
@@ -250,6 +252,7 @@ export default function GameTouchCanvas() {
               padding: "0.7rem 0.8rem",
               fontSize: "0.98rem",
               outline: "none",
+              cursor: "none",
             }}
           >
             {GAME_CHARACTERS.map((character) => (
