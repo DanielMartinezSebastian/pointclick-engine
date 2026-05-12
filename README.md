@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 2D Game Test
 
-## Getting Started
+Prototipo de juego 2D/2.5D hecho con Next.js, React Three Fiber y Rapier.
 
-First, run the development server:
+El proyecto incluye:
+
+- Movimiento del personaje con teclado y click/touch.
+- Escalado del sprite por profundidad (efecto de perspectiva en escena 2.5D).
+- Escenas intercambiables con límites de suelo y muros.
+- Modo debug con editor visual de muros y suelo.
+- Atlas de sprites con animaciones direccionales.
+
+## Stack técnico
+
+- Next.js 16 + React 19 + TypeScript
+- Three.js + @react-three/fiber + @react-three/drei
+- @react-three/rapier (físicas y colisiones)
+- Zustand (estado global de escena)
+- Tailwind CSS v4 (base global)
+
+## Requisitos
+
+- Node.js 20+
+- npm 10+ (o equivalente)
+
+## Instalación
+
+```bash
+npm install
+```
+
+## Scripts
+
+```bash
+npm run dev    # entorno de desarrollo
+npm run build  # build de producción
+npm run start  # servir build de producción
+npm run lint   # lint con ESLint
+```
+
+## Arranque rápido
+
+1. Levanta el servidor:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Abre:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `http://localhost:3000`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Controles
 
-## Learn More
+- Movimiento: `WASD` o flechas
+- Movimiento por click/touch: click en el plano jugable
+- Respawn: botón `Reaparecer en spawn`
 
-To learn more about Next.js, take a look at the following resources:
+El personaje activo y la escena se cambian desde el panel de control en pantalla.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Modo debug
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Puedes activar debug de dos formas:
 
-## Deploy on Vercel
+- Entrando a `http://localhost:3000?debug`
+- O usando el botón `Entrar en debug`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Con debug activo tienes:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Mostrar/ocultar visuales de suelo
+- Mostrar/ocultar visuales de muros
+- Editor de muros:
+	- Crear/borrar muro
+	- Seleccionar muro
+	- Editar posición, tamaño (`halfSize`) y rotación Y
+	- Arrastrar wireframe/handles en viewport
+	- Copiar JSON para persistir en `app/scenes/scenes.ts`
+- Editor de suelo:
+	- Editar `minX`, `maxX`, `minZ`, `maxZ`, `y`
+	- Ver ancho/fondo calculados
+	- Copiar JSON para persistir en `app/scenes/scenes.ts`
+
+## Estructura del proyecto
+
+```text
+app/
+	page.tsx                     # entrada principal (renderiza GameTouchCanvas)
+	layout.tsx                   # layout global y fuentes
+	globals.css                  # estilos globales
+	components/
+		GameTouchCanvas.tsx        # escena principal con físicas + debug/editor
+		GameCanvas.tsx             # canvas alternativo más simple (2D plano)
+		MouseCursor.tsx            # cursor pixel personalizado (desktop)
+		PixelSelect.tsx            # selector visual retro
+		sprite/
+			AnimatedSprite.tsx       # reproducción de atlas por frames
+			clips.ts                 # definición de clips y personajes
+	scenes/
+		scenes.ts                  # definición de escenas (spawn, suelo, muros)
+	store/
+		sceneStore.ts              # estado global de escena con Zustand
+
+public/
+	assets/
+		background/                # fondos por escena
+		sprites/                   # atlas de sprites
+```
+
+## Flujo de trabajo recomendado para editar escenas
+
+1. Arranca en debug (`?debug`).
+2. Ajusta muros y/o suelo visualmente.
+3. Usa `Copiar JSON` en el panel correspondiente.
+4. Pega el resultado en la escena de `app/scenes/scenes.ts`.
+5. Guarda y valida colisiones en runtime.
+
+## Notas de implementación
+
+- El estado de escena se clona al cambiar de escena para evitar mutaciones accidentales.
+- El personaje se reposiciona en `playerSpawn` al cambiar de escena o al hacer respawn.
+- La velocidad vertical (eje Z) está aumentada respecto al eje X para compensar la percepción en cámara ortográfica inclinada.
+- El sprite ajusta escala por profundidad entre límites configurados, simulando alejamiento/cercanía.
+
+## Deploy
+
+Build y arranque en producción:
+
+```bash
+npm run build
+npm run start
+```
+
+Puedes desplegar en cualquier entorno compatible con Next.js (por ejemplo Vercel).
