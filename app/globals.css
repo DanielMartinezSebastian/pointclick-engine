@@ -25,6 +25,13 @@ body {
   font-family: var(--font-pixel), "Courier New", monospace;
 }
 
+/* Cursor personalizado solo para desktop con puntero fino */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
 .game-shell {
   position: relative;
   display: grid;

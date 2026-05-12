@@ -6,6 +6,7 @@ import { Mesh, Vector2 } from "three";
 
 import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
 import MouseCursor from "./MouseCursor";
+import PixelSelect from "./PixelSelect";
 import {
   ATLAS_SIZE,
   GAME_CHARACTER_CLIPS,
@@ -200,6 +201,15 @@ function GameTouchSprite({
 export default function GameTouchCanvas() {
   const [selectedCharacter, setSelectedCharacter] = useState<GameCharacterName>("Dave");
   const [readyMessage, setReadyMessage] = useState("Dave cargando...");
+
+  const characterOptions = useMemo(
+    () =>
+      GAME_CHARACTERS.map((character) => ({
+        label: character.name,
+        value: character.name,
+      })),
+    [],
+  );
   const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
 
   useEffect(() => {
@@ -242,33 +252,12 @@ export default function GameTouchCanvas() {
           textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
         }}
       >
-        <label style={{ display: "grid", gap: "6px", fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase", cursor: "none", fontWeight: "bold" }}>
-          Debug personaje
-          <select
-            value={selectedCharacter}
-            onChange={(event) => setSelectedCharacter(event.target.value as GameCharacterName)}
-            style={{
-              appearance: "none",
-              borderRadius: "2px",
-              border: "2px solid #00ff41",
-              background: "rgb(8 12 32 / 90%)",
-              color: "#00ff41",
-              padding: "0.6rem 0.8rem",
-              fontSize: "12px",
-              outline: "none",
-              cursor: "none",
-              fontFamily: "var(--font-pixel), monospace",
-              letterSpacing: "1px",
-              boxShadow: "inset 0 0 4px rgba(0, 255, 65, 0.2), 0 0 8px rgba(0, 255, 65, 0.2)",
-            }}
-          >
-            {GAME_CHARACTERS.map((character) => (
-              <option key={character.name} value={character.name}>
-                {character.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <PixelSelect
+          label="Debug personaje"
+          value={selectedCharacter}
+          onChange={(value) => setSelectedCharacter(value as GameCharacterName)}
+          options={characterOptions}
+        />
         <strong style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "1px", lineHeight: "1.6" }}>{readyMessage}</strong>
       </div>
     </div>

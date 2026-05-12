@@ -9,27 +9,66 @@ export default function MouseCursor() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(true);
   const [isOverInteractive, setIsOverInteractive] = useState(false);
+  const [isDesktopPointer, setIsDesktopPointer] = useState(false);
 
   useEffect(() => {
+    const hoverQuery = window.matchMedia("(hover: hover)");
+    const pointerQuery = window.matchMedia("(pointer: fine)");
+
+    const updatePointerMode = () => {
+      // Cursor personalizado cuando el dispositivo actual soporta hover + puntero fino
+      setIsDesktopPointer(hoverQuery.matches && pointerQuery.matches);
+    };
+
+    updatePointerMode();
+
+    hoverQuery.addEventListener("change", updatePointerMode);
+    pointerQuery.addEventListener("change", updatePointerMode);
+    window.addEventListener("resize", updatePointerMode);
+
+    return () => {
+      hoverQuery.removeEventListener("change", updatePointerMode);
+      pointerQuery.removeEventListener("change", updatePointerMode);
+      window.removeEventListener("resize", updatePointerMode);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktopPointer) {
+      return;
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
       if (!isVisible) setIsVisible(true);
 
       // Detectar si el mouse está sobre un elemento interactivo
       const target = e.target as HTMLElement;
-      const isInteractive =
+      
+      // Búsqueda más agresiva de elementos interactivos
+      let isInteractive = 
         INTERACTIVE_ELEMENTS.includes(target.tagName.toLowerCase()) ||
         target.getAttribute("role") === "button" ||
-        target.closest("button") ||
-        target.closest("select") ||
-        target.closest("a") ||
-        target.closest("[role='button']");
+        target.classList.contains("interactive");
+
+      // Búsqueda en padres
+      if (!isInteractive && target.parentElement) {
+        let parent: HTMLElement | null = target.parentElement;
+        while (parent && !isInteractive) {
+          isInteractive =
+            INTERACTIVE_ELEMENTS.includes(parent.tagName.toLowerCase()) ||
+            parent.getAttribute("role") === "button" ||
+            parent.classList.contains("interactive");
+          parent = parent.parentElement;
+        }
+      }
 
       setIsOverInteractive(!!isInteractive);
     };
 
     const handleMouseLeave = () => {
       setIsVisible(false);
+      setIsOverInteractive(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -39,7 +78,11 @@ export default function MouseCursor() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [isVisible]);
+  }, [isVisible, isDesktopPointer]);
+
+  if (!isDesktopPointer) {
+    return null;
+  }
 
   const IconComponent = isOverInteractive ? Pointer : CursorMinimal;
 
