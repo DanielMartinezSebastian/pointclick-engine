@@ -70,15 +70,15 @@ Con debug activo tienes:
 - Mostrar/ocultar visuales de suelo
 - Mostrar/ocultar visuales de muros
 - Editor de muros:
-	- Crear/borrar muro
-	- Seleccionar muro
-	- Editar posición, tamaño (`halfSize`) y rotación Y
-	- Arrastrar wireframe/handles en viewport
-	- Copiar JSON para persistir en `app/scenes/scenes.ts`
+  - Crear/borrar muro
+  - Seleccionar muro
+  - Editar posición, tamaño (`halfSize`) y rotación Y
+  - Arrastrar wireframe/handles en viewport
+  - Copiar JSON para persistir en `app/scenes/scenes.ts`
 - Editor de suelo:
-	- Editar `minX`, `maxX`, `minZ`, `maxZ`, `y`
-	- Ver ancho/fondo calculados
-	- Copiar JSON para persistir en `app/scenes/scenes.ts`
+  - Editar `minX`, `maxX`, `minZ`, `maxZ`, `y`
+  - Ver ancho/fondo calculados
+  - Copiar JSON para persistir en `app/scenes/scenes.ts`
 
 ## Estructura del proyecto
 
