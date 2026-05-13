@@ -20,15 +20,15 @@
 }
 
 body {
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
   font-family: var(--font-pixel), "Courier New", monospace;
 }
 
-/* Cursor personalizado solo para desktop con puntero fino */
+/* Restaurar cursor nativo en desktop */
 @media (hover: hover) and (pointer: fine) {
   * {
-    cursor: none !important;
+    cursor: auto !important;
   }
 }
 
@@ -39,23 +39,11 @@ body {
   gap: 1rem;
   min-height: 100vh;
   padding: 1.2rem;
-  background:
-    radial-gradient(circle at 20% 15%, rgb(129 255 234 / 24%), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgb(255 139 106 / 22%), transparent 30%),
-    linear-gradient(160deg, #060816 0%, #141c3f 45%, #2b1450 100%);
+  background: transparent;
 }
 
 .game-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(
-    rgb(255 255 255 / 20%) 0.8px,
-    transparent 0.8px
-  );
-  background-size: 16px 16px;
-  opacity: 0.4;
+  display: none;
 }
 
 .game-hud {
@@ -93,11 +81,7 @@ body {
   overflow: hidden;
   min-height: 300px;
   box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
-  background: linear-gradient(
-    180deg,
-    rgb(13 24 70 / 65%) 0%,
-    rgb(11 11 26 / 75%) 100%
-  );
+  background: transparent;
 }
 
 .game-controls {

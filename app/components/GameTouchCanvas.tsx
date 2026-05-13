@@ -1,14 +1,13 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, TextureLoader, Vector2 } from "three";
+import { MathUtils, Mesh, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
 import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
-import MouseCursor from "./MouseCursor";
 import PixelSelect from "./PixelSelect";
 import SpeechBubble from "./SpeechBubble";
 import { getRandomPhrase } from "../dialogs/getRandomPhrase";
@@ -278,6 +277,69 @@ function SceneWalls({
         </RigidBody>
       ))}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BackgroundPlane — plano con textura anclado a la cámara
+// ---------------------------------------------------------------------------
+function BackgroundPlane({ url }: { url: string | null | undefined }) {
+  const [texture, setTexture] = useState<any>(null);
+  const meshRef = useRef<Mesh | null>(null);
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (!url) return;
+    const loader = new TextureLoader();
+    let mounted = true;
+    loader.load(
+      url,
+      (tex) => {
+        if (!mounted) return;
+        setTexture(tex);
+      },
+      undefined,
+      (err) => {
+         
+        console.warn("BackgroundPlane: texture load error", err);
+      },
+    );
+    return () => {
+      mounted = false;
+      if (texture) try { texture.dispose(); } catch (e) {}
+    };
+  }, [url]);
+
+  // calcular tamaño básico a partir del aspect de la imagen si está disponible
+  let aspect = 16 / 9;
+  try {
+    if (texture && texture.image && texture.image.width && texture.image.height) {
+      aspect = texture.image.width / texture.image.height;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  const height = 19.28;
+  const width = height * aspect;
+
+  useFrame(() => {
+    if (!meshRef.current) return;
+    const dir = new Vector3();
+    camera.getWorldDirection(dir);
+    const distance = 10; // distancia fija delante de la cámara
+    meshRef.current.position.copy(camera.position).add(dir.multiplyScalar(distance));
+    meshRef.current.quaternion.copy(camera.quaternion);
+  });
+
+  if (!url) return null;
+  if (!texture) return null;
+
+  return (
+    <mesh ref={meshRef} frustumCulled={false} renderOrder={-100}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial map={texture} side={DoubleSide} depthTest={false} depthWrite={false} />
+    </mesh>
   );
 }
 
@@ -894,7 +956,7 @@ function DebugNumberInput({
           fontFamily: "var(--font-pixel), monospace",
           letterSpacing: "1px",
           outline: "none",
-          cursor: "none",
+          cursor: "auto",
         }}
       />
     </label>
@@ -924,7 +986,7 @@ function DebugButton({
         fontSize: "11px",
         fontFamily: "var(--font-pixel), monospace",
         letterSpacing: "1px",
-        cursor: disabled ? "not-allowed" : "none",
+        cursor: disabled ? "not-allowed" : "pointer",
       }}
     >
       {label}
@@ -1086,7 +1148,7 @@ function WallEditorPanel({
           fontFamily: "var(--font-pixel), monospace",
           letterSpacing: "0.5px",
           resize: "vertical",
-          cursor: "none",
+          cursor: "auto",
         }}
       />
 
@@ -1171,7 +1233,7 @@ function GroundEditorPanel() {
           fontFamily: "var(--font-pixel), monospace",
           letterSpacing: "0.5px",
           resize: "vertical",
-          cursor: "none",
+          cursor: "auto",
         }}
       />
 
@@ -1183,7 +1245,26 @@ function GroundEditorPanel() {
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const pathname = usePathname();
-  const isDebug = pathname === "/debug";
+  const [isDebug, setIsDebug] = useState(false);
+
+  useEffect(() => {
+    const hasQuery = typeof window !== "undefined" && window.location.search.includes("debug");
+    const next = pathname === "/debug" || hasQuery;
+    setIsDebug(next);
+     
+    console.log("GameTouchCanvas: debug mode ->", next, { pathname, hasQuery });
+  }, [isDebug]);
+
+  useEffect(() => {
+    if (!isDebug) return;
+    const styleEl = document.createElement("style");
+    styleEl.setAttribute("data-debug-cursor-override", "true");
+    styleEl.innerHTML = `* { cursor: auto !important; }`;
+    document.head.appendChild(styleEl);
+    return () => {
+      styleEl.remove();
+    };
+  }, [pathname]);
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
@@ -1250,25 +1331,31 @@ export default function GameTouchCanvas() {
   }, [sceneId, showSpeechBubble]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url(${scene.background})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          zIndex: 0,
-          pointerEvents: "none",
+    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
+
+      <Canvas
+        gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
+        onCreated={(state) => {
+          try {
+            console.log("Three: renderer created", {
+              contextAttributes: state.gl.getContextAttributes?.(),
+              version: state.gl.getParameter?.(state.gl.VERSION),
+              shadingLanguageVersion: state.gl.getParameter?.(state.gl.SHADING_LANGUAGE_VERSION),
+            });
+            // pintar un color sólido para confirmar que el canvas está activo
+            state.gl.setClearColor?.(0.06, 0.06, 0.06, 1);
+            state.gl.clear?.(state.gl.COLOR_BUFFER_BIT | state.gl.DEPTH_BUFFER_BIT);
+          } catch (err) {
+            console.error("Three: onCreated error", err);
+          }
         }}
-      />
-      <MouseCursor />
-      <Canvas gl={{ alpha: true }} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, background: "transparent", display: "block" }}
+      >
         <OrthographicCamera makeDefault position={CAMERA_POSITION} rotation={[-0.24, 0, 0]} zoom={56} near={0.01} far={120} />
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
+        <BackgroundPlane url={scene.background} />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
             <GameSceneContents
@@ -1293,14 +1380,14 @@ export default function GameTouchCanvas() {
       {isDebug && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed",
             top: "16px",
             left: debugPanelSide === "left" ? "16px" : undefined,
             right: debugPanelSide === "right" ? "16px" : undefined,
             display: "flex",
             flexDirection: "column",
             gap: "10px",
-            zIndex: 20,
+            zIndex: 10001,
             padding: "1rem 1.2rem",
             borderRadius: "2px",
             border: "3px solid #00ff41",
@@ -1316,6 +1403,7 @@ export default function GameTouchCanvas() {
             fontSize: "13px",
             letterSpacing: "1px",
             textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
+            pointerEvents: "auto",
           }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -1372,7 +1460,7 @@ export default function GameTouchCanvas() {
                 letterSpacing: "0.5px",
                 resize: "vertical",
                 outline: "none",
-                cursor: "none",
+                cursor: "auto",
               }}
             />
             <DebugNumberInput

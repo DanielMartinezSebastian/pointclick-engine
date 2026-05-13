@@ -40,7 +40,7 @@ export default function PixelSelect({
   }, [isOpen]);
 
   return (
-    <div style={{ display: "grid", gap: "6px", cursor: "none" }} ref={containerRef}>
+    <div style={{ display: "grid", gap: "6px" }} ref={containerRef}>
       {label && (
         <label
           style={{
@@ -73,7 +73,7 @@ export default function PixelSelect({
             alignItems: "center",
             gap: "8px",
             textAlign: "left",
-            cursor: "none",
+            cursor: "pointer",
           }}
         >
           <span>{selectedOption?.label || "Seleccionar..."}</span>
@@ -126,7 +126,7 @@ export default function PixelSelect({
                   fontFamily: "var(--font-pixel), monospace",
                   letterSpacing: "1px",
                   textAlign: "left",
-                  cursor: "none",
+                  cursor: "pointer",
                   transition: "background 0.1s",
                 }}
                 onMouseEnter={(e) => {
