@@ -189,7 +189,6 @@ export default function SpeechBubble({
           textAlign="left"
           outlineWidth={0.005}
           outlineColor="#ffffff"
-          toneMapped={false}
         >
           {displayedText}
         </Text>
