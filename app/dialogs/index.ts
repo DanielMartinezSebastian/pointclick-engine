@@ -16,6 +16,15 @@ export const dialogs: DialogLocales = {
         "Esto es como intentar salir de Google Maps.",
       ],
     },
+    personalRoomWelcome: {
+      phrases: [
+        "¡Bienvenido a tu habitación personal! No olvides limpiar.",
+        "Este es tu espacio. Hazlo tuyo, pero sin romper nada.",
+        "¡Qué acogedor! ¿Es nueva la decoración?",
+        "Tu habitación, tus reglas. Pero no te pases.",
+        "¡Bienvenido! Aquí puedes ser tú mismo, o alguien más.",
+      ],
+    },
   },
   en: {
     boundaryHit: {
@@ -30,6 +39,15 @@ export const dialogs: DialogLocales = {
         "Limit reached! This is not a bug, it's a feature.",
         "My adventure ends here... and so does my dignity.",
         "This is like trying to leave Google Maps.",
+      ],
+    },
+    personalRoomWelcome: {
+      phrases: [
+        "Welcome to your personal room! Don't forget to clean up.",
+        "This is your space. Make it yours, but don't break anything.",
+        "So cozy! Is that new decor?",
+        "Your room, your rules. But don't go overboard.",
+        "Welcome! Be yourself here, or someone else.",
       ],
     },
   },

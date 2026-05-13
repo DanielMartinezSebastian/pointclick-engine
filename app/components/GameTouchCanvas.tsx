@@ -344,7 +344,6 @@ function GameSceneContents({
   speechTrigger,
   speechCharsPerSecond,
   onBoundaryHit,
-  onSpeechDismiss,
 }: {
   selectedCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -358,7 +357,6 @@ function GameSceneContents({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onBoundaryHit: (phrase: string) => void;
-  onSpeechDismiss: () => void;
 }) {
   return (
     <GameTouchSprite
@@ -374,7 +372,6 @@ function GameSceneContents({
       speechTrigger={speechTrigger}
       speechCharsPerSecond={speechCharsPerSecond}
       onBoundaryHit={onBoundaryHit}
-      onSpeechDismiss={onSpeechDismiss}
     />
   );
 }
@@ -392,7 +389,6 @@ function GameTouchSprite({
   speechTrigger,
   speechCharsPerSecond,
   onBoundaryHit,
-  onSpeechDismiss,
 }: {
   activeCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -406,7 +402,6 @@ function GameTouchSprite({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onBoundaryHit: (phrase: string) => void;
-  onSpeechDismiss: () => void;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -857,7 +852,6 @@ function GameTouchSprite({
           visible={speechVisible}
           trigger={speechTrigger}
           charsPerSecond={speechCharsPerSecond}
-          onDismiss={onSpeechDismiss}
         />
       </RigidBody>
     </>
@@ -1221,17 +1215,33 @@ export default function GameTouchCanvas() {
     setSpeechTrigger((current) => current + 1);
   }, []);
 
-  const runSpeechBubble = useCallback(() => {
-    const nextText = speechDraft.trim();
-    if (!nextText) return;
+  const showSpeechBubble = useCallback((nextText: string) => {
     setSpeechText(nextText);
     setSpeechVisible(true);
     setSpeechTrigger((current) => current + 1);
-  }, [speechDraft]);
+  }, []);
+
+  const runSpeechBubble = useCallback(() => {
+    const nextText = speechDraft.trim();
+    if (!nextText) return;
+    showSpeechBubble(nextText);
+  }, [showSpeechBubble, speechDraft]);
 
   const hideSpeechBubble = useCallback(() => {
     setSpeechVisible(false);
   }, []);
+
+  useEffect(() => {
+    if (sceneId !== "personalRoom") return;
+
+    const timeoutId = window.setTimeout(() => {
+      showSpeechBubble(getRandomPhrase("personalRoomWelcome"));
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [sceneId, showSpeechBubble]);
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
@@ -1268,7 +1278,6 @@ export default function GameTouchCanvas() {
               speechTrigger={speechTrigger}
               speechCharsPerSecond={speechCharsPerSecond}
               onBoundaryHit={handleBoundaryHit}
-              onSpeechDismiss={hideSpeechBubble}
             />
           </Suspense>
         </Physics>

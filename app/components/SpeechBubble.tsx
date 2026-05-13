@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundedBox, Text } from "@react-three/drei";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useSceneStore } from "../store/sceneStore";
 
@@ -10,7 +10,6 @@ type SpeechBubbleProps = {
   visible: boolean;
   trigger: number;
   charsPerSecond?: number;
-  onDismiss?: () => void;
 };
 
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
@@ -32,9 +31,6 @@ const MIN_BUBBLE_WIDTH = 0.6;
 const MAX_BUBBLE_WIDTH = 5.2;
 const MIN_BUBBLE_HEIGHT = 0.45;
 const MAX_BUBBLE_HEIGHT = 3.8;
-const MS_PER_WORD_READ = 286;   // ~3.5 palabras/s, ritmo cómodo de lectura
-const MIN_READ_MS = 2080;       // mínimo aunque el texto sea brevísimo
-const MAX_READ_MS = 10400;      // techo para textos muy largos
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -51,13 +47,13 @@ function wrapParagraphByWords(paragraph: string, maxCharsPerLine: number) {
   const lines: string[] = [];
   let currentLine = words[0];
 
-  for (let i = 1; i < words.length; i += 1) {
-    const candidate = `${currentLine} ${words[i]}`;
+  for (let index = 1; index < words.length; index += 1) {
+    const candidate = `${currentLine} ${words[index]}`;
     if (candidate.length <= maxCharsPerLine) {
       currentLine = candidate;
     } else {
       lines.push(currentLine);
-      currentLine = words[i];
+      currentLine = words[index];
     }
   }
 
@@ -70,14 +66,11 @@ export default function SpeechBubble({
   visible,
   trigger,
   charsPerSecond = 30,
-  onDismiss,
 }: SpeechBubbleProps) {
-  const playerPosition = useSceneStore((s) => s.playerPosition);
-  const ground = useSceneStore((s) => s.scene.ground);
+  const playerPosition = useSceneStore((state) => state.playerPosition);
+  const ground = useSceneStore((state) => state.scene.ground);
   const normalizedText = useMemo(() => text.trim(), [text]);
   const [displayedText, setDisplayedText] = useState("");
-
-  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!visible || normalizedText.length === 0) return;
@@ -91,28 +84,18 @@ export default function SpeechBubble({
 
       if (index >= normalizedText.length) {
         window.clearInterval(timer);
-
-        if (onDismiss) {
-          const wordCount = normalizedText.trim().split(/\s+/).length;
-          const readMs = clamp(wordCount * MS_PER_WORD_READ, MIN_READ_MS, MAX_READ_MS);
-          dismissTimerRef.current = setTimeout(onDismiss, readMs);
-        }
       }
     }, msPerChar);
 
     return () => {
       window.clearInterval(timer);
-      if (dismissTimerRef.current !== null) {
-        clearTimeout(dismissTimerRef.current);
-        dismissTimerRef.current = null;
-      }
     };
-  }, [charsPerSecond, normalizedText, onDismiss, trigger, visible]);
+  }, [charsPerSecond, normalizedText, trigger, visible]);
 
   const shouldShowLeft = useMemo(() => {
-    const WORLD_EDGE_PADDING = 0.9;
-    const spaceLeft = playerPosition[0] - ground.minX - WORLD_EDGE_PADDING;
-    const spaceRight = ground.maxX - playerPosition[0] - WORLD_EDGE_PADDING;
+    const worldEdgePadding = 0.9;
+    const spaceLeft = playerPosition[0] - ground.minX - worldEdgePadding;
+    const spaceRight = ground.maxX - playerPosition[0] - worldEdgePadding;
     return spaceLeft > spaceRight;
   }, [ground.maxX, ground.minX, playerPosition]);
 
@@ -137,7 +120,11 @@ export default function SpeechBubble({
     const longestLineChars = Math.max(1, ...wrappedLines.map((line) => line.length));
     const lineCount = Math.max(1, wrappedLines.length);
 
-    const textWidth = clamp(longestLineChars * AVG_CHAR_WIDTH_WORLD, MIN_BUBBLE_WIDTH - (TEXT_PADDING_X * 2), MAX_BUBBLE_WIDTH - (TEXT_PADDING_X * 2));
+    const textWidth = clamp(
+      longestLineChars * AVG_CHAR_WIDTH_WORLD,
+      MIN_BUBBLE_WIDTH - (TEXT_PADDING_X * 2),
+      MAX_BUBBLE_WIDTH - (TEXT_PADDING_X * 2),
+    );
     const bubbleWidth = clamp(textWidth + (TEXT_PADDING_X * 2), MIN_BUBBLE_WIDTH, MAX_BUBBLE_WIDTH);
 
     const lineHeightWorld = FONT_SIZE * LINE_HEIGHT;
@@ -155,13 +142,9 @@ export default function SpeechBubble({
     return null;
   }
 
-  // Offset simetrico desde el borde real del sprite (dependiente de la escala por profundidad).
   const spriteHalfWidthWorld = Math.max(SPRITE_HALF_WIDTH_WORLD, spriteScale * SPRITE_HALF_WIDTH_FACTOR);
   const sideOffset = spriteHalfWidthWorld + BUBBLE_GAP_WORLD;
   const offsetX = shouldShowLeft ? -sideOffset : sideOffset;
-  // Ancla vertical al tope del sprite real (que cambia con la escala en profundidad).
-  // spriteCenterY = spriteScale - 0.95
-  // spriteTopY = spriteCenterY + spriteScale = 2 * spriteScale - 0.95
   const offsetY = (2 * spriteScale) + SPRITE_CENTER_Y_OFFSET + BUBBLE_HEADROOM;
   const bubbleCenterX = shouldShowLeft
     ? offsetX - bubbleLayout.bubbleWidth / 2
@@ -172,10 +155,22 @@ export default function SpeechBubble({
   return (
     <group position={[0, offsetY, 0]}>
       <group position={[bubbleCenterX, 0, 0.03]}>
-        <RoundedBox args={[1, 1, 0.02]} scale={[bubbleLayout.bubbleWidth + BORDER_PADDING, bubbleLayout.bubbleHeight + BORDER_PADDING, 1]} radius={0.14} smoothness={4} position={[0, 0, -0.003]}>
+        <RoundedBox
+          args={[1, 1, 0.02]}
+          scale={[bubbleLayout.bubbleWidth + BORDER_PADDING, bubbleLayout.bubbleHeight + BORDER_PADDING, 1]}
+          radius={0.14}
+          smoothness={4}
+          position={[0, 0, -0.003]}
+        >
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </RoundedBox>
-        <RoundedBox args={[1, 1, 0.018]} scale={[bubbleLayout.bubbleWidth, bubbleLayout.bubbleHeight, 1]} radius={0.12} smoothness={4} position={[0, 0, 0]}>
+        <RoundedBox
+          args={[1, 1, 0.018]}
+          scale={[bubbleLayout.bubbleWidth, bubbleLayout.bubbleHeight, 1]}
+          radius={0.12}
+          smoothness={4}
+          position={[0, 0, 0]}
+        >
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </RoundedBox>
         <Text
