@@ -344,6 +344,7 @@ function GameSceneContents({
   speechTrigger,
   speechCharsPerSecond,
   onBoundaryHit,
+  onSpeechDismiss,
 }: {
   selectedCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -357,6 +358,7 @@ function GameSceneContents({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onBoundaryHit: (phrase: string) => void;
+  onSpeechDismiss: () => void;
 }) {
   return (
     <GameTouchSprite
@@ -372,6 +374,7 @@ function GameSceneContents({
       speechTrigger={speechTrigger}
       speechCharsPerSecond={speechCharsPerSecond}
       onBoundaryHit={onBoundaryHit}
+      onSpeechDismiss={onSpeechDismiss}
     />
   );
 }
@@ -389,6 +392,7 @@ function GameTouchSprite({
   speechTrigger,
   speechCharsPerSecond,
   onBoundaryHit,
+  onSpeechDismiss,
 }: {
   activeCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -402,6 +406,7 @@ function GameTouchSprite({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onBoundaryHit: (phrase: string) => void;
+  onSpeechDismiss: () => void;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -852,6 +857,7 @@ function GameTouchSprite({
           visible={speechVisible}
           trigger={speechTrigger}
           charsPerSecond={speechCharsPerSecond}
+          onDismiss={onSpeechDismiss}
         />
       </RigidBody>
     </>
@@ -1278,6 +1284,7 @@ export default function GameTouchCanvas() {
               speechTrigger={speechTrigger}
               speechCharsPerSecond={speechCharsPerSecond}
               onBoundaryHit={handleBoundaryHit}
+              onSpeechDismiss={hideSpeechBubble}
             />
           </Suspense>
         </Physics>
