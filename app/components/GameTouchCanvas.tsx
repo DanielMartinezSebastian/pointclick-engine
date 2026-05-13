@@ -21,6 +21,9 @@ import { SCENES, type SceneWall } from "../scenes/scenes";
 
 type MovementAction = GameDirection;
 type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
+type WallToolMode = "manual" | "points";
+type WallPointStart = { point: Vector2; resetSignal: number };
+type WallPointPreview = { start: Vector2; end: Vector2; resetSignal: number };
 type WallInteraction =
   | { mode: "move"; offsetX: number; offsetZ: number }
   | { mode: "resize"; handle: WallResizeHandle }
@@ -332,12 +335,16 @@ function GameSceneContents({
   debug,
   showDebugGround,
   showDebugWalls,
+  wallToolMode,
+  wallPointResetSignal,
 }: {
   selectedCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => void;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
+  wallToolMode: WallToolMode;
+  wallPointResetSignal: number;
 }) {
   return (
     <GameTouchSprite
@@ -346,6 +353,8 @@ function GameSceneContents({
       debug={debug}
       showDebugGround={showDebugGround}
       showDebugWalls={showDebugWalls}
+      wallToolMode={wallToolMode}
+      wallPointResetSignal={wallPointResetSignal}
     />
   );
 }
@@ -356,12 +365,16 @@ function GameTouchSprite({
   debug,
   showDebugGround,
   showDebugWalls,
+  wallToolMode,
+  wallPointResetSignal,
 }: {
   activeCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => void;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
+  wallToolMode: WallToolMode;
+  wallPointResetSignal: number;
 }) {
   const spriteRef = useRef<AnimatedSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -371,11 +384,14 @@ function GameTouchSprite({
   const currentActionRef = useRef<MovementAction>("idle");
   const lastLoggedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
+  const [wallPointPreviewState, setWallPointPreviewState] = useState<WallPointPreview | null>(null);
   const wallInteractionRef = useRef<WallInteraction>(null);
+  const wallPointStartRef = useRef<WallPointStart | null>(null);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
+  const addWallWithData = useSceneStore((s) => s.addWallWithData);
   const respawnSignal = useSceneStore((s) => s.respawnSignal);
 
   const clampToPlayableArea = useCallback((x: number, z: number) => {
@@ -399,9 +415,51 @@ function GameTouchSprite({
 
   const handleClickWorld = useCallback((x: number, z: number) => {
     if (wallInteractionRef.current) return;
+
+    if (debug && wallToolMode === "points") {
+      const clamped = clampToPlayableArea(x, z);
+      const clickedPoint = new Vector2(clamped.x, clamped.z);
+      const startPoint =
+        wallPointStartRef.current?.resetSignal === wallPointResetSignal
+          ? wallPointStartRef.current.point
+          : null;
+
+      if (!startPoint) {
+        wallPointStartRef.current = { point: clickedPoint, resetSignal: wallPointResetSignal };
+        setWallPointPreviewState({ start: clickedPoint, end: clickedPoint, resetSignal: wallPointResetSignal });
+        return;
+      }
+
+      const dx = clickedPoint.x - startPoint.x;
+      const dz = clickedPoint.y - startPoint.y;
+      const length = Math.sqrt(dx * dx + dz * dz);
+
+      if (length < MIN_WALL_HALF_EXTENT * 2) {
+        setWallPointPreviewState({ start: startPoint, end: clickedPoint, resetSignal: wallPointResetSignal });
+        return;
+      }
+
+      const halfHeight = 2;
+      const halfThickness = 0.25;
+      const centerX = (startPoint.x + clickedPoint.x) / 2;
+      const centerZ = (startPoint.y + clickedPoint.y) / 2;
+      const rotationY = -Math.atan2(dz, dx);
+
+      addWallWithData({
+        position: [centerX, ground.y + halfHeight, centerZ],
+        rotationY,
+        halfSize: [Math.max(MIN_WALL_HALF_EXTENT, length / 2), halfHeight, halfThickness],
+      });
+
+      // Encadenar segmentos: el segundo punto pasa a ser el nuevo punto inicial.
+      wallPointStartRef.current = { point: clickedPoint, resetSignal: wallPointResetSignal };
+      setWallPointPreviewState({ start: clickedPoint, end: clickedPoint, resetSignal: wallPointResetSignal });
+      return;
+    }
+
     const clamped = clampToPlayableArea(x, z);
     clickTargetRef.current = new Vector2(clamped.x, clamped.z);
-  }, [clampToPlayableArea]);
+  }, [addWallWithData, clampToPlayableArea, debug, ground.y, wallPointResetSignal, wallToolMode]);
 
   const stopWallInteraction = useCallback(() => {
     wallInteractionRef.current = null;
@@ -494,6 +552,21 @@ function GameTouchSprite({
       };
     });
   }, []);
+
+  const handleHoverPointWallTool = useCallback((x: number, z: number) => {
+    if (!debug || wallToolMode !== "points") return;
+    const startPoint =
+      wallPointStartRef.current?.resetSignal === wallPointResetSignal
+        ? wallPointStartRef.current.point
+        : null;
+    if (!startPoint) return;
+    const clamped = clampToPlayableArea(x, z);
+    setWallPointPreviewState({
+      start: startPoint,
+      end: new Vector2(clamped.x, clamped.z),
+      resetSignal: wallPointResetSignal,
+    });
+  }, [clampToPlayableArea, debug, wallPointResetSignal, wallToolMode]);
 
   const characterClips = useMemo(
     () => GAME_CHARACTER_CLIPS[activeCharacter],
@@ -651,14 +724,56 @@ function GameTouchSprite({
     }
   });
 
+  const wallPointPreview =
+    debug && wallToolMode === "points" && wallPointPreviewState?.resetSignal === wallPointResetSignal
+      ? wallPointPreviewState
+      : null;
+
+  const pointPreviewLength = wallPointPreview
+    ? Math.sqrt(
+      (wallPointPreview.end.x - wallPointPreview.start.x) ** 2
+      + (wallPointPreview.end.y - wallPointPreview.start.y) ** 2,
+    )
+    : 0;
+  const pointPreviewMidX = wallPointPreview ? (wallPointPreview.start.x + wallPointPreview.end.x) / 2 : 0;
+  const pointPreviewMidZ = wallPointPreview ? (wallPointPreview.start.y + wallPointPreview.end.y) / 2 : 0;
+  const pointPreviewRotationY = wallPointPreview
+    ? -Math.atan2(wallPointPreview.end.y - wallPointPreview.start.y, wallPointPreview.end.x - wallPointPreview.start.x)
+    : 0;
+
   return (
     <>
       <SceneGround
         onClickWorld={handleClickWorld}
-        onHoverWorld={debug ? handleHoverWorld : undefined}
+        onHoverWorld={
+          debug
+            ? (x, z) => {
+              handleHoverWorld(x, z);
+              handleHoverPointWallTool(x, z);
+            }
+            : undefined
+        }
         debug={debug && showDebugGround}
       />
       <SceneWalls debug={debug && showDebugWalls} onStartWallMove={handleStartWallMove} onStartWallResize={handleStartWallResize} />
+      {debug && wallToolMode === "points" && wallPointPreview && (
+        <>
+          <mesh position={[wallPointPreview.start.x, ground.y + 0.12, wallPointPreview.start.y]}>
+            <boxGeometry args={[0.22, 0.22, 0.22]} />
+            <meshBasicMaterial color="#00ff41" />
+          </mesh>
+          <mesh position={[wallPointPreview.end.x, ground.y + 0.12, wallPointPreview.end.y]}>
+            <boxGeometry args={[0.2, 0.2, 0.2]} />
+            <meshBasicMaterial color="#00d8ff" />
+          </mesh>
+          {pointPreviewLength >= 0.01 && (
+            <mesh position={[pointPreviewMidX, ground.y + 0.1, pointPreviewMidZ]} rotation={[0, pointPreviewRotationY, 0]}>
+              <boxGeometry args={[pointPreviewLength, 0.08, 0.08]} />
+              <meshBasicMaterial color="#00d8ff" transparent opacity={0.85} />
+            </mesh>
+          )}
+        </>
+      )}
       <CollisionCube />
       <CollisionSphere />
       <RigidBody
@@ -756,7 +871,15 @@ function DebugButton({
   );
 }
 
-function WallEditorPanel() {
+function WallEditorPanel({
+  wallToolMode,
+  setWallToolMode,
+  onResetPointTool,
+}: {
+  wallToolMode: WallToolMode;
+  setWallToolMode: (mode: WallToolMode) => void;
+  onResetPointTool: () => void;
+}) {
   const sceneId = useSceneStore((s) => s.sceneId);
   const walls = useSceneStore((s) => s.scene.walls);
   const groundY = useSceneStore((s) => s.scene.ground.y);
@@ -825,6 +948,25 @@ function WallEditorPanel() {
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
         Arrastra el wireframe amarillo para mover. Los cubos azules cambian el largo y los rosas el grosor.
       </span>
+
+      <PixelSelect
+        label="Herramienta"
+        value={wallToolMode}
+        onChange={(value) => setWallToolMode(value as WallToolMode)}
+        options={[
+          { label: "Manual", value: "manual" },
+          { label: "Por puntos", value: "points" },
+        ]}
+      />
+
+      {wallToolMode === "points" && (
+        <>
+          <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+            Click 1: punto inicial. Click 2: punto final y se crea el muro. El punto final queda como nuevo inicio.
+          </span>
+          <DebugButton label="Cancelar trazo" onClick={onResetPointTool} />
+        </>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
         <DebugButton label="Nuevo muro" onClick={addWall} />
@@ -987,6 +1129,8 @@ export default function GameTouchCanvas() {
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
   const [editorMode, setEditorMode] = useState<"walls" | "ground">("walls");
+  const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
+  const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
   const { scene, setScene, sceneId } = useSceneStore();
   const requestRespawn = useSceneStore((s) => s.requestRespawn);
 
@@ -1007,6 +1151,11 @@ export default function GameTouchCanvas() {
   const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
+  const handleWallToolModeChange = useCallback((mode: WallToolMode) => {
+    setWallToolMode(mode);
+    setWallPointResetSignal((signal) => signal + 1);
+  }, []);
+
   const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
   };
@@ -1026,6 +1175,8 @@ export default function GameTouchCanvas() {
       setIsDebugGroundVisible(true);
       setIsDebugWallsVisible(true);
       setEditorMode("walls");
+      setWallToolMode("manual");
+      setWallPointResetSignal((signal) => signal + 1);
     }
   }, [isDebug]);
 
@@ -1057,6 +1208,8 @@ export default function GameTouchCanvas() {
               debug={isDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}
+              wallToolMode={wallToolMode}
+              wallPointResetSignal={wallPointResetSignal}
             />
           </Suspense>
         </Physics>
@@ -1136,7 +1289,13 @@ export default function GameTouchCanvas() {
             ]}
           />
         )}
-        {isDebug && editorMode === "walls" && <WallEditorPanel />}
+        {isDebug && editorMode === "walls" && (
+          <WallEditorPanel
+            wallToolMode={wallToolMode}
+            setWallToolMode={handleWallToolModeChange}
+            onResetPointTool={() => setWallPointResetSignal((signal) => signal + 1)}
+          />
+        )}
         {isDebug && editorMode === "ground" && <GroundEditorPanel />}
       </div>
     </div>

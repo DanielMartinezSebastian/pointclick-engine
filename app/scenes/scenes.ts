@@ -81,6 +81,20 @@ export const SCENES: Record<string, Scene> = {
     },
     walls: [],
   },
+  personalRoom: {
+    id: "personalRoom",
+    label: "Personal Room",
+    background: "/assets/background/personalRoom.png",
+    playerSpawn: [0, -1.1, 13.44],
+    ground: {
+      minX: -17,
+      maxX: 16.8,
+      minZ: -7.6,
+      maxZ: 69.7,
+      y: -2.05,
+    },
+    walls: [],
+  },
   lavaAnimated: {
     id: "lavaAnimated",
     label: "Lava Animated",

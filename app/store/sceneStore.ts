@@ -33,6 +33,7 @@ type SceneStore = {
   updateGround: (updater: (ground: Scene["ground"]) => Scene["ground"]) => void;
   selectWall: (index: number | null) => void;
   addWall: () => void;
+  addWallWithData: (wall: SceneWall) => void;
   removeSelectedWall: () => void;
   updateSelectedWall: (updater: (wall: SceneWall) => SceneWall) => void;
   setPlayerPosition: (position: [number, number, number]) => void;
@@ -81,6 +82,17 @@ export const useSceneStore = create<SceneStore>((set) => ({
         scene: {
           ...state.scene,
           walls: [...state.scene.walls, newWall],
+        },
+        selectedWallIndex: state.scene.walls.length,
+      };
+    }),
+  addWallWithData: (wall) =>
+    set((state) => {
+      const nextWall = cloneWall(wall);
+      return {
+        scene: {
+          ...state.scene,
+          walls: [...state.scene.walls, nextWall],
         },
         selectedWallIndex: state.scene.walls.length,
       };
