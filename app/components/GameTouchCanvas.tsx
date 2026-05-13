@@ -1337,14 +1337,14 @@ export default function GameTouchCanvas() {
         gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
         onCreated={(state) => {
           try {
+            const glCtx = state.gl.getContext();
             console.log("Three: renderer created", {
-              contextAttributes: state.gl.getContextAttributes?.(),
-              version: state.gl.getParameter?.(state.gl.VERSION),
-              shadingLanguageVersion: state.gl.getParameter?.(state.gl.SHADING_LANGUAGE_VERSION),
+              contextAttributes: glCtx?.getContextAttributes?.(),
+              version: glCtx?.getParameter?.(glCtx.VERSION),
+              shadingLanguageVersion: glCtx?.getParameter?.(glCtx.SHADING_LANGUAGE_VERSION),
             });
-            // pintar un color sólido para confirmar que el canvas está activo
-            state.gl.setClearColor?.(0.06, 0.06, 0.06, 1);
-            state.gl.clear?.(state.gl.COLOR_BUFFER_BIT | state.gl.DEPTH_BUFFER_BIT);
+            state.gl.setClearColor(0x0f0f10, 1);
+            state.gl.clear();
           } catch (err) {
             console.error("Three: onCreated error", err);
           }
