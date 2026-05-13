@@ -6,13 +6,12 @@ import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, TextureLoader, Vector2 } from "three";
 
-import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
+import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import MouseCursor from "./MouseCursor";
 import PixelSelect from "./PixelSelect";
+import SpeechBubble from "./SpeechBubble";
 import {
-  ATLAS_SIZE,
-  GAME_CHARACTER_CLIPS,
-  GAME_CHARACTERS,
+  GAME_CHARACTER_SPRITES,
   type GameCharacterName,
   type GameDirection,
 } from "./sprite/clips";
@@ -35,8 +34,8 @@ const CLICK_ARRIVAL_THRESHOLD = 0.15;
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
 const DEPTH_FAR_Z = -16;
 const DEPTH_NEAR_Z = 8;
-const SPRITE_MIN_SCALE = 1.0;
-const SPRITE_MAX_SCALE = 2.1;
+const SPRITE_MIN_SCALE = 1.4;
+const SPRITE_MAX_SCALE = 2.94;
 const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
@@ -46,9 +45,9 @@ function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
   const angle = Math.atan2(Math.abs(vertical), Math.abs(horizontal));
   if (angle >= VERTICAL_ANGLE_THRESHOLD) {
-    return vertical < 0 ? "up" : "down";
+    return vertical < 0 ? "north" : "south";
   }
-  return horizontal < 0 ? "left" : "right";
+  return horizontal < 0 ? "west" : "east";
 }
 
 function getWallAxes(rotationY: number) {
@@ -337,14 +336,22 @@ function GameSceneContents({
   showDebugWalls,
   wallToolMode,
   wallPointResetSignal,
+  speechText,
+  speechVisible,
+  speechTrigger,
+  speechCharsPerSecond,
 }: {
   selectedCharacter: GameCharacterName;
-  onSpriteReady: (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => void;
+  onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
   wallToolMode: WallToolMode;
   wallPointResetSignal: number;
+  speechText: string;
+  speechVisible: boolean;
+  speechTrigger: number;
+  speechCharsPerSecond: number;
 }) {
   return (
     <GameTouchSprite
@@ -355,6 +362,10 @@ function GameSceneContents({
       showDebugWalls={showDebugWalls}
       wallToolMode={wallToolMode}
       wallPointResetSignal={wallPointResetSignal}
+      speechText={speechText}
+      speechVisible={speechVisible}
+      speechTrigger={speechTrigger}
+      speechCharsPerSecond={speechCharsPerSecond}
     />
   );
 }
@@ -367,16 +378,24 @@ function GameTouchSprite({
   showDebugWalls,
   wallToolMode,
   wallPointResetSignal,
+  speechText,
+  speechVisible,
+  speechTrigger,
+  speechCharsPerSecond,
 }: {
   activeCharacter: GameCharacterName;
-  onSpriteReady: (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => void;
+  onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
   wallToolMode: WallToolMode;
   wallPointResetSignal: number;
+  speechText: string;
+  speechVisible: boolean;
+  speechTrigger: number;
+  speechCharsPerSecond: number;
 }) {
-  const spriteRef = useRef<AnimatedSpriteHandle | null>(null);
+  const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
   const keysPressedRef = useRef(new Set<string>());
@@ -569,7 +588,7 @@ function GameTouchSprite({
   }, [clampToPlayableArea, debug, wallPointResetSignal, wallToolMode]);
 
   const characterClips = useMemo(
-    () => GAME_CHARACTER_CLIPS[activeCharacter],
+    () => GAME_CHARACTER_SPRITES[activeCharacter],
     [activeCharacter],
   );
 
@@ -674,7 +693,7 @@ function GameTouchSprite({
       setAction(nextAction);
     }
 
-    const speed = 3.5;
+    const speed = 7;
     const currentVelocity = body.linvel();
     // Movimiento vertical (Z) 3x más rápido que horizontal (X)
     const verticalSpeed = vertical !== 0 ? speed * 3 : speed;
@@ -692,10 +711,25 @@ function GameTouchSprite({
 
     const currentPosition = body.translation();
     const clampedPosition = clampToPlayableArea(currentPosition.x, currentPosition.z);
-    if (clampedPosition.x !== currentPosition.x || clampedPosition.z !== currentPosition.z) {
+    const wasClampedX = clampedPosition.x !== currentPosition.x;
+    const wasClampedZ = clampedPosition.z !== currentPosition.z;
+    if (wasClampedX || wasClampedZ) {
       body.setTranslation({ x: clampedPosition.x, y: currentPosition.y, z: clampedPosition.z }, true);
-      const currentVelocity = body.linvel();
-      body.setLinvel({ x: 0, y: currentVelocity.y, z: 0 }, true);
+      const vel = body.linvel();
+      // Solo cancelar la componente de velocidad que empuja HACIA el límite;
+      // si el jugador se mueve HACIA ADENTRO del área jugable, conservar esa velocidad.
+      body.setLinvel(
+        {
+          x: wasClampedX
+            ? (currentPosition.x > clampedPosition.x ? Math.min(0, vel.x) : Math.max(0, vel.x))
+            : vel.x,
+          y: vel.y,
+          z: wasClampedZ
+            ? (currentPosition.z > clampedPosition.z ? Math.min(0, vel.z) : Math.max(0, vel.z))
+            : vel.z,
+        },
+        true,
+      );
     }
 
     const safePosition = body.translation();
@@ -717,7 +751,8 @@ function GameTouchSprite({
 
     const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
     if (meshRef.current) {
-      meshRef.current.scale.set(spriteScale, spriteScale, 1);
+      const flipX = action === "west" ? -1 : 1;
+      meshRef.current.scale.set(spriteScale * flipX, spriteScale, 1);
       // El centro del collider queda en el medio del cuerpo; el sprite debe subir
       // exactamente su semialtura menos la semialtura del collider para apoyar los pies.
       meshRef.current.position.y = spriteScale - 0.95;
@@ -788,15 +823,19 @@ function GameTouchSprite({
         enabledRotations={[false, false, false]}
       >
         <CuboidCollider args={[0.55, 0.95, 0.18]} friction={2.2} restitution={0} />
-        <AnimatedSprite
+        <DavidSprite
           ref={spriteRef}
           meshRef={meshRef}
-          textureUrl="/assets/sprites/maniac-mansion.png"
-          atlas={ATLAS_SIZE}
-          clip={characterClips[action]}
+          animation={characterClips[action]}
           scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
-          flipX={false}
           isPaused={false}
+        />
+        <SpeechBubble
+          key={speechTrigger}
+          text={speechText}
+          visible={speechVisible}
+          trigger={speechTrigger}
+          charsPerSecond={speechCharsPerSecond}
         />
       </RigidBody>
     </>
@@ -1120,7 +1159,7 @@ function GroundEditorPanel() {
 }
 
 export default function GameTouchCanvas() {
-  const [selectedCharacter, setSelectedCharacter] = useState<GameCharacterName>("Dave");
+  const selectedCharacter: GameCharacterName = "Dave";
   const [isDebug, setIsDebug] = useState(() => {
     if (typeof window === "undefined") return false;
     return new URLSearchParams(window.location.search).has("debug");
@@ -1131,24 +1170,20 @@ export default function GameTouchCanvas() {
   const [editorMode, setEditorMode] = useState<"walls" | "ground">("walls");
   const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
   const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
+  const [speechDraft, setSpeechDraft] = useState("Hola. Este es un bocadillo de prueba.");
+  const [speechText, setSpeechText] = useState("");
+  const [speechVisible, setSpeechVisible] = useState(false);
+  const [speechTrigger, setSpeechTrigger] = useState(0);
+  const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
   const { scene, setScene, sceneId } = useSceneStore();
   const requestRespawn = useSceneStore((s) => s.requestRespawn);
-
-  const characterOptions = useMemo(
-    () =>
-      GAME_CHARACTERS.map((character) => ({
-        label: character.name,
-        value: character.name,
-      })),
-    [],
-  );
 
   const sceneOptions = useMemo(
     () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
     [],
   );
 
-  const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
+  const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
   const handleWallToolModeChange = useCallback((mode: WallToolMode) => {
@@ -1156,7 +1191,7 @@ export default function GameTouchCanvas() {
     setWallPointResetSignal((signal) => signal + 1);
   }, []);
 
-  const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
+  const handleSpriteReady = (spriteRef: React.RefObject<DavidSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
   };
 
@@ -1177,8 +1212,21 @@ export default function GameTouchCanvas() {
       setEditorMode("walls");
       setWallToolMode("manual");
       setWallPointResetSignal((signal) => signal + 1);
+      setSpeechVisible(false);
     }
   }, [isDebug]);
+
+  const runSpeechBubble = useCallback(() => {
+    const nextText = speechDraft.trim();
+    if (!nextText) return;
+    setSpeechText(nextText);
+    setSpeechVisible(true);
+    setSpeechTrigger((current) => current + 1);
+  }, [speechDraft]);
+
+  const hideSpeechBubble = useCallback(() => {
+    setSpeechVisible(false);
+  }, []);
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", cursor: "none" }}>
@@ -1210,6 +1258,10 @@ export default function GameTouchCanvas() {
               showDebugWalls={isDebugWallsVisible}
               wallToolMode={wallToolMode}
               wallPointResetSignal={wallPointResetSignal}
+              speechText={speechText}
+              speechVisible={speechVisible}
+              speechTrigger={speechTrigger}
+              speechCharsPerSecond={speechCharsPerSecond}
             />
           </Suspense>
         </Physics>
@@ -1265,12 +1317,6 @@ export default function GameTouchCanvas() {
           </div>
         )}
         <PixelSelect
-          label="Personaje"
-          value={selectedCharacter}
-          onChange={(value) => setSelectedCharacter(value as GameCharacterName)}
-          options={characterOptions}
-        />
-        <PixelSelect
           label="Escenario"
           value={sceneId}
           onChange={(value) => setScene(value)}
@@ -1288,6 +1334,42 @@ export default function GameTouchCanvas() {
               { label: "Editar suelo", value: "ground" },
             ]}
           />
+        )}
+        {isDebug && (
+          <div style={{ display: "grid", gap: "8px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
+            <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Bocadillo de dialogo</strong>
+            <textarea
+              value={speechDraft}
+              onChange={(e) => setSpeechDraft(e.target.value)}
+              placeholder="Escribe el texto para el personaje"
+              rows={4}
+              style={{
+                width: "100%",
+                minHeight: "84px",
+                borderRadius: "2px",
+                border: "2px solid #00ff41",
+                background: "rgb(8 12 32 / 90%)",
+                color: "#00ff41",
+                padding: "0.6rem",
+                fontSize: "11px",
+                fontFamily: "var(--font-pixel), monospace",
+                letterSpacing: "0.5px",
+                resize: "vertical",
+                outline: "none",
+                cursor: "none",
+              }}
+            />
+            <DebugNumberInput
+              label="Velocidad (chars/seg)"
+              value={speechCharsPerSecond}
+              step={1}
+              onChange={(value) => setSpeechCharsPerSecond(Math.max(1, Math.round(value)))}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <DebugButton label="Hablar" onClick={runSpeechBubble} disabled={speechDraft.trim().length === 0} />
+              <DebugButton label="Ocultar" onClick={hideSpeechBubble} disabled={!speechVisible} />
+            </div>
+          </div>
         )}
         {isDebug && editorMode === "walls" && (
           <WallEditorPanel

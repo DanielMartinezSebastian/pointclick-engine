@@ -1,20 +1,8 @@
-export type AnimationClip = {
-  startFrame: number;
-  endFrame: number;
+export type SpriteAnimation = {
+  frames: readonly string[];
   fps: number;
   loop?: boolean;
-  x: number;
-  y: number;
-  frameWidth: number;
-  frameHeight: number;
-  strideX: number;
-  offsetX?: number;
-  offsetY?: number;
-};
-
-export const ATLAS_SIZE = {
-  width: 712,
-  height: 628,
+  flipX?: boolean;
 };
 
 export type GameCharacterName =
@@ -28,9 +16,9 @@ export type GameCharacterName =
   | "Sandy"
   | "Radiation Suit";
 
-export type GameDirection = "idle" | "left" | "right" | "up" | "down";
+export type GameDirection = "idle" | "north" | "south" | "west" | "east";
 
-type CharacterClips = Record<GameDirection, AnimationClip>;
+type CharacterSprites = Record<GameDirection, SpriteAnimation>;
 
 type CharacterGridPosition = {
   name: GameCharacterName;
@@ -38,79 +26,42 @@ type CharacterGridPosition = {
   row: 0 | 1 | 2;
 };
 
-const FRAME_WIDTH = 26;
-const FRAME_HEIGHT = 56;
-const FRAME_STRIDE_X = 28;
-const FRAMES_PER_ROW = 8;
-const CHARACTER_COLUMN_ORIGINS = [0, 240, 480] as const;
-const CHARACTER_ROW_ORIGINS = [0, 216, 428] as const;
-const CHARACTER_ROW_Y_ADJUSTMENTS = [0, -4, -4] as const;
-const ROW_FRAME_X = 2;
-const ROW_FRAME_Y = 27;
-const ROW_VERTICAL_OFFSET = 60;
-const HALF_ROW_FRAME_COUNT = 4;
+const DAVE_SPRITE_ROOT = "/assets/sprites/david";
 
-const createClip = (
-  x: number,
-  y: number,
-  fps: number,
-  loop: boolean,
-  frameCount = FRAMES_PER_ROW,
-): AnimationClip => ({
-  x,
-  y,
-  frameWidth: FRAME_WIDTH,
-  frameHeight: FRAME_HEIGHT,
-  strideX: FRAME_STRIDE_X,
-  startFrame: 0,
-  endFrame: frameCount - 1,
-  fps,
-  loop,
-});
+const createFrameUrls = (prefix: string, count: number, startIndex = 1) =>
+  Array.from(
+    { length: count },
+    (_, index) =>
+      `${DAVE_SPRITE_ROOT}/${prefix}_${String(startIndex + index).padStart(4, "0")}.png`,
+  );
 
-const createCharacterClips = ({
-  column,
-  row,
-}: CharacterGridPosition): CharacterClips => {
-  const originX = CHARACTER_COLUMN_ORIGINS[column] + ROW_FRAME_X;
-  const originY =
-    CHARACTER_ROW_ORIGINS[row] + ROW_FRAME_Y + CHARACTER_ROW_Y_ADJUSTMENTS[row];
-
-  return {
-    idle: {
-      ...createClip(originX, originY, 1, true),
-      startFrame: 0,
-      endFrame: 0,
-    },
-    down: createClip(
-      originX,
-      originY + ROW_VERTICAL_OFFSET,
-      8,
-      true,
-      HALF_ROW_FRAME_COUNT,
-    ),
-    up: createClip(
-      originX + HALF_ROW_FRAME_COUNT * FRAME_STRIDE_X,
-      originY + ROW_VERTICAL_OFFSET,
-      8,
-      true,
-      HALF_ROW_FRAME_COUNT,
-    ),
-    left: createClip(
-      originX,
-      originY + ROW_VERTICAL_OFFSET * 2,
-      8,
-      true,
-      HALF_ROW_FRAME_COUNT,
-    ),
-    right: createClip(
-      originX + HALF_ROW_FRAME_COUNT * FRAME_STRIDE_X,
-      originY + ROW_VERTICAL_OFFSET * 2,
-      8,
-      true,
-      HALF_ROW_FRAME_COUNT,
-    ),
-  };
+const DAVE_CHARACTER_SPRITES: CharacterSprites = {
+  idle: {
+    frames: [`${DAVE_SPRITE_ROOT}/david_idle.png`],
+    fps: 1,
+    loop: true,
+  },
+  north: {
+    frames: createFrameUrls("david-walk-north", 9).slice().reverse(),
+    fps: 16,
+    loop: true,
+  },
+  south: {
+    frames: createFrameUrls("david-walk-south", 8, 3),
+    fps: 16,
+    loop: true,
+  },
+  west: {
+    frames: createFrameUrls("david-walk-west", 9).slice().reverse(),
+    fps: 16,
+    loop: true,
+    flipX: true,
+  },
+  east: {
+    frames: createFrameUrls("david-walk-west", 9).slice().reverse(),
+    fps: 16,
+    loop: true,
+  },
 };
 
 export const GAME_CHARACTERS = [
@@ -125,11 +76,8 @@ export const GAME_CHARACTERS = [
   { name: "Radiation Suit", column: 2, row: 2 },
 ] as const satisfies ReadonlyArray<CharacterGridPosition>;
 
-export const GAME_CHARACTER_CLIPS = Object.fromEntries(
-  GAME_CHARACTERS.map((character) => [
-    character.name,
-    createCharacterClips(character),
-  ]),
-) as Record<GameCharacterName, CharacterClips>;
+export const GAME_CHARACTER_SPRITES = Object.fromEntries(
+  GAME_CHARACTERS.map((character) => [character.name, DAVE_CHARACTER_SPRITES]),
+) as Record<GameCharacterName, CharacterSprites>;
 
-export const DAVE_CLIPS = GAME_CHARACTER_CLIPS.Dave;
+export const DAVE_SPRITES = DAVE_CHARACTER_SPRITES;

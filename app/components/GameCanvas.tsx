@@ -4,11 +4,9 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Mesh, Vector2 } from "three";
 
-import AnimatedSprite, { type AnimatedSpriteHandle } from "./sprite/AnimatedSprite";
+import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import {
-  ATLAS_SIZE,
-  GAME_CHARACTER_CLIPS,
-  GAME_CHARACTERS,
+  GAME_CHARACTER_SPRITES,
   type GameCharacterName,
   type GameDirection,
 } from "./sprite/clips";
@@ -24,9 +22,9 @@ function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
   const angle = Math.atan2(Math.abs(vertical), Math.abs(horizontal));
   if (angle >= VERTICAL_ANGLE_THRESHOLD) {
-    return vertical < 0 ? "up" : "down";
+    return vertical < 0 ? "north" : "south";
   }
-  return horizontal < 0 ? "left" : "right";
+  return horizontal < 0 ? "west" : "east";
 }
 
 function ClickPlane({ onClickWorld }: { onClickWorld: (x: number, y: number) => void }) {
@@ -50,9 +48,9 @@ function GameTouchSprite({
   onSpriteReady,
 }: {
   activeCharacter: GameCharacterName;
-  onSpriteReady: (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => void;
+  onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
 }) {
-  const spriteRef = useRef<AnimatedSpriteHandle | null>(null);
+  const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const keysPressedRef = useRef(new Set<string>());
   const clickTargetRef = useRef<Vector2 | null>(null);
@@ -66,7 +64,7 @@ function GameTouchSprite({
   }, []);
 
   const characterClips = useMemo(
-    () => GAME_CHARACTER_CLIPS[activeCharacter],
+    () => GAME_CHARACTER_SPRITES[activeCharacter],
     [activeCharacter],
   );
 
@@ -158,7 +156,7 @@ function GameTouchSprite({
       return;
     }
 
-    const speed = 2.5;
+    const speed = 5;
     const prevX = mesh.position.x;
     const prevY = mesh.position.y;
 
@@ -191,14 +189,11 @@ function GameTouchSprite({
   return (
     <>
       <ClickPlane onClickWorld={handleClickWorld} />
-      <AnimatedSprite
+      <DavidSprite
         ref={spriteRef}
         meshRef={meshRef}
-        textureUrl="/assets/sprites/maniac-mansion.png"
-        atlas={ATLAS_SIZE}
-        clip={characterClips[action]}
-        scale={[1.6, 1.6, 1]}
-        flipX={false}
+        animation={characterClips[action]}
+        scale={[2.24, 2.24, 1]}
         isPaused={false}
       />
     </>
@@ -206,11 +201,11 @@ function GameTouchSprite({
 }
 
 export default function GameTouchCanvas() {
-  const [selectedCharacter, setSelectedCharacter] = useState<GameCharacterName>("Dave");
+  const selectedCharacter: GameCharacterName = "Dave";
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
-  const spriteRefRef = useRef<React.RefObject<AnimatedSpriteHandle | null> | null>(null);
+  const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
 
-  const handleSpriteReady = (spriteRef: React.RefObject<AnimatedSpriteHandle | null>) => {
+  const handleSpriteReady = (spriteRef: React.RefObject<DavidSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
   };
 
@@ -241,29 +236,6 @@ export default function GameTouchCanvas() {
           boxShadow: "0 14px 32px rgb(0 0 0 / 28%)",
         }}
       >
-        <label style={{ display: "grid", gap: "6px", fontSize: "0.8rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-          Debug personaje
-          <select
-            value={selectedCharacter}
-            onChange={(event) => setSelectedCharacter(event.target.value as GameCharacterName)}
-            style={{
-              appearance: "none",
-              borderRadius: "12px",
-              border: "1px solid rgb(255 255 255 / 18%)",
-              background: "rgb(12 19 48 / 82%)",
-              color: "white",
-              padding: "0.7rem 0.8rem",
-              fontSize: "0.98rem",
-              outline: "none",
-            }}
-          >
-            {GAME_CHARACTERS.map((character) => (
-              <option key={character.name} value={character.name}>
-                {character.name}
-              </option>
-            ))}
-          </select>
-        </label>
         <strong style={{ fontSize: "0.95rem" }}>{readyMessage}</strong>
       </div>
     </div>
