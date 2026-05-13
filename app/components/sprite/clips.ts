@@ -5,16 +5,7 @@ export type SpriteAnimation = {
   flipX?: boolean;
 };
 
-export type GameCharacterName =
-  | "Dave"
-  | "Razor"
-  | "Bernard"
-  | "Syd"
-  | "Wendy"
-  | "Jeff"
-  | "Michael"
-  | "Sandy"
-  | "Radiation Suit";
+export type GameCharacterName = "Dave";
 
 export type GameDirection = "idle" | "north" | "south" | "west" | "east";
 
@@ -66,14 +57,6 @@ const DAVE_CHARACTER_SPRITES: CharacterSprites = {
 
 export const GAME_CHARACTERS = [
   { name: "Dave", column: 0, row: 0 },
-  { name: "Razor", column: 1, row: 0 },
-  { name: "Bernard", column: 2, row: 0 },
-  { name: "Syd", column: 0, row: 1 },
-  { name: "Wendy", column: 1, row: 1 },
-  { name: "Jeff", column: 2, row: 1 },
-  { name: "Michael", column: 0, row: 2 },
-  { name: "Sandy", column: 1, row: 2 },
-  { name: "Radiation Suit", column: 2, row: 2 },
 ] as const satisfies ReadonlyArray<CharacterGridPosition>;
 
 export const GAME_CHARACTER_SPRITES = Object.fromEntries(
