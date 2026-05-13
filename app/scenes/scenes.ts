@@ -219,4 +219,4 @@ export const SCENES: Record<string, Scene> = {
   },
 };
 
-export const DEFAULT_SCENE_ID = "town";
+export const DEFAULT_SCENE_ID = "personalRoom";

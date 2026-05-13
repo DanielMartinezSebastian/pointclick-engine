@@ -1,7 +1,7 @@
 "use client";
 
 import { RoundedBox, Text } from "@react-three/drei";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useSceneStore } from "../store/sceneStore";
 
@@ -10,6 +10,7 @@ type SpeechBubbleProps = {
   visible: boolean;
   trigger: number;
   charsPerSecond?: number;
+  onDismiss?: () => void;
 };
 
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
@@ -31,6 +32,9 @@ const MIN_BUBBLE_WIDTH = 0.6;
 const MAX_BUBBLE_WIDTH = 5.2;
 const MIN_BUBBLE_HEIGHT = 0.45;
 const MAX_BUBBLE_HEIGHT = 3.8;
+const MS_PER_WORD_READ = 286;   // ~3.5 palabras/s, ritmo cómodo de lectura
+const MIN_READ_MS = 2080;       // mínimo aunque el texto sea brevísimo
+const MAX_READ_MS = 10400;      // techo para textos muy largos
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -66,11 +70,14 @@ export default function SpeechBubble({
   visible,
   trigger,
   charsPerSecond = 30,
+  onDismiss,
 }: SpeechBubbleProps) {
   const playerPosition = useSceneStore((s) => s.playerPosition);
   const ground = useSceneStore((s) => s.scene.ground);
   const normalizedText = useMemo(() => text.trim(), [text]);
   const [displayedText, setDisplayedText] = useState("");
+
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!visible || normalizedText.length === 0) return;
@@ -84,13 +91,23 @@ export default function SpeechBubble({
 
       if (index >= normalizedText.length) {
         window.clearInterval(timer);
+
+        if (onDismiss) {
+          const wordCount = normalizedText.trim().split(/\s+/).length;
+          const readMs = clamp(wordCount * MS_PER_WORD_READ, MIN_READ_MS, MAX_READ_MS);
+          dismissTimerRef.current = setTimeout(onDismiss, readMs);
+        }
       }
     }, msPerChar);
 
     return () => {
       window.clearInterval(timer);
+      if (dismissTimerRef.current !== null) {
+        clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
     };
-  }, [charsPerSecond, normalizedText, trigger, visible]);
+  }, [charsPerSecond, normalizedText, onDismiss, trigger, visible]);
 
   const shouldShowLeft = useMemo(() => {
     const WORLD_EDGE_PADDING = 0.9;

@@ -5,11 +5,13 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, TextureLoader, Vector2 } from "three";
+import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import MouseCursor from "./MouseCursor";
 import PixelSelect from "./PixelSelect";
 import SpeechBubble from "./SpeechBubble";
+import { getRandomPhrase } from "../dialogs/getRandomPhrase";
 import {
   GAME_CHARACTER_SPRITES,
   type GameCharacterName,
@@ -38,6 +40,7 @@ const SPRITE_MIN_SCALE = 1.4;
 const SPRITE_MAX_SCALE = 2.94;
 const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
+const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
 
@@ -340,6 +343,8 @@ function GameSceneContents({
   speechVisible,
   speechTrigger,
   speechCharsPerSecond,
+  onBoundaryHit,
+  onSpeechDismiss,
 }: {
   selectedCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -352,6 +357,8 @@ function GameSceneContents({
   speechVisible: boolean;
   speechTrigger: number;
   speechCharsPerSecond: number;
+  onBoundaryHit: (phrase: string) => void;
+  onSpeechDismiss: () => void;
 }) {
   return (
     <GameTouchSprite
@@ -366,6 +373,8 @@ function GameSceneContents({
       speechVisible={speechVisible}
       speechTrigger={speechTrigger}
       speechCharsPerSecond={speechCharsPerSecond}
+      onBoundaryHit={onBoundaryHit}
+      onSpeechDismiss={onSpeechDismiss}
     />
   );
 }
@@ -382,6 +391,8 @@ function GameTouchSprite({
   speechVisible,
   speechTrigger,
   speechCharsPerSecond,
+  onBoundaryHit,
+  onSpeechDismiss,
 }: {
   activeCharacter: GameCharacterName;
   onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
@@ -394,6 +405,8 @@ function GameTouchSprite({
   speechVisible: boolean;
   speechTrigger: number;
   speechCharsPerSecond: number;
+  onBoundaryHit: (phrase: string) => void;
+  onSpeechDismiss: () => void;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -406,6 +419,7 @@ function GameTouchSprite({
   const [wallPointPreviewState, setWallPointPreviewState] = useState<WallPointPreview | null>(null);
   const wallInteractionRef = useRef<WallInteraction>(null);
   const wallPointStartRef = useRef<WallPointStart | null>(null);
+  const lastBoundaryHitRef = useRef<number>(0);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const ground = useSceneStore((s) => s.scene.ground);
@@ -730,6 +744,13 @@ function GameTouchSprite({
         },
         true,
       );
+
+      const now = performance.now();
+      if (now - lastBoundaryHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
+        lastBoundaryHitRef.current = now;
+        const phrase = getRandomPhrase("boundaryHit");
+        onBoundaryHit(phrase);
+      }
     }
 
     const safePosition = body.translation();
@@ -836,6 +857,7 @@ function GameTouchSprite({
           visible={speechVisible}
           trigger={speechTrigger}
           charsPerSecond={speechCharsPerSecond}
+          onDismiss={onSpeechDismiss}
         />
       </RigidBody>
     </>
@@ -1160,10 +1182,8 @@ function GroundEditorPanel() {
 
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
-  const [isDebug, setIsDebug] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return new URLSearchParams(window.location.search).has("debug");
-  });
+  const pathname = usePathname();
+  const isDebug = pathname === "/debug";
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
@@ -1195,26 +1215,11 @@ export default function GameTouchCanvas() {
     spriteRefRef.current = spriteRef;
   };
 
-  const handleToggleDebugMode = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const nextIsDebug = !isDebug;
-    const url = new URL(window.location.href);
-    if (nextIsDebug) {
-      url.searchParams.set("debug", "");
-    } else {
-      url.searchParams.delete("debug");
-    }
-    window.history.replaceState({}, "", url.toString());
-    setIsDebug(nextIsDebug);
-    if (!nextIsDebug) {
-      setIsDebugGroundVisible(true);
-      setIsDebugWallsVisible(true);
-      setEditorMode("walls");
-      setWallToolMode("manual");
-      setWallPointResetSignal((signal) => signal + 1);
-      setSpeechVisible(false);
-    }
-  }, [isDebug]);
+  const handleBoundaryHit = useCallback((phrase: string) => {
+    setSpeechText(phrase);
+    setSpeechVisible(true);
+    setSpeechTrigger((current) => current + 1);
+  }, []);
 
   const runSpeechBubble = useCallback(() => {
     const nextText = speechDraft.trim();
@@ -1262,49 +1267,41 @@ export default function GameTouchCanvas() {
               speechVisible={speechVisible}
               speechTrigger={speechTrigger}
               speechCharsPerSecond={speechCharsPerSecond}
+              onBoundaryHit={handleBoundaryHit}
+              onSpeechDismiss={hideSpeechBubble}
             />
           </Suspense>
         </Physics>
       </Canvas>
 
-      <div
-        style={{
-          position: "absolute",
-          top: "16px",
-          left: debugPanelSide === "left" ? "16px" : undefined,
-          right: debugPanelSide === "right" ? "16px" : undefined,
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          zIndex: 20,
-          padding: "1rem 1.2rem",
-          borderRadius: "2px",
-          border: "3px solid #00ff41",
-          background: "rgb(12 19 48 / 95%)",
-          color: "#00ff41",
-          backdropFilter: "blur(4px)",
-          minWidth: "260px",
-          maxWidth: "420px",
-          maxHeight: "calc(100vh - 32px)",
-          overflowY: "auto",
-          boxShadow: "0 0 16px rgba(0, 255, 65, 0.3), inset 0 0 8px rgba(0, 255, 65, 0.1)",
-          fontFamily: "var(--font-pixel), monospace",
-          fontSize: "13px",
-          letterSpacing: "1px",
-          textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
-        }}
-      >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-          <DebugButton
-            label={isDebug ? "Salir de debug" : "Entrar en debug"}
-            onClick={handleToggleDebugMode}
-          />
-          <DebugButton
-            label={debugPanelSide === "left" ? "Panel a derecha" : "Panel a izquierda"}
-            onClick={() => setDebugPanelSide((side) => (side === "left" ? "right" : "left"))}
-          />
-        </div>
-        {isDebug && (
+      {isDebug && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: debugPanelSide === "left" ? "16px" : undefined,
+            right: debugPanelSide === "right" ? "16px" : undefined,
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            zIndex: 20,
+            padding: "1rem 1.2rem",
+            borderRadius: "2px",
+            border: "3px solid #00ff41",
+            background: "rgb(12 19 48 / 95%)",
+            color: "#00ff41",
+            backdropFilter: "blur(4px)",
+            minWidth: "260px",
+            maxWidth: "420px",
+            maxHeight: "calc(100vh - 32px)",
+            overflowY: "auto",
+            boxShadow: "0 0 16px rgba(0, 255, 65, 0.3), inset 0 0 8px rgba(0, 255, 65, 0.1)",
+            fontFamily: "var(--font-pixel), monospace",
+            fontSize: "13px",
+            letterSpacing: "1px",
+            textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
+          }}
+        >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             <DebugButton
               label={isDebugGroundVisible ? "Ocultar suelo" : "Mostrar suelo"}
@@ -1315,7 +1312,10 @@ export default function GameTouchCanvas() {
               onClick={() => setIsDebugWallsVisible((visible) => !visible)}
             />
           </div>
-        )}
+          <DebugButton
+            label={debugPanelSide === "left" ? "Panel a derecha" : "Panel a izquierda"}
+            onClick={() => setDebugPanelSide((side) => (side === "left" ? "right" : "left"))}
+          />
         <PixelSelect
           label="Escenario"
           value={sceneId}
@@ -1379,7 +1379,8 @@ export default function GameTouchCanvas() {
           />
         )}
         {isDebug && editorMode === "ground" && <GroundEditorPanel />}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
