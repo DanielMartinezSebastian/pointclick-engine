@@ -12,7 +12,17 @@ import {
   TextureLoader,
 } from "three";
 
-import type { AnimationClip } from "./clips";
+type AnimationClip = {
+  x: number;
+  y: number;
+  frameWidth: number;
+  frameHeight: number;
+  strideX: number;
+  startFrame: number;
+  endFrame: number;
+  fps: number;
+  loop?: boolean;
+};
 
 type AtlasGrid = {
   width: number;
