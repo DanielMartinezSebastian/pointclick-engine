@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
@@ -306,6 +306,30 @@ function CameraController() {
         : groundCenterX;
     camera.position.setX(MathUtils.lerp(camera.position.x, clampedX, 0.1));
   });
+
+  return null;
+}
+
+// Ajusta el zoom de la cámara ortográfica para que la altura visible
+// en unidades mundo coincida con el alto deseado de la escena.
+function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHeight?: number }) {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    const cam = camera as ThreeOrthoCamera;
+    if (!cam) return;
+
+    const compute = () => {
+      // Evitar división por cero
+      const pixelHeight = Math.max(1, size.height || (typeof window !== 'undefined' ? window.innerHeight : 800));
+      const zoom = pixelHeight / desiredWorldHeight;
+      cam.zoom = zoom;
+      cam.updateProjectionMatrix();
+    };
+
+    compute();
+    // Recalcular si cambia el tamaño del canvas
+  }, [camera, size.height, desiredWorldHeight]);
 
   return null;
 }
@@ -1375,7 +1399,7 @@ export default function GameTouchCanvas() {
   }, [sceneId, showSpeechBubble]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
 
       <Canvas
         gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
@@ -1395,7 +1419,8 @@ export default function GameTouchCanvas() {
         }}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, background: "transparent", display: "block" }}
       >
-        <OrthographicCamera makeDefault position={CAMERA_POSITION} rotation={[-0.24, 0, 0]} zoom={56} near={0.01} far={120} />
+        <OrthographicCamera makeDefault position={CAMERA_POSITION} rotation={[-0.24, 0, 0]} near={0.01} far={120} />
+        <CameraFitHeight desiredWorldHeight={19.28} />
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
