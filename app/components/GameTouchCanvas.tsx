@@ -1,10 +1,10 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
+import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
 import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
@@ -17,7 +17,13 @@ import {
   type GameDirection,
 } from "./sprite/clips";
 import { useSceneStore } from "../store/sceneStore";
+import dynamic from "next/dynamic";
 import { SCENES, type SceneWall } from "../scenes/scenes";
+import { useMobileInputStore } from "../store/mobileInputStore";
+
+// Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
+// táctil se realiza dentro del propio componente con window garantizado.
+const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 
 type MovementAction = GameDirection;
 type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
@@ -281,12 +287,36 @@ function SceneWalls({
 }
 
 // ---------------------------------------------------------------------------
+// CameraController — sigue al jugador en X con lerp y clamping por ground
+// Obtiene camera y size del estado del frame para no violar la regla
+// react-hooks/immutability; usa setX() en lugar de asignación directa.
+// ---------------------------------------------------------------------------
+function CameraController() {
+  useFrame(({ camera, size }) => {
+    const { playerPosition, scene: { ground } } = useSceneStore.getState();
+    const zoom = (camera as ThreeOrthoCamera).zoom;
+    const halfViewW = size.width / (2 * zoom);
+    const groundCenterX = (ground.minX + ground.maxX) / 2;
+    const minCamX = ground.minX + halfViewW;
+    const maxCamX = ground.maxX - halfViewW;
+    const targetX = playerPosition[0];
+    const clampedX =
+      minCamX <= maxCamX
+        ? MathUtils.clamp(targetX, minCamX, maxCamX)
+        : groundCenterX;
+    camera.position.setX(MathUtils.lerp(camera.position.x, clampedX, 0.1));
+  });
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // BackgroundPlane — plano con textura anclado a la cámara
 // ---------------------------------------------------------------------------
 function BackgroundPlane({ url }: { url: string | null | undefined }) {
   const [texture, setTexture] = useState<any>(null);
   const meshRef = useRef<Mesh | null>(null);
-  const { camera } = useThree();
+  const ground = useSceneStore((s) => s.scene.ground);
 
   useEffect(() => {
     if (!url) return;
@@ -321,14 +351,23 @@ function BackgroundPlane({ url }: { url: string | null | undefined }) {
   }
 
   const height = 19.28;
+  const groundCenterX = (ground.minX + ground.maxX) / 2;
+  // Tamaño pixel-perfecto: zoom fijo = 56 → 1 px = 1/56 unidades mundo.
+  // NO estirar: los muros están calibrados a esta escala exacta.
   const width = height * aspect;
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     if (!meshRef.current) return;
     const dir = new Vector3();
     camera.getWorldDirection(dir);
-    const distance = 10; // distancia fija delante de la cámara
-    meshRef.current.position.copy(camera.position).add(dir.multiplyScalar(distance));
+    const distance = 10;
+    // Seguir cámara en Y y Z para mantener la profundidad visual correcta,
+    // pero fijar X al centro del mundo: así el fondo se desplaza en bloque
+    // con los elementos del juego cuando la cámara panea horizontalmente.
+    meshRef.current.position
+      .copy(camera.position)
+      .addScaledVector(dir, distance);
+    meshRef.current.position.x = groundCenterX;
     meshRef.current.quaternion.copy(camera.quaternion);
   });
 
@@ -741,7 +780,13 @@ function GameTouchSprite({
     let horizontal = 0;
     let vertical = 0;
 
-    if (anyKeyPressed) {
+    // Prioridad: joystick táctil > teclado > click-to-move
+    const joystick = useMobileInputStore.getState();
+    if (joystick.active) {
+      horizontal = joystick.x;
+      vertical = joystick.z;
+      clickTargetRef.current = null;
+    } else if (anyKeyPressed) {
       horizontal = Number(moveRight) - Number(moveLeft);
       vertical = Number(moveDown) - Number(moveUp);
     } else if (clickTargetRef.current) {
@@ -1246,7 +1291,6 @@ export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const pathname = usePathname();
   const [isDebug, setIsDebug] = useState(false);
-
   useEffect(() => {
     const hasQuery = typeof window !== "undefined" && window.location.search.includes("debug");
     const next = pathname === "/debug" || hasQuery;
@@ -1356,6 +1400,7 @@ export default function GameTouchCanvas() {
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
         <BackgroundPlane url={scene.background} />
+        <CameraController />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
             <GameSceneContents
@@ -1377,6 +1422,7 @@ export default function GameTouchCanvas() {
         </Physics>
       </Canvas>
 
+      <Joystick />
       {isDebug && (
         <div
           style={{
