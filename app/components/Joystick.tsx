@@ -40,7 +40,7 @@ export default function Joystick() {
       const manager = create({
         zone: containerRef.current,
         mode: "static",
-        position: { left: "50%", top: "50%" },
+        position: { right: "50%", top: "50%" },
         color: "white",
         size: 100,
         restJoystick: true,
