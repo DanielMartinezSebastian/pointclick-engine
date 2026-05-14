@@ -82,7 +82,7 @@ export default function Joystick() {
       style={{
         position: "fixed",
         bottom: "48px",
-        left: "40px",
+        right: "40px",
         width: "120px",
         height: "120px",
         zIndex: 100,
