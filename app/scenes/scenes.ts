@@ -1,9 +1,33 @@
+import type { DialogKey } from "../dialogs/types";
+
 export type SceneWall = {
   position: [number, number, number];
   /** Rotation around Y axis in radians */
   rotationY?: number;
   /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
   halfSize: [number, number, number];
+};
+
+export type SceneInteractionDialogKeys = {
+  hit: DialogKey;
+  miss: DialogKey;
+};
+
+export type SceneInteraction = {
+  id: string;
+  kind: "drop-target";
+  /** World-space center position [x, y, z] */
+  position: [number, number, number];
+  /** Rotation around Y axis in radians */
+  rotationY?: number;
+  /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
+  halfSize: [number, number, number];
+  /** If true, character collides and cannot pass through this interaction */
+  hasCollision?: boolean;
+  /** Item ids accepted by this interaction. If omitted, any item can be accepted. */
+  acceptsItemIds?: string[];
+  dialogKeys: SceneInteractionDialogKeys;
+  label: string;
 };
 
 export type SceneGround = {
@@ -26,6 +50,7 @@ export type Scene = {
   playerSpawn: [number, number, number];
   ground: SceneGround;
   walls: SceneWall[];
+  interactions: SceneInteraction[];
 };
 
 export const SCENES: Record<string, Scene> = {
@@ -52,6 +77,7 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [5.8, 3, 2],
       },
     ],
+    interactions: [],
   },
   dungeon: {
     id: "dungeon",
@@ -66,6 +92,7 @@ export const SCENES: Record<string, Scene> = {
       y: -3.15,
     },
     walls: [],
+    interactions: [],
   },
   volcano: {
     id: "volcano",
@@ -80,6 +107,7 @@ export const SCENES: Record<string, Scene> = {
       y: -2.05,
     },
     walls: [],
+    interactions: [],
   },
   personalRoom: {
     id: "personalRoom",
@@ -202,6 +230,21 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [1.9532208005620664, 2, 0.25],
       },
     ],
+    interactions: [
+      {
+        id: "personal-room-gameboy-drop-target",
+        kind: "drop-target",
+        label: "Soporte del Gameboy",
+        position: [-3.83, -1.4, 11.01],
+        halfSize: [0.95, 0.55, 0.95],
+        hasCollision: true,
+        acceptsItemIds: ["gameboy"],
+        dialogKeys: {
+          hit: "inventoryDropHit",
+          miss: "inventoryDropMiss",
+        },
+      },
+    ],
   },
   lavaAnimated: {
     id: "lavaAnimated",
@@ -216,6 +259,7 @@ export const SCENES: Record<string, Scene> = {
       y: -2.05,
     },
     walls: [],
+    interactions: [],
   },
 };
 

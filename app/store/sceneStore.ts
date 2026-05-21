@@ -3,6 +3,7 @@ import {
   SCENES,
   DEFAULT_SCENE_ID,
   type Scene,
+  type SceneInteraction,
   type SceneWall,
 } from "../scenes/scenes";
 
@@ -14,12 +15,25 @@ function cloneWall(wall: SceneWall): SceneWall {
   };
 }
 
+function cloneInteraction(interaction: SceneInteraction): SceneInteraction {
+  return {
+    ...interaction,
+    position: [...interaction.position] as [number, number, number],
+    halfSize: [...interaction.halfSize] as [number, number, number],
+    acceptsItemIds: interaction.acceptsItemIds
+      ? [...interaction.acceptsItemIds]
+      : undefined,
+    dialogKeys: { ...interaction.dialogKeys },
+  };
+}
+
 function cloneScene(scene: Scene): Scene {
   return {
     ...scene,
     playerSpawn: [...scene.playerSpawn] as [number, number, number],
     ground: { ...scene.ground },
     walls: scene.walls.map(cloneWall),
+    interactions: scene.interactions.map(cloneInteraction),
   };
 }
 

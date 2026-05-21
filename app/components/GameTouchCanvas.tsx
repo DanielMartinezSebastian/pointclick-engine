@@ -18,8 +18,12 @@ import {
 } from "./sprite/clips";
 import { useSceneStore } from "../store/sceneStore";
 import dynamic from "next/dynamic";
-import { SCENES, type SceneWall } from "../scenes/scenes";
+import { SCENES, type SceneInteraction, type SceneWall } from "../scenes/scenes";
 import { useMobileInputStore } from "../store/mobileInputStore";
+import { DraggedInventoryGhost, InventoryUI, type InventorySlots, type InventoryStack } from "./InventoryUI";
+import { SceneDropTargets, type DraggedInventoryPayload } from "./inventory/SceneDropTargets";
+import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneItems";
+import { getItemDefinition, resolveItemRule } from "../items";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -48,6 +52,58 @@ const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
+
+function createInitialInventorySlots(): InventorySlots {
+  return Array.from({ length: 9 }, (_, index) => {
+    if (index !== 0) return null;
+    return {
+      id: "gameboy",
+      name: "Gameboy",
+      spriteUrl: "/assets/gameboy/gameboy.png",
+      quantity: 1,
+    } as InventoryStack;
+  });
+}
+
+function removeOneFromSlot(slots: InventorySlots, slotIndex: number): InventorySlots {
+  const slot = slots[slotIndex];
+  if (!slot) return slots;
+  const next = [...slots];
+  if (slot.quantity <= 1) {
+    next[slotIndex] = null;
+  } else {
+    next[slotIndex] = { ...slot, quantity: slot.quantity - 1 };
+  }
+  return next;
+}
+
+function addOneToInventory(slots: InventorySlots, stack: Omit<InventoryStack, "quantity">): { slots: InventorySlots; added: boolean } {
+  const existingIndex = slots.findIndex((current) => current?.id === stack.id);
+  if (existingIndex >= 0) {
+    const next = [...slots];
+    const existing = next[existingIndex];
+    if (!existing) return { slots, added: false };
+    next[existingIndex] = { ...existing, quantity: existing.quantity + 1 };
+    return { slots: next, added: true };
+  }
+
+  const emptyIndex = slots.findIndex((current) => current == null);
+  if (emptyIndex < 0) {
+    return { slots, added: false };
+  }
+
+  const next = [...slots];
+  next[emptyIndex] = { ...stack, quantity: 1 };
+  return { slots: next, added: true };
+}
+
+function getInteractionWorldPosition(interaction: SceneInteraction): [number, number, number] {
+  return [
+    interaction.position[0],
+    interaction.position[1] + interaction.halfSize[1] + 0.175,
+    interaction.position[2],
+  ];
+}
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -403,31 +459,6 @@ function BackgroundPlane({ url }: { url: string | null | undefined }) {
       <planeGeometry args={[width, height]} />
       <meshBasicMaterial map={texture} side={DoubleSide} depthTest={false} depthWrite={false} />
     </mesh>
-  );
-}
-
-function CollisionCube() {
-  const groundY = useSceneStore((s) => s.scene.ground.y);
-  // Posicionar sobre el suelo: groundY + collider-height + half-size del cubo
-  const posY = groundY + 0.1 + 0.55;
-
-  return (
-    <RigidBody
-      type="dynamic"
-      colliders={false}
-      position={[-3.83, posY, 11.01]}
-      gravityScale={1.2}
-      linearDamping={1.2}
-      angularDamping={1.8}
-      ccd
-      enabledRotations={[false, false, false]}
-    >
-      <CuboidCollider args={[0.55, 0.55, 0.55]} friction={2.8} restitution={0} />
-      <mesh>
-        <boxGeometry args={[1.1, 1.1, 1.1]} />
-        <meshStandardMaterial color="#ffb000" roughness={0.7} metalness={0.1} />
-      </mesh>
-    </RigidBody>
   );
 }
 
@@ -961,7 +992,6 @@ function GameTouchSprite({
           )}
         </>
       )}
-      <CollisionCube />
       <CollisionSphere />
       <RigidBody
         ref={characterBodyRef}
@@ -1321,7 +1351,7 @@ export default function GameTouchCanvas() {
     setIsDebug(next);
      
     console.log("GameTouchCanvas: debug mode ->", next, { pathname, hasQuery });
-  }, [isDebug]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!isDebug) return;
@@ -1332,7 +1362,7 @@ export default function GameTouchCanvas() {
     return () => {
       styleEl.remove();
     };
-  }, [pathname]);
+  }, [isDebug]);
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
@@ -1344,7 +1374,14 @@ export default function GameTouchCanvas() {
   const [speechVisible, setSpeechVisible] = useState(false);
   const [speechTrigger, setSpeechTrigger] = useState(0);
   const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
-  const { scene, setScene, sceneId } = useSceneStore();
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() => createInitialInventorySlots());
+  const [draggedStack, setDraggedStack] = useState<(DraggedInventoryPayload & { pointerX: number; pointerY: number }) | null>(null);
+  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
+  const sceneId = useSceneStore((s) => s.sceneId);
+  const sceneBackground = useSceneStore((s) => s.scene.background);
+  const setScene = useSceneStore((s) => s.setScene);
+  const sceneInteractions = useSceneStore((s) => s.scene.interactions);
   const requestRespawn = useSceneStore((s) => s.requestRespawn);
 
   const sceneOptions = useMemo(
@@ -1386,6 +1423,114 @@ export default function GameTouchCanvas() {
     setSpeechVisible(false);
   }, []);
 
+  const handleInventoryDropHit = useCallback((interaction: SceneInteraction, payload: DraggedInventoryPayload) => {
+    const itemDefinition = getItemDefinition(payload.stack.id);
+    if (!itemDefinition) {
+      showSpeechBubble("No conozco este item todavía.");
+      setDraggedStack(null);
+      return;
+    }
+
+    const rule = resolveItemRule(itemDefinition.id, interaction.id);
+    if (!rule) {
+      showSpeechBubble(getRandomPhrase(interaction.dialogKeys.miss));
+      setDraggedStack(null);
+      return;
+    }
+
+    if (rule.outcome === "place") {
+      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
+      setPlacedItems((currentPlaced) => {
+        const worldPosition = getInteractionWorldPosition(interaction);
+        const placedId = `${itemDefinition.id}-${interaction.id}-${Date.now()}`;
+        return [
+          ...currentPlaced,
+          {
+            id: placedId,
+            itemId: itemDefinition.id,
+            interactionId: interaction.id,
+            name: itemDefinition.name,
+            spriteUrl: itemDefinition.spriteUrl,
+            worldPosition,
+            canPickup: rule.placeCanPickup ?? false,
+            hasCollision: rule.placeHasCollision ?? false,
+            collisionHalfSize: rule.placeCollisionHalfSize,
+            pickupSuccessDialogKey: rule.pickupSuccessDialogKey,
+            pickupBlockedDialogKey: rule.pickupBlockedDialogKey,
+          },
+        ];
+      });
+      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
+      setDraggedStack(null);
+      return;
+    }
+
+    if (rule.outcome === "consume") {
+      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
+      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
+      setDraggedStack(null);
+      return;
+    }
+
+    showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? rule.missDialogKey ?? interaction.dialogKeys.miss));
+    setDraggedStack(null);
+  }, [showSpeechBubble]);
+
+  const handleInventoryDropMiss = useCallback((payload: DraggedInventoryPayload, interaction?: SceneInteraction) => {
+    const itemRule = interaction ? resolveItemRule(payload.stack.id, interaction.id) : null;
+    const fallbackMiss = itemRule?.missDialogKey
+      ?? interaction?.dialogKeys.miss
+      ?? sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys.miss
+      ?? "inventoryDropMiss";
+
+    showSpeechBubble(getRandomPhrase(fallbackMiss));
+    setDraggedStack(null);
+  }, [sceneInteractions, showSpeechBubble]);
+
+  const handlePickupPlacedItem = useCallback((placedItem: PlacedSceneItem) => {
+    const itemDefinition = getItemDefinition(placedItem.itemId);
+    if (!itemDefinition) {
+      return;
+    }
+
+    if (!placedItem.canPickup) {
+      showSpeechBubble(getRandomPhrase(placedItem.pickupBlockedDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.blocked"));
+      return;
+    }
+
+    let added = false;
+    setInventorySlots((currentSlots) => {
+      const result = addOneToInventory(currentSlots, {
+        id: itemDefinition.id,
+        name: itemDefinition.name,
+        spriteUrl: itemDefinition.spriteUrl,
+      });
+      added = result.added;
+      return result.added ? result.slots : currentSlots;
+    });
+
+    if (!added) {
+      showSpeechBubble("Inventario lleno.");
+      return;
+    }
+
+    setPlacedItems((currentPlaced) => currentPlaced.filter((currentItem) => currentItem.id !== placedItem.id));
+    showSpeechBubble(getRandomPhrase(placedItem.pickupSuccessDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed"));
+  }, [showSpeechBubble]);
+
+  const handleStartInventoryDrag = useCallback((slotIndex: number, clientX: number, clientY: number) => {
+    const stack = inventorySlots[slotIndex];
+    if (!stack) return;
+
+    setIsInventoryOpen(false);
+    setDraggedStack({
+      stack,
+      fromSlotIndex: slotIndex,
+      pointerX: clientX,
+      pointerY: clientY,
+    });
+  }, [inventorySlots]);
+
   useEffect(() => {
     if (sceneId !== "personalRoom") return;
 
@@ -1403,6 +1548,7 @@ export default function GameTouchCanvas() {
 
       <Canvas
         gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
+        onPointerDownCapture={() => setIsInventoryOpen(false)}
         onCreated={(state) => {
           try {
             const glCtx = state.gl.getContext();
@@ -1424,7 +1570,7 @@ export default function GameTouchCanvas() {
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
-        <BackgroundPlane url={scene.background} />
+        <BackgroundPlane url={sceneBackground} />
         <CameraController />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
@@ -1444,10 +1590,30 @@ export default function GameTouchCanvas() {
               onSpeechDismiss={hideSpeechBubble}
             />
           </Suspense>
+          <SceneDropTargets
+            targets={sceneInteractions}
+            draggedStack={draggedStack ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex } : null}
+            onDropHit={handleInventoryDropHit}
+            onDropMiss={handleInventoryDropMiss}
+          />
+          <PlacedSceneItems items={placedItems} onPickup={handlePickupPlacedItem} />
         </Physics>
       </Canvas>
 
       <Joystick />
+      <InventoryUI
+        isOpen={isInventoryOpen}
+        slots={inventorySlots}
+        onToggle={() => setIsInventoryOpen((open) => !open)}
+        onStartDrag={handleStartInventoryDrag}
+      />
+      {draggedStack && (
+        <DraggedInventoryGhost
+          stack={draggedStack.stack}
+          initialPointerX={draggedStack.pointerX}
+          initialPointerY={draggedStack.pointerY}
+        />
+      )}
       {isDebug && (
         <div
           style={{

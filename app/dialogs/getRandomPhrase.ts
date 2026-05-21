@@ -7,7 +7,10 @@ import type { DialogKey, Locale } from "./types";
  */
 export function getRandomPhrase(key: DialogKey, locale: Locale = "es"): string {
   const dict = dialogs[locale] ?? dialogs.es;
-  const entry = dict[key];
+  const entry = dict[key] ?? dialogs.es[key];
+  if (!entry || entry.phrases.length === 0) {
+    return key;
+  }
   const { phrases } = entry;
   return phrases[Math.floor(Math.random() * phrases.length)];
 }
