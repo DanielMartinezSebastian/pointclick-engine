@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import {
+  type DebugEditorMode,
+  type WallToolMode,
+} from "../types/gameRuntime";
 
 export function useDebugPanelController() {
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">(
@@ -8,12 +12,8 @@ export function useDebugPanelController() {
   );
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
-  const [editorMode, setEditorMode] = useState<
-    "walls" | "ground" | "items" | "targets"
-  >("walls");
-  const [wallToolMode, setWallToolMode] = useState<"manual" | "points">(
-    "manual",
-  );
+  const [editorMode, setEditorMode] = useState<DebugEditorMode>("walls");
+  const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
   const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
   const [speechDraft, setSpeechDraft] = useState(
     "Hola. Este es un bocadillo de prueba.",
@@ -21,7 +21,7 @@ export function useDebugPanelController() {
   const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
 
   const handleWallToolModeChange = useCallback(
-    (mode: "manual" | "points") => {
+    (mode: WallToolMode) => {
       setWallToolMode(mode);
       setWallPointResetSignal((signal) => signal + 1);
     },

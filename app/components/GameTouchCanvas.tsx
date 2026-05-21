@@ -16,13 +16,13 @@ import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { GameTouchSpriteRuntime } from "./scene/GameTouchSpriteRuntime";
-import { type WallToolMode } from "./debug/WallEditorPanel";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
+import { type WallToolMode } from "../lib/engine/types/gameRuntime";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.

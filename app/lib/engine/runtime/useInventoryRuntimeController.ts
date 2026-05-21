@@ -6,7 +6,7 @@ import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
 import type { SceneInteraction } from "../../../scenes/scenes";
 import type { InventorySlots } from "../../../components/InventoryUI";
 import type { DraggedInventoryPayload } from "../../../components/inventory/SceneDropTargets";
-import type { PlacedSceneItem } from "../../../components/inventory/PlacedSceneItems";
+import type { PlacedSceneItem } from "../types/gameRuntime";
 import {
   addOneToInventory,
   inventoryRuleMessages,

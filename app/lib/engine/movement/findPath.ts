@@ -2,7 +2,7 @@ import type {
   SceneGround,
   SceneInteraction,
   SceneWall,
-} from "../../scenes/scenes";
+} from "../../../scenes/scenes";
 
 export type MovementPoint = {
   x: number;

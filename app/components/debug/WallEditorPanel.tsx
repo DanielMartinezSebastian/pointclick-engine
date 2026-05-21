@@ -4,10 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 import { MathUtils } from "three";
 
 import PixelSelect from "../PixelSelect";
+import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
 import { useSceneStore } from "../../store/sceneStore";
 import { DebugButton, DebugNumberInput } from "./controls";
-
-export type WallToolMode = "manual" | "points";
 
 export function WallEditorPanel({
   wallToolMode,

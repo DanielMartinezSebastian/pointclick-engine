@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import type { DebugEditorMode } from "../lib/engine/types/gameRuntime";
 import PixelSelect from "./PixelSelect";
 
 function OverlayButton({
@@ -115,8 +116,8 @@ export function DebugOverlayPanel({
   sceneOptions: Array<{ label: string; value: string }>;
   readyMessage: string;
   onRespawn: () => void;
-  editorMode: "walls" | "ground" | "items" | "targets";
-  onEditorModeChange: (value: "walls" | "ground" | "items" | "targets") => void;
+  editorMode: DebugEditorMode;
+  onEditorModeChange: (value: DebugEditorMode) => void;
   speechDraft: string;
   onSpeechDraftChange: (value: string) => void;
   speechCharsPerSecond: number;
@@ -197,7 +198,7 @@ export function DebugOverlayPanel({
       <PixelSelect
         label="Modo editor"
         value={editorMode}
-        onChange={(value) => onEditorModeChange(value as "walls" | "ground" | "items" | "targets")}
+        onChange={(value) => onEditorModeChange(value as DebugEditorMode)}
         options={[
           { label: "Editar paredes", value: "walls" },
           { label: "Editar suelo", value: "ground" },

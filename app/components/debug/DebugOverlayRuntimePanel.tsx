@@ -6,11 +6,13 @@ import { DebugOverlayPanel } from "../DebugOverlayPanel";
 import { GroundEditorPanel } from "./GroundEditorPanel";
 import { InteractionTargetsEditorPanel } from "./InteractionTargetsEditorPanel";
 import { PlacedItemsEditorPanel } from "./PlacedItemsEditorPanel";
-import { WallEditorPanel, type WallToolMode } from "./WallEditorPanel";
+import { WallEditorPanel } from "./WallEditorPanel";
 import { type SceneInteraction } from "../../scenes/scenes";
-import { type PlacedSceneItem } from "../inventory/PlacedSceneItems";
-
-type EditorMode = "walls" | "ground" | "items" | "targets";
+import {
+  type DebugEditorMode,
+  type PlacedSceneItem,
+  type WallToolMode,
+} from "../../lib/engine/types/gameRuntime";
 
 export function DebugOverlayRuntimePanel({
   isDebug,
@@ -60,8 +62,8 @@ export function DebugOverlayRuntimePanel({
   sceneOptions: Array<{ label: string; value: string }>;
   readyMessage: string;
   requestRespawn: () => void;
-  editorMode: EditorMode;
-  setEditorMode: (value: EditorMode) => void;
+  editorMode: DebugEditorMode;
+  setEditorMode: (value: DebugEditorMode) => void;
   wallToolMode: WallToolMode;
   handleWallToolModeChange: (mode: WallToolMode) => void;
   resetWallPointTool: () => void;

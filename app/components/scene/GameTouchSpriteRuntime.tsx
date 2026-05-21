@@ -12,11 +12,11 @@ import {
   type GameCharacterName,
   type GameDirection,
 } from "../sprite/clips";
-import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
+import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../../lib/engine/movement";
 import { useMobileInputStore } from "../../store/mobileInputStore";
 import { useSceneStore } from "../../store/sceneStore";
 import { getRandomPhrase } from "../../dialogs/getRandomPhrase";
-import { type WallToolMode } from "../debug/WallEditorPanel";
+import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
 import { SceneCollisionSphere } from "./SceneCollisionSphere";
 import { SceneGround } from "./SceneGround";
 import { SceneWallPointPreview } from "./SceneWallPointPreview";

@@ -3,20 +3,7 @@
 import { useEffect, useState } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Texture, TextureLoader } from "three";
-
-type PlacedSceneItem = {
-  id: string;
-  itemId: string;
-  interactionId: string;
-  name: string;
-  spriteUrl: string;
-  worldPosition: [number, number, number];
-  canPickup: boolean;
-  hasCollision?: boolean;
-  collisionHalfSize?: [number, number, number];
-  pickupSuccessDialogKey?: string;
-  pickupBlockedDialogKey?: string;
-};
+import type { PlacedSceneItem } from "../../lib/engine/types/gameRuntime";
 
 function PlacedSceneItemMesh({
   item,
@@ -95,4 +82,3 @@ export function PlacedSceneItems({
   );
 }
 
-export type { PlacedSceneItem };

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import type { PlacedSceneItem } from "../inventory/PlacedSceneItems";
+import type { PlacedSceneItem } from "../../lib/engine/types/gameRuntime";
 import PixelSelect from "../PixelSelect";
 import { DebugButton, DebugNumberInput } from "./controls";
 
