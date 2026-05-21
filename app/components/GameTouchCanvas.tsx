@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense, useRef } from "react";
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 
-import { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import {
   type GameCharacterName,
 } from "./sprite/clips";
@@ -15,68 +14,19 @@ import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
-import { GameTouchSpriteRuntime } from "./scene/GameTouchSpriteRuntime";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
+import { GameTouchSpriteRuntime } from "../lib/engine/runtime/GameTouchSpriteRuntime";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
-import { type WallToolMode } from "../lib/engine/types/gameRuntime";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
 const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
-
-function GameSceneContents({
-  selectedCharacter,
-  onSpriteReady,
-  debug,
-  showDebugGround,
-  showDebugWalls,
-  wallToolMode,
-  wallPointResetSignal,
-  speechText,
-  speechVisible,
-  speechTrigger,
-  speechCharsPerSecond,
-  onBoundaryHit,
-  onSpeechDismiss,
-}: {
-  selectedCharacter: GameCharacterName;
-  onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
-  debug: boolean;
-  showDebugGround: boolean;
-  showDebugWalls: boolean;
-  wallToolMode: WallToolMode;
-  wallPointResetSignal: number;
-  speechText: string;
-  speechVisible: boolean;
-  speechTrigger: number;
-  speechCharsPerSecond: number;
-  onBoundaryHit: (phrase: string) => void;
-  onSpeechDismiss: () => void;
-}) {
-  return (
-    <GameTouchSpriteRuntime
-      activeCharacter={selectedCharacter}
-      onSpriteReady={onSpriteReady}
-      debug={debug}
-      showDebugGround={showDebugGround}
-      showDebugWalls={showDebugWalls}
-      wallToolMode={wallToolMode}
-      wallPointResetSignal={wallPointResetSignal}
-      speechText={speechText}
-      speechVisible={speechVisible}
-      speechTrigger={speechTrigger}
-      speechCharsPerSecond={speechCharsPerSecond}
-      onBoundaryHit={onBoundaryHit}
-      onSpeechDismiss={onSpeechDismiss}
-    />
-  );
-}
 
 
 export default function GameTouchCanvas() {
@@ -151,12 +101,7 @@ export default function GameTouchCanvas() {
     updateInteraction,
   });
 
-  const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
-
-  const handleSpriteReady = (spriteRef: React.RefObject<DavidSpriteHandle | null>) => {
-    spriteRefRef.current = spriteRef;
-  };
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
@@ -189,9 +134,8 @@ export default function GameTouchCanvas() {
         <CameraController />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
-            <GameSceneContents
-              selectedCharacter={selectedCharacter}
-              onSpriteReady={handleSpriteReady}
+            <GameTouchSpriteRuntime
+              activeCharacter={selectedCharacter}
               debug={isDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}

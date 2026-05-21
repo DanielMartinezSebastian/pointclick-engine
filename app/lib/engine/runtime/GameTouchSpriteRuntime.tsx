@@ -5,22 +5,22 @@ import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, Vector2 } from "three";
 
-import SpeechBubble from "../SpeechBubble";
-import DavidSprite, { type DavidSpriteHandle } from "../sprite/DavidSprite";
+import SpeechBubble from "../../../components/SpeechBubble";
+import DavidSprite, { type DavidSpriteHandle } from "../../../components/sprite/DavidSprite";
 import {
   GAME_CHARACTER_SPRITES,
   type GameCharacterName,
   type GameDirection,
-} from "../sprite/clips";
-import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../../lib/engine/movement";
-import { useMobileInputStore } from "../../store/mobileInputStore";
-import { useSceneStore } from "../../store/sceneStore";
-import { getRandomPhrase } from "../../dialogs/getRandomPhrase";
-import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
-import { SceneCollisionSphere } from "./SceneCollisionSphere";
-import { SceneGround } from "./SceneGround";
-import { SceneWallPointPreview } from "./SceneWallPointPreview";
-import { SceneWalls, type WallResizeHandle } from "./SceneWalls";
+} from "../../../components/sprite/clips";
+import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
+import { useMobileInputStore } from "../../../store/mobileInputStore";
+import { useSceneStore } from "../../../store/sceneStore";
+import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
+import { type WallToolMode } from "../types/gameRuntime";
+import { SceneCollisionSphere } from "../../../components/scene/SceneCollisionSphere";
+import { SceneGround } from "../../../components/scene/SceneGround";
+import { SceneWallPointPreview } from "../../../components/scene/SceneWallPointPreview";
+import { SceneWalls, type WallResizeHandle } from "../../../components/scene/SceneWalls";
 
 type MovementAction = GameDirection;
 type WallPointStart = { point: Vector2; resetSignal: number };
@@ -63,7 +63,6 @@ function projectDistance(originX: number, originZ: number, pointX: number, point
 
 export function GameTouchSpriteRuntime({
   activeCharacter,
-  onSpriteReady,
   debug,
   showDebugGround,
   showDebugWalls,
@@ -77,7 +76,6 @@ export function GameTouchSpriteRuntime({
   onSpeechDismiss,
 }: {
   activeCharacter: GameCharacterName;
-  onSpriteReady: (spriteRef: React.RefObject<DavidSpriteHandle | null>) => void;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
@@ -319,10 +317,6 @@ export function GameTouchSpriteRuntime({
     clearPressedKeys();
     setPlayerPosition([spawn[0], spawn[1], spawn[2]]);
   }, [cancelTarget, clearPressedKeys, sceneId, respawnSignal, setPlayerPosition]);
-
-  useEffect(() => {
-    onSpriteReady(spriteRef);
-  }, [onSpriteReady]);
 
   useEffect(() => {
     window.addEventListener("pointerup", stopWallInteraction);
