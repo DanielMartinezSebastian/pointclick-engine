@@ -17,11 +17,12 @@ import {
 } from "./sprite/clips";
 import { useSceneStore } from "../store/sceneStore";
 import dynamic from "next/dynamic";
-import { type SceneWall } from "../scenes/scenes";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
 import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
+import { SceneGround } from "./scene/SceneGround";
+import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 import { GroundEditorPanel } from "./debug/GroundEditorPanel";
 import { InteractionTargetsEditorPanel } from "./debug/InteractionTargetsEditorPanel";
 import { PlacedItemsEditorPanel } from "./debug/PlacedItemsEditorPanel";
@@ -38,7 +39,6 @@ import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntime
 const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 
 type MovementAction = GameDirection;
-type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 type WallPointStart = { point: Vector2; resetSignal: number };
 type WallPointPreview = { start: Vector2; end: Vector2; resetSignal: number };
 type WallInteraction =
@@ -76,223 +76,6 @@ function getWallAxes(rotationY: number) {
 
 function projectDistance(originX: number, originZ: number, pointX: number, pointZ: number, axis: Vector2) {
   return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
-}
-
-// ---------------------------------------------------------------------------
-// SceneGround — plano de suelo reactivo a la escena activa
-// ---------------------------------------------------------------------------
-
-// Shader de tablero de ajedrez: celdas alternando verde semitransparente / negro casi invisible
-const checkerVertexShader = /* glsl */`
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-const checkerFragmentShader = /* glsl */`
-  varying vec2 vUv;
-  uniform float uCells;
-  void main() {
-    vec2 cell = floor(vUv * uCells);
-    float checker = mod(cell.x + cell.y, 2.0);
-    // verde para una celda, casi transparente para la otra
-    vec3 col = checker > 0.5 ? vec3(0.0, 1.0, 0.25) : vec3(0.0, 0.0, 0.0);
-    float alpha = checker > 0.5 ? 0.28 : 0.04;
-    gl_FragColor = vec4(col, alpha);
-  }
-`;
-
-function SceneGround({
-  onClickWorld,
-  onHoverWorld,
-  debug,
-}: {
-  onClickWorld: (x: number, z: number) => void;
-  onHoverWorld?: (x: number, z: number) => void;
-  debug: boolean;
-}) {
-  const ground = useSceneStore((s) => s.scene.ground);
-  
-  // Calcular dimensiones desde límites
-  const width = ground.maxX - ground.minX;
-  const depth = ground.maxZ - ground.minZ;
-  const centerX = (ground.minX + ground.maxX) / 2;
-  const centerZ = (ground.minZ + ground.maxZ) / 2;
-  
-  const segX = Math.round(width / 2);
-  const segZ = Math.round(depth / 2);
-
-  const gy = ground.y + 0.02;
-  const t = 0.05;
-  const borderWallHalfHeight = 3;
-  const borderWallHalfThickness = 0.35;
-  const borderWallCenterY = ground.y + borderWallHalfHeight;
-
-  // Celdas totales del checker
-  const cells = Math.max(segX, segZ);
-  const checkerUniforms = useMemo(() => ({ uCells: { value: cells } }), [cells]);
-
-  return (
-    <>
-      {/* Malla de física — RigidBody con CuboidCollider explícito */}
-      <RigidBody type="fixed" position={[centerX, ground.y, centerZ]}>
-        {/* Colisionador: caja con grosor real para solidez */}
-        <CuboidCollider args={[width / 2, 0.2, depth / 2]} friction={2.8} restitution={0} />
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            onClickWorld(e.point.x, e.point.z);
-          }}
-          onPointerMove={(e) => {
-            if (!onHoverWorld) return;
-            onHoverWorld(e.point.x, e.point.z);
-          }}
-        >
-          <planeGeometry args={[width, depth]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-      </RigidBody>
-
-      {/* Paredes invisibles automáticas en bordes del suelo */}
-      <RigidBody type="fixed" position={[centerX, borderWallCenterY, ground.minZ - borderWallHalfThickness]}>
-        <CuboidCollider args={[width / 2 + borderWallHalfThickness, borderWallHalfHeight, borderWallHalfThickness]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[centerX, borderWallCenterY, ground.maxZ + borderWallHalfThickness]}>
-        <CuboidCollider args={[width / 2 + borderWallHalfThickness, borderWallHalfHeight, borderWallHalfThickness]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[ground.minX - borderWallHalfThickness, borderWallCenterY, centerZ]}>
-        <CuboidCollider args={[borderWallHalfThickness, borderWallHalfHeight, depth / 2 + borderWallHalfThickness]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[ground.maxX + borderWallHalfThickness, borderWallCenterY, centerZ]}>
-        <CuboidCollider args={[borderWallHalfThickness, borderWallHalfHeight, depth / 2 + borderWallHalfThickness]} />
-      </RigidBody>
-
-      {/* Visuales de debug */}
-      {debug && (
-        <>
-          {/* Tablero de ajedrez */}
-          <mesh position={[centerX, gy, centerZ]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-            <planeGeometry args={[width, depth, segX, segZ]} />
-            <shaderMaterial
-              vertexShader={checkerVertexShader}
-              fragmentShader={checkerFragmentShader}
-              uniforms={checkerUniforms}
-              transparent
-              depthWrite={false}
-            />
-          </mesh>
-          {/* Grid de líneas */}
-          <mesh position={[centerX, gy + 0.001, centerZ]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-            <planeGeometry args={[width, depth, segX, segZ]} />
-            <meshBasicMaterial color="#00ff41" wireframe transparent opacity={0.45} depthWrite={false} />
-          </mesh>
-
-          {/* ── Borde del suelo (4 cajas finas) ───────────────────────── */}
-          <mesh position={[centerX, gy, ground.minZ]}><boxGeometry args={[width + t, t, t]} /><meshBasicMaterial color="#00ff88" /></mesh>
-          <mesh position={[centerX, gy, ground.maxZ]}><boxGeometry args={[width + t, t, t]} /><meshBasicMaterial color="#00ff88" /></mesh>
-          <mesh position={[ground.minX, gy, centerZ]}><boxGeometry args={[t, t, depth]} /><meshBasicMaterial color="#00ff88" /></mesh>
-          <mesh position={[ground.maxX, gy, centerZ]}><boxGeometry args={[t, t, depth]} /><meshBasicMaterial color="#00ff88" /></mesh>
-
-          {/* ── Postes verticales en las 4 esquinas ───────────────────── */}
-          <mesh position={[ground.minX, ground.y + 1.25, ground.minZ]}><boxGeometry args={[t, 2.5, t]} /><meshBasicMaterial color="#ffff00" /></mesh>
-          <mesh position={[ground.maxX, ground.y + 1.25, ground.minZ]}><boxGeometry args={[t, 2.5, t]} /><meshBasicMaterial color="#ffff00" /></mesh>
-          <mesh position={[ground.minX, ground.y + 1.25, ground.maxZ]}><boxGeometry args={[t, 2.5, t]} /><meshBasicMaterial color="#ffff00" /></mesh>
-          <mesh position={[ground.maxX, ground.y + 1.25, ground.maxZ]}><boxGeometry args={[t, 2.5, t]} /><meshBasicMaterial color="#ffff00" /></mesh>
-
-          {/* ── Marcadores de rango de escala del jugador ─────────────── */}
-          <mesh position={[centerX, gy, DEPTH_NEAR_Z]}><boxGeometry args={[width, t, t]} /><meshBasicMaterial color="#ff8800" /></mesh>
-          <mesh position={[centerX, gy, DEPTH_FAR_Z]}><boxGeometry args={[width, t, t]} /><meshBasicMaterial color="#ff4400" /></mesh>
-        </>
-      )}
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// SceneWalls — colisiones fijas de la escena activa
-// ---------------------------------------------------------------------------
-function SceneWalls({
-  debug,
-  onStartWallMove,
-  onStartWallResize,
-}: {
-  debug: boolean;
-  onStartWallMove: (index: number, pointX: number, pointZ: number) => void;
-  onStartWallResize: (index: number, handle: WallResizeHandle) => void;
-}) {
-  const walls = useSceneStore((s) => s.scene.walls);
-  const selectedWallIndex = useSceneStore((s) => s.selectedWallIndex);
-  const selectWall = useSceneStore((s) => s.selectWall);
-  return (
-    <>
-      {walls.map((wall: SceneWall, i: number) => (
-        <RigidBody key={i} type="fixed" position={wall.position} rotation={[0, wall.rotationY ?? 0, 0]}>
-          <CuboidCollider args={wall.halfSize} />
-          {debug && (
-            <>
-              <mesh
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  selectWall(i);
-                  onStartWallMove(i, e.point.x, e.point.z);
-                }}
-              >
-                <boxGeometry args={[wall.halfSize[0] * 2, wall.halfSize[1] * 2, wall.halfSize[2] * 2]} />
-                <meshBasicMaterial color={selectedWallIndex === i ? "#ffff00" : "#ff4400"} wireframe />
-              </mesh>
-
-              {selectedWallIndex === i && (
-                <>
-                  <mesh
-                    position={[wall.halfSize[0], 0, 0]}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      onStartWallResize(i, "x+");
-                    }}
-                  >
-                    <boxGeometry args={[0.35, 0.35, 0.35]} />
-                    <meshBasicMaterial color="#00d8ff" />
-                  </mesh>
-                  <mesh
-                    position={[-wall.halfSize[0], 0, 0]}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      onStartWallResize(i, "x-");
-                    }}
-                  >
-                    <boxGeometry args={[0.35, 0.35, 0.35]} />
-                    <meshBasicMaterial color="#00d8ff" />
-                  </mesh>
-                  <mesh
-                    position={[0, 0, wall.halfSize[2]]}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      onStartWallResize(i, "z+");
-                    }}
-                  >
-                    <boxGeometry args={[0.35, 0.35, 0.35]} />
-                    <meshBasicMaterial color="#ff00aa" />
-                  </mesh>
-                  <mesh
-                    position={[0, 0, -wall.halfSize[2]]}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      onStartWallResize(i, "z-");
-                    }}
-                  >
-                    <boxGeometry args={[0.35, 0.35, 0.35]} />
-                    <meshBasicMaterial color="#ff00aa" />
-                  </mesh>
-                </>
-              )}
-            </>
-          )}
-        </RigidBody>
-      ))}
-    </>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -931,6 +714,8 @@ function GameTouchSprite({
             : undefined
         }
         debug={debug && showDebugGround}
+        depthNearZ={DEPTH_NEAR_Z}
+        depthFarZ={DEPTH_FAR_Z}
       />
       <SceneWalls debug={debug && showDebugWalls} onStartWallMove={handleStartWallMove} onStartWallResize={handleStartWallResize} />
       {debug && wallToolMode === "points" && wallPointPreview && (
