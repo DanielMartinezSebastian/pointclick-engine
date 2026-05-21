@@ -5,7 +5,6 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
-import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import PixelSelect from "./PixelSelect";
@@ -27,6 +26,8 @@ import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
+import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
+import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -54,7 +55,6 @@ const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 1.2;
-const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -1567,23 +1567,7 @@ function InteractionTargetsEditorPanel({
 
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
-  const pathname = usePathname();
-  const isDebug = DEBUG_ROUTE_ENABLED && pathname === "/debug";
-
-  useEffect(() => {
-    console.log("GameTouchCanvas: debug mode ->", isDebug, { pathname });
-  }, [isDebug, pathname]);
-
-  useEffect(() => {
-    if (!isDebug) return;
-    const styleEl = document.createElement("style");
-    styleEl.setAttribute("data-debug-cursor-override", "true");
-    styleEl.innerHTML = `* { cursor: auto !important; }`;
-    document.head.appendChild(styleEl);
-    return () => {
-      styleEl.remove();
-    };
-  }, [isDebug]);
+  const { isDebug } = useDebugModeEffects();
 
   const {
     debugPanelSide,
@@ -1603,15 +1587,18 @@ export default function GameTouchCanvas() {
     speechCharsPerSecond,
     setSpeechCharsPerSecond,
   } = useDebugPanelController();
-  const sceneId = useSceneStore((s) => s.sceneId);
-  const sceneBackground = useSceneStore((s) => s.scene.background);
-  const setScene = useSceneStore((s) => s.setScene);
-  const sceneInteractions = useSceneStore((s) => s.scene.interactions);
-  const requestRespawn = useSceneStore((s) => s.requestRespawn);
-  const playerPosition = useSceneStore((s) => s.playerPosition);
-  const scenePlayerSpawn = useSceneStore((s) => s.scene.playerSpawn);
-  const updateInteraction = useSceneStore((s) => s.updateInteraction);
-  const resetInteractionsFromSceneConfig = useSceneStore((s) => s.resetInteractionsFromSceneConfig);
+  const {
+    sceneId,
+    sceneBackground,
+    setScene,
+    sceneInteractions,
+    requestRespawn,
+    playerPosition,
+    scenePlayerSpawn,
+    updateInteraction,
+    resetInteractionsFromSceneConfig,
+    sceneOptions,
+  } = useSceneRuntimeController();
 
   const {
     speechText,
@@ -1649,11 +1636,6 @@ export default function GameTouchCanvas() {
     scenePlayerSpawnY: scenePlayerSpawn[1],
     updateInteraction,
   });
-
-  const sceneOptions = useMemo(
-    () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
-    [],
-  );
 
   const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
