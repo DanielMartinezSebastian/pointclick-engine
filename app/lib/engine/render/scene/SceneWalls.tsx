@@ -2,7 +2,7 @@
 
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import { type SceneWall } from "../../../../scenes/scenes";
+import { type SceneWall } from "../../../../demo/content/scenes";
 import { useSceneStore } from "../../../../store/sceneStore";
 
 export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";

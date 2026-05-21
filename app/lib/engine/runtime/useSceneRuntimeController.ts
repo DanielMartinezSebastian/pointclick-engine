@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { SCENES } from "../../../scenes/scenes";
+import { SCENES } from "../../../demo/content/scenes";
 import { useSceneStore } from "../../../store/sceneStore";
 
 export function useSceneRuntimeController() {

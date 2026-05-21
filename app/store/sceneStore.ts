@@ -5,7 +5,7 @@ import {
   type Scene,
   type SceneInteraction,
   type SceneWall,
-} from "../scenes/scenes";
+} from "../demo/content/scenes";
 
 function cloneWall(wall: SceneWall): SceneWall {
   return {

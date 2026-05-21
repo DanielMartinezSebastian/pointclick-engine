@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
-import type { SceneInteraction } from "../../../scenes/scenes";
+import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
+import type { SceneInteraction } from "../../../demo/content/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 import {
   addOneToInventory,

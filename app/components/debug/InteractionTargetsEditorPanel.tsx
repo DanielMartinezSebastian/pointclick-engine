@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { MathUtils } from "three";
 
-import type { SceneInteraction } from "../../scenes/scenes";
+import type { SceneInteraction } from "../../demo/content/scenes";
 import PixelSelect from "../PixelSelect";
 import { DebugButton, DebugNumberInput } from "./controls";
 

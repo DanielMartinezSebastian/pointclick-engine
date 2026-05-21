@@ -15,7 +15,7 @@ import {
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
-import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
+import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { type WallToolMode } from "../types/gameRuntime";
 import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
 import { SceneGround } from "../render/scene/SceneGround";

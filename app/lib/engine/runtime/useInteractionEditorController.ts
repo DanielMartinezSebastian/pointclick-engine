@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { SceneInteraction } from "../../../scenes/scenes";
+import type { SceneInteraction } from "../../../demo/content/scenes";
 
 const PLAYER_COLLIDER_HALF_HEIGHT = 0.95;
 const DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN = 0.05;
