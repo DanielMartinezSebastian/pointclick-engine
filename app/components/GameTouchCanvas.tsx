@@ -24,6 +24,7 @@ import { DraggedInventoryGhost, InventoryUI, type InventorySlots, type Inventory
 import { SceneDropTargets, type DraggedInventoryPayload } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneItems";
 import { getItemDefinition, resolveItemRule } from "../items";
+import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./movement";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -40,8 +41,6 @@ type WallInteraction =
   | { mode: "resize"; handle: WallResizeHandle }
   | null;
 
-const MOVEMENT_KEYS = new Set(["arrowleft", "arrowright", "arrowup", "arrowdown", "a", "d", "w", "s"]);
-const CLICK_ARRIVAL_THRESHOLD = 0.15;
 // Angle from horizontal axis above which vertical animation fires (55° = 35° cone around vertical)
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
 const DEPTH_FAR_Z = -16;
@@ -584,8 +583,6 @@ function GameTouchSprite({
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
-  const keysPressedRef = useRef(new Set<string>());
-  const clickTargetRef = useRef<Vector2 | null>(null);
   const currentActionRef = useRef<MovementAction>("idle");
   const lastLoggedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
@@ -601,7 +598,10 @@ function GameTouchSprite({
   const addWallWithData = useSceneStore((s) => s.addWallWithData);
   const respawnSignal = useSceneStore((s) => s.respawnSignal);
 
-  const clampToPlayableArea = useCallback((x: number, z: number) => {
+  const { setTarget, setRoute, cancelTarget, resolveDirection, registerProgress } = useClickToMoveController();
+  const { clearPressedKeys, getKeyboardMovement } = useKeyboardMovementInput();
+
+  const playableBounds = useMemo(() => {
     const minX = ground.minX + PLAYER_BOUND_MARGIN;
     const maxX = ground.maxX - PLAYER_BOUND_MARGIN;
     const minZ = ground.minZ + PLAYER_BOUND_MARGIN;
@@ -609,16 +609,20 @@ function GameTouchSprite({
     const maxZByCamera = CAMERA_POSITION[2] - CAMERA_FRONT_PLAYABLE_MARGIN;
     const maxZ = Math.min(maxZByGround, maxZByCamera);
 
-    const clampMinX = Math.min(minX, maxX);
-    const clampMaxX = Math.max(minX, maxX);
-    const clampMinZ = Math.min(minZ, maxZ);
-    const clampMaxZ = Math.max(minZ, maxZ);
-
     return {
-      x: MathUtils.clamp(x, clampMinX, clampMaxX),
-      z: MathUtils.clamp(z, clampMinZ, clampMaxZ),
+      minX: Math.min(minX, maxX),
+      maxX: Math.max(minX, maxX),
+      minZ: Math.min(minZ, maxZ),
+      maxZ: Math.max(minZ, maxZ),
     };
   }, [ground.maxX, ground.maxZ, ground.minX, ground.minZ]);
+
+  const clampToPlayableArea = useCallback((x: number, z: number) => {
+    return {
+      x: MathUtils.clamp(x, playableBounds.minX, playableBounds.maxX),
+      z: MathUtils.clamp(z, playableBounds.minZ, playableBounds.maxZ),
+    };
+  }, [playableBounds.maxX, playableBounds.maxZ, playableBounds.minX, playableBounds.minZ]);
 
   const handleClickWorld = useCallback((x: number, z: number) => {
     if (wallInteractionRef.current) return;
@@ -665,8 +669,24 @@ function GameTouchSprite({
     }
 
     const clamped = clampToPlayableArea(x, z);
-    clickTargetRef.current = new Vector2(clamped.x, clamped.z);
-  }, [addWallWithData, clampToPlayableArea, debug, ground.y, wallPointResetSignal, wallToolMode]);
+    const body = characterBodyRef.current;
+    const scene = useSceneStore.getState().scene;
+    const startPosition = body?.translation() ?? { x: playerSpawn[0], z: playerSpawn[2] };
+    const route = findPath({
+      start: { x: startPosition.x, z: startPosition.z },
+      goal: clamped,
+      bounds: playableBounds,
+      walls: scene.walls,
+      interactions: scene.interactions,
+    });
+
+    if (route && route.length > 0) {
+      setRoute(route);
+      return;
+    }
+
+    setTarget(clamped.x, clamped.z);
+  }, [addWallWithData, clampToPlayableArea, debug, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
 
   const stopWallInteraction = useCallback(() => {
     wallInteractionRef.current = null;
@@ -787,10 +807,10 @@ function GameTouchSprite({
     const spawn = useSceneStore.getState().scene.playerSpawn;
     body.setTranslation({ x: spawn[0], y: spawn[1], z: spawn[2] }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    clickTargetRef.current = null;
-    keysPressedRef.current.clear();
+    cancelTarget();
+    clearPressedKeys();
     setPlayerPosition([spawn[0], spawn[1], spawn[2]]);
-  }, [sceneId, respawnSignal, setPlayerPosition]);
+  }, [cancelTarget, clearPressedKeys, sceneId, respawnSignal, setPlayerPosition]);
 
   useEffect(() => {
     onSpriteReady(spriteRef);
@@ -803,34 +823,6 @@ function GameTouchSprite({
     };
   }, [stopWallInteraction]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const normalizedKey = event.key.toLowerCase();
-
-      if (MOVEMENT_KEYS.has(normalizedKey)) {
-        event.preventDefault();
-        keysPressedRef.current.add(normalizedKey);
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      const normalizedKey = event.key.toLowerCase();
-
-      if (MOVEMENT_KEYS.has(normalizedKey)) {
-        event.preventDefault();
-        keysPressedRef.current.delete(normalizedKey);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown, { passive: false });
-    window.addEventListener("keyup", handleKeyUp, { passive: false });
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
-
   useFrame((_, delta) => {
     const body = characterBodyRef.current;
 
@@ -838,46 +830,41 @@ function GameTouchSprite({
       return;
     }
 
-    const pressed = keysPressedRef.current;
-    const moveLeft = pressed.has("arrowleft") || pressed.has("a");
-    const moveRight = pressed.has("arrowright") || pressed.has("d");
-    const moveUp = pressed.has("arrowup") || pressed.has("w");
-    const moveDown = pressed.has("arrowdown") || pressed.has("s");
+    const { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed } = getKeyboardMovement();
 
-    const anyKeyPressed = moveLeft || moveRight || moveUp || moveDown;
-
-    // Keyboard takes priority; cancel click target while keys are held
-    if (anyKeyPressed) {
-      clickTargetRef.current = null;
-    }
+    const joystick = useMobileInputStore.getState();
+    const manualInputActive = anyKeyPressed || joystick.active;
 
     let horizontal = 0;
     let vertical = 0;
 
     // Prioridad: joystick táctil > teclado > click-to-move
-    const joystick = useMobileInputStore.getState();
     if (joystick.active) {
       horizontal = joystick.x;
       vertical = joystick.z;
-      clickTargetRef.current = null;
     } else if (anyKeyPressed) {
       horizontal = Number(moveRight) - Number(moveLeft);
       vertical = Number(moveDown) - Number(moveUp);
-    } else if (clickTargetRef.current) {
+    } else {
       const currentPosition = body.translation();
-      const dx = clickTargetRef.current.x - currentPosition.x;
-      const dz = clickTargetRef.current.y - currentPosition.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-      const step = 2.5 * delta;
+      const autoMove = resolveDirection(
+        currentPosition.x,
+        currentPosition.z,
+        delta,
+        manualInputActive,
+      );
+      horizontal = autoMove.horizontal;
+      vertical = autoMove.vertical;
 
-      if (dist <= step || dist < CLICK_ARRIVAL_THRESHOLD) {
-        // Snap to target and stop
-        body.setTranslation({ x: clickTargetRef.current.x, y: currentPosition.y, z: clickTargetRef.current.y }, true);
-        clickTargetRef.current = null;
-      } else {
-        // Normalize direction
-        horizontal = dx / dist;
-        vertical = dz / dist;
+      if (autoMove.snapToTarget) {
+        body.setTranslation(
+          {
+            x: autoMove.snapToTarget.x,
+            y: currentPosition.y,
+            z: autoMove.snapToTarget.z,
+          },
+          true,
+        );
       }
     }
 
@@ -935,6 +922,19 @@ function GameTouchSprite({
     }
 
     const safePosition = body.translation();
+
+    const { stuck } = registerProgress(
+      safePosition.x,
+      safePosition.z,
+      delta,
+      manualInputActive,
+    );
+
+    if (stuck) {
+      const vel = body.linvel();
+      body.setLinvel({ x: 0, y: vel.y, z: 0 }, true);
+    }
+
     const depthFactor = MathUtils.clamp(
       MathUtils.inverseLerp(DEPTH_FAR_Z, DEPTH_NEAR_Z, safePosition.z),
       0,
