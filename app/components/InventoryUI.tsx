@@ -65,8 +65,8 @@ export function InventoryUI({
         aria-label={isOpen ? "Cerrar inventario" : "Abrir inventario"}
         style={{
           position: "absolute",
-          left: "18px",
-          bottom: "18px",
+          left: isMobile ? "22px" : "18px",
+          bottom: isMobile ? "30px" : "18px",
           transform: undefined,
           width: "84px",
           height: "84px",
