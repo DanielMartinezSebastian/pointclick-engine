@@ -5,22 +5,22 @@ import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, Vector2 } from "three";
 
-import SpeechBubble from "../../../components/SpeechBubble";
-import DavidSprite, { type DavidSpriteHandle } from "../../../components/sprite/DavidSprite";
+import SpeechBubble from "../render/SpeechBubble";
+import DavidSprite, { type DavidSpriteHandle } from "../render/sprite/DavidSprite";
 import {
   GAME_CHARACTER_SPRITES,
   type GameCharacterName,
   type GameDirection,
-} from "../../../components/sprite/clips";
+} from "../render/sprite/clips";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
 import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
 import { type WallToolMode } from "../types/gameRuntime";
-import { SceneCollisionSphere } from "../../../components/scene/SceneCollisionSphere";
-import { SceneGround } from "../../../components/scene/SceneGround";
-import { SceneWallPointPreview } from "../../../components/scene/SceneWallPointPreview";
-import { SceneWalls, type WallResizeHandle } from "../../../components/scene/SceneWalls";
+import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
+import { SceneGround } from "../render/scene/SceneGround";
+import { SceneWallPointPreview } from "../render/scene/SceneWallPointPreview";
+import { SceneWalls, type WallResizeHandle } from "../render/scene/SceneWalls";
 
 type MovementAction = GameDirection;
 type WallPointStart = { point: Vector2; resetSignal: number };

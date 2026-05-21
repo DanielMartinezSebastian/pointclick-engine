@@ -3,6 +3,10 @@
 Date: 2026-05-21
 Status: Draft for team review
 
+Execution tracking:
+
+- PR roadmap checklist: [PR_ROADMAP_CHECKLIST.md](./PR_ROADMAP_CHECKLIST.md)
+
 ## 1. Goal and product direction
 
 The repository should evolve from a single demo into a reusable library for building modern, responsive point-and-click games with native web interoperability.

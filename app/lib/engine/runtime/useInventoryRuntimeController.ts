@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getRandomPhrase } from "../../../dialogs/getRandomPhrase";
 import type { SceneInteraction } from "../../../scenes/scenes";
-import type { InventorySlots } from "../../../components/InventoryUI";
-import type { DraggedInventoryPayload } from "../../../components/inventory/SceneDropTargets";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 import {
   addOneToInventory,
@@ -16,6 +14,20 @@ import {
   resolveInventoryDropOnPlayerMessage,
   resolvePickupPlacedItemDecision,
 } from "../../core/rules/inventoryRules";
+
+type InventoryStack = {
+  id: string;
+  name: string;
+  spriteUrl: string;
+  quantity: number;
+};
+
+type InventorySlots = Array<InventoryStack | null>;
+
+type DraggedInventoryPayload = {
+  stack: InventoryStack;
+  fromSlotIndex: number;
+};
 
 type RuntimeDraggedStack = DraggedInventoryPayload & {
   pointerX: number;
