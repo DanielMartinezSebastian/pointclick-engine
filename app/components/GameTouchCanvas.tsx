@@ -5,9 +5,9 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
-import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
+import { DebugOverlayPanel } from "./DebugOverlayPanel";
 import PixelSelect from "./PixelSelect";
 import SpeechBubble from "./SpeechBubble";
 import { getRandomPhrase } from "../dialogs/getRandomPhrase";
@@ -20,11 +20,15 @@ import { useSceneStore } from "../store/sceneStore";
 import dynamic from "next/dynamic";
 import { SCENES, type SceneInteraction, type SceneWall } from "../scenes/scenes";
 import { useMobileInputStore } from "../store/mobileInputStore";
-import { DraggedInventoryGhost, InventoryUI, type InventorySlots, type InventoryStack } from "./InventoryUI";
-import { SceneDropTargets, type DraggedInventoryPayload } from "./inventory/SceneDropTargets";
+import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
+import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneItems";
-import { getItemDefinition, resolveItemRule } from "../items";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./movement";
+import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
+import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
+import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
+import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
+import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -52,73 +56,6 @@ const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 1.2;
-const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
-const PLAYER_COLLIDER_HALF_HEIGHT = 0.95;
-const DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN = 0.05;
-
-function createInitialInventorySlots(): InventorySlots {
-  return Array.from({ length: 9 }, (_, index) => {
-    if (index !== 0) return null;
-    return {
-      id: "gameboy",
-      name: "Gameboy",
-      spriteUrl: "/assets/gameboy/gameboy.png",
-      quantity: 1,
-    } as InventoryStack;
-  });
-}
-
-function removeOneFromSlot(slots: InventorySlots, slotIndex: number): InventorySlots {
-  const slot = slots[slotIndex];
-  if (!slot) return slots;
-  const next = [...slots];
-  if (slot.quantity <= 1) {
-    next[slotIndex] = null;
-  } else {
-    next[slotIndex] = { ...slot, quantity: slot.quantity - 1 };
-  }
-  return next;
-}
-
-function addOneToInventory(slots: InventorySlots, stack: Omit<InventoryStack, "quantity">): { slots: InventorySlots; added: boolean } {
-  const existingIndex = slots.findIndex((current) => current?.id === stack.id);
-  if (existingIndex >= 0) {
-    const next = [...slots];
-    const existing = next[existingIndex];
-    if (!existing) return { slots, added: false };
-    next[existingIndex] = { ...existing, quantity: existing.quantity + 1 };
-    return { slots: next, added: true };
-  }
-
-  const emptyIndex = slots.findIndex((current) => current == null);
-  if (emptyIndex < 0) {
-    return { slots, added: false };
-  }
-
-  const next = [...slots];
-  next[emptyIndex] = { ...stack, quantity: 1 };
-  return { slots: next, added: true };
-}
-
-function getInteractionWorldPosition(interaction: SceneInteraction): [number, number, number] {
-  return [
-    interaction.position[0],
-    interaction.position[1] + interaction.halfSize[1] + 0.175,
-    interaction.position[2],
-  ];
-}
-
-function keepInteractionCollidable(interaction: SceneInteraction, playerSpawnY: number): SceneInteraction {
-  if (!interaction.hasCollision) return interaction;
-
-  const minTopY = playerSpawnY - PLAYER_COLLIDER_HALF_HEIGHT + DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN;
-  const minCenterY = minTopY - interaction.halfSize[1];
-  if (interaction.position[1] >= minCenterY) return interaction;
-
-  const position = [...interaction.position] as [number, number, number];
-  position[1] = minCenterY;
-  return { ...interaction, position };
-}
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -1631,76 +1568,82 @@ function InteractionTargetsEditorPanel({
 
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
-  const pathname = usePathname();
-  const isDebug = DEBUG_ROUTE_ENABLED && pathname === "/debug";
+  const { isDebug } = useDebugModeEffects();
 
-  useEffect(() => {
-    console.log("GameTouchCanvas: debug mode ->", isDebug, { pathname });
-  }, [isDebug, pathname]);
+  const {
+    debugPanelSide,
+    setDebugPanelSide,
+    isDebugGroundVisible,
+    setIsDebugGroundVisible,
+    isDebugWallsVisible,
+    setIsDebugWallsVisible,
+    editorMode,
+    setEditorMode,
+    wallToolMode,
+    wallPointResetSignal,
+    handleWallToolModeChange,
+    resetWallPointTool,
+    speechDraft,
+    setSpeechDraft,
+    speechCharsPerSecond,
+    setSpeechCharsPerSecond,
+  } = useDebugPanelController();
+  const {
+    sceneId,
+    sceneBackground,
+    setScene,
+    sceneInteractions,
+    requestRespawn,
+    playerPosition,
+    scenePlayerSpawn,
+    updateInteraction,
+    resetInteractionsFromSceneConfig,
+    sceneOptions,
+  } = useSceneRuntimeController();
 
-  useEffect(() => {
-    if (!isDebug) return;
-    const styleEl = document.createElement("style");
-    styleEl.setAttribute("data-debug-cursor-override", "true");
-    styleEl.innerHTML = `* { cursor: auto !important; }`;
-    document.head.appendChild(styleEl);
-    return () => {
-      styleEl.remove();
-    };
-  }, [isDebug]);
-  const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
-  const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
-  const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
-  const [editorMode, setEditorMode] = useState<DebugEditorMode>("walls");
-  const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
-  const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
-  const [speechDraft, setSpeechDraft] = useState("Hola. Este es un bocadillo de prueba.");
-  const [speechText, setSpeechText] = useState("");
-  const [speechVisible, setSpeechVisible] = useState(false);
-  const [speechTrigger, setSpeechTrigger] = useState(0);
-  const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
-  const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() => createInitialInventorySlots());
-  const [draggedStack, setDraggedStack] = useState<(DraggedInventoryPayload & { pointerX: number; pointerY: number }) | null>(null);
-  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
-  const sceneId = useSceneStore((s) => s.sceneId);
-  const sceneBackground = useSceneStore((s) => s.scene.background);
-  const setScene = useSceneStore((s) => s.setScene);
-  const sceneInteractions = useSceneStore((s) => s.scene.interactions);
-  const requestRespawn = useSceneStore((s) => s.requestRespawn);
-  const playerPosition = useSceneStore((s) => s.playerPosition);
-  const scenePlayerSpawn = useSceneStore((s) => s.scene.playerSpawn);
-  const updateInteraction = useSceneStore((s) => s.updateInteraction);
-  const resetInteractionsFromSceneConfig = useSceneStore((s) => s.resetInteractionsFromSceneConfig);
+  const {
+    speechText,
+    speechVisible,
+    speechTrigger,
+    isInventoryOpen,
+    inventorySlots,
+    draggedStack,
+    placedItems,
+    setIsInventoryOpen,
+    handleBoundaryHit,
+    showSpeechBubble,
+    hideSpeechBubble,
+    handleInventoryDropHit,
+    handleInventoryDropMiss,
+    handleInventoryDropOnPlayer,
+    handlePickupPlacedItem,
+    updatePlacedItemPosition,
+    movePlacedItemToPlayer,
+    removePlacedItemById,
+    handleStartInventoryDrag,
+  } = useInventoryRuntimeController({
+    sceneId,
+    sceneInteractions,
+    playerPosition,
+  });
 
-  const sceneOptions = useMemo(
-    () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
-    [],
-  );
+  const {
+    updateInteractionPosition,
+    updateInteractionHalfSize,
+    updateInteractionRotationDeg,
+    moveInteractionToPlayer,
+  } = useInteractionEditorController({
+    playerPosition,
+    scenePlayerSpawnY: scenePlayerSpawn[1],
+    updateInteraction,
+  });
 
   const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
-  const handleWallToolModeChange = useCallback((mode: WallToolMode) => {
-    setWallToolMode(mode);
-    setWallPointResetSignal((signal) => signal + 1);
-  }, []);
-
   const handleSpriteReady = (spriteRef: React.RefObject<DavidSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
   };
-
-  const handleBoundaryHit = useCallback((phrase: string) => {
-    setSpeechText(phrase);
-    setSpeechVisible(true);
-    setSpeechTrigger((current) => current + 1);
-  }, []);
-
-  const showSpeechBubble = useCallback((nextText: string) => {
-    setSpeechText(nextText);
-    setSpeechVisible(true);
-    setSpeechTrigger((current) => current + 1);
-  }, []);
 
   const runSpeechBubble = useCallback(() => {
     const nextText = speechDraft.trim();
@@ -1708,200 +1651,32 @@ export default function GameTouchCanvas() {
     showSpeechBubble(nextText);
   }, [showSpeechBubble, speechDraft]);
 
-  const hideSpeechBubble = useCallback(() => {
-    setSpeechVisible(false);
-  }, []);
-
-  const handleInventoryDropHit = useCallback((interaction: SceneInteraction, payload: DraggedInventoryPayload) => {
-    const itemDefinition = getItemDefinition(payload.stack.id);
-    if (!itemDefinition) {
-      showSpeechBubble("No conozco este item todavía.");
-      setDraggedStack(null);
-      return;
-    }
-
-    const rule = resolveItemRule(itemDefinition.id, interaction.id);
-    if (!rule) {
-      showSpeechBubble(getRandomPhrase(interaction.dialogKeys.miss));
-      setDraggedStack(null);
-      return;
-    }
-
-    if (rule.outcome === "place") {
-      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
-      setPlacedItems((currentPlaced) => {
-        const worldPosition = getInteractionWorldPosition(interaction);
-        const placedId = `${itemDefinition.id}-${interaction.id}-${Date.now()}`;
-        return [
-          ...currentPlaced,
-          {
-            id: placedId,
-            itemId: itemDefinition.id,
-            interactionId: interaction.id,
-            name: itemDefinition.name,
-            spriteUrl: itemDefinition.spriteUrl,
-            worldPosition,
-            canPickup: rule.placeCanPickup ?? false,
-            hasCollision: rule.placeHasCollision ?? false,
-            collisionHalfSize: rule.placeCollisionHalfSize,
-            pickupSuccessDialogKey: rule.pickupSuccessDialogKey,
-            pickupBlockedDialogKey: rule.pickupBlockedDialogKey,
-          },
-        ];
-      });
-      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
-      setDraggedStack(null);
-      return;
-    }
-
-    if (rule.outcome === "consume") {
-      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
-      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
-      setDraggedStack(null);
-      return;
-    }
-
-    showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? rule.missDialogKey ?? interaction.dialogKeys.miss));
-    setDraggedStack(null);
-  }, [showSpeechBubble]);
-
-  const handleInventoryDropMiss = useCallback((payload: DraggedInventoryPayload, interaction?: SceneInteraction) => {
-    const itemRule = interaction ? resolveItemRule(payload.stack.id, interaction.id) : null;
-    const fallbackMiss = itemRule?.missDialogKey
-      ?? interaction?.dialogKeys.miss
-      ?? sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys.miss
-      ?? "inventoryDropMiss";
-
-    showSpeechBubble(getRandomPhrase(fallbackMiss));
-    setDraggedStack(null);
-  }, [sceneInteractions, showSpeechBubble]);
-
-  const handleInventoryDropOnPlayer = useCallback((payload: DraggedInventoryPayload) => {
-    const itemDefinition = getItemDefinition(payload.stack.id);
-    if (!itemDefinition) {
-      showSpeechBubble("No conozco este item todavía.");
-      setDraggedStack(null);
-      return;
-    }
-
-    const descriptionKey = itemDefinition.descriptionDialogKey;
-    if (descriptionKey) {
-      showSpeechBubble(getRandomPhrase(descriptionKey));
-    } else {
-      showSpeechBubble(`Es ${itemDefinition.name}.`);
-    }
-
-    setDraggedStack(null);
-  }, [showSpeechBubble]);
-
-  const handlePickupPlacedItem = useCallback((placedItem: PlacedSceneItem) => {
-    const itemDefinition = getItemDefinition(placedItem.itemId);
-    if (!itemDefinition) {
-      return;
-    }
-
-    if (!placedItem.canPickup) {
-      showSpeechBubble(getRandomPhrase(placedItem.pickupBlockedDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.blocked"));
-      return;
-    }
-
-    let added = false;
-    setInventorySlots((currentSlots) => {
-      const result = addOneToInventory(currentSlots, {
-        id: itemDefinition.id,
-        name: itemDefinition.name,
-        spriteUrl: itemDefinition.spriteUrl,
-      });
-      added = result.added;
-      return result.added ? result.slots : currentSlots;
-    });
-
-    if (!added) {
-      showSpeechBubble("Inventario lleno.");
-      return;
-    }
-
-    setPlacedItems((currentPlaced) => currentPlaced.filter((currentItem) => currentItem.id !== placedItem.id));
-    showSpeechBubble(getRandomPhrase(placedItem.pickupSuccessDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed"));
-  }, [showSpeechBubble]);
-
-  const updatePlacedItemPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
-    setPlacedItems((currentPlaced) => currentPlaced.map((item) => {
-      if (item.id !== id) return item;
-      const worldPosition = [...item.worldPosition] as [number, number, number];
-      worldPosition[axis] = value;
-      return { ...item, worldPosition };
-    }));
-  }, []);
-
-  const movePlacedItemToPlayer = useCallback((id: string) => {
-    setPlacedItems((currentPlaced) => currentPlaced.map((item) => {
-      if (item.id !== id) return item;
-      return {
-        ...item,
-        worldPosition: [playerPosition[0], item.worldPosition[1], playerPosition[2]],
-      };
-    }));
-  }, [playerPosition]);
-
-  const removePlacedItemById = useCallback((id: string) => {
-    setPlacedItems((currentPlaced) => currentPlaced.filter((item) => item.id !== id));
-  }, []);
-
-  const updateInteractionPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
-    updateInteraction(id, (interaction) => {
-      const position = [...interaction.position] as [number, number, number];
-      position[axis] = value;
-      return keepInteractionCollidable({ ...interaction, position }, scenePlayerSpawn[1]);
-    });
-  }, [scenePlayerSpawn, updateInteraction]);
-
-  const updateInteractionHalfSize = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
-    updateInteraction(id, (interaction) => {
-      const halfSize = [...interaction.halfSize] as [number, number, number];
-      halfSize[axis] = Math.max(0.05, value);
-      return keepInteractionCollidable({ ...interaction, halfSize }, scenePlayerSpawn[1]);
-    });
-  }, [scenePlayerSpawn, updateInteraction]);
-
-  const updateInteractionRotationDeg = useCallback((id: string, value: number) => {
-    updateInteraction(id, (interaction) => ({
-      ...interaction,
-      rotationY: (value * Math.PI) / 180,
-    }));
-  }, [updateInteraction]);
-
-  const moveInteractionToPlayer = useCallback((id: string) => {
-    updateInteraction(id, (interaction) => ({
-      ...interaction,
-      position: [playerPosition[0], interaction.position[1], playerPosition[2]],
-    }));
-  }, [playerPosition, updateInteraction]);
-
-  const handleStartInventoryDrag = useCallback((slotIndex: number, clientX: number, clientY: number) => {
-    const stack = inventorySlots[slotIndex];
-    if (!stack) return;
-
-    setIsInventoryOpen(false);
-    setDraggedStack({
-      stack,
-      fromSlotIndex: slotIndex,
-      pointerX: clientX,
-      pointerY: clientY,
-    });
-  }, [inventorySlots]);
-
-  useEffect(() => {
-    if (sceneId !== "personalRoom") return;
-
-    const timeoutId = window.setTimeout(() => {
-      showSpeechBubble(getRandomPhrase("personalRoomWelcome"));
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [sceneId, showSpeechBubble]);
+  const debugEditorContent =
+    editorMode === "walls" ? (
+      <WallEditorPanel
+        wallToolMode={wallToolMode}
+        setWallToolMode={handleWallToolModeChange}
+        onResetPointTool={resetWallPointTool}
+      />
+    ) : editorMode === "ground" ? (
+      <GroundEditorPanel />
+    ) : editorMode === "targets" ? (
+      <InteractionTargetsEditorPanel
+        interactions={sceneInteractions}
+        onSetPosition={updateInteractionPosition}
+        onSetHalfSize={updateInteractionHalfSize}
+        onSetRotationDeg={updateInteractionRotationDeg}
+        onMoveToPlayer={moveInteractionToPlayer}
+        onResetFromSceneConfig={resetInteractionsFromSceneConfig}
+      />
+    ) : editorMode === "items" ? (
+      <PlacedItemsEditorPanel
+        items={placedItems}
+        onSetPosition={updatePlacedItemPosition}
+        onMoveToPlayer={movePlacedItemToPlayer}
+        onRemove={removePlacedItemById}
+      />
+    ) : null;
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
@@ -1978,134 +1753,34 @@ export default function GameTouchCanvas() {
           initialPointerY={draggedStack.pointerY}
         />
       )}
-      {isDebug && (
-        <div
-          style={{
-            position: "fixed",
-            top: "16px",
-            left: debugPanelSide === "left" ? "16px" : undefined,
-            right: debugPanelSide === "right" ? "16px" : undefined,
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            zIndex: 10001,
-            padding: "1rem 1.2rem",
-            borderRadius: "2px",
-            border: "3px solid #00ff41",
-            background: "rgb(12 19 48 / 95%)",
-            color: "#00ff41",
-            backdropFilter: "blur(4px)",
-            minWidth: "260px",
-            maxWidth: "420px",
-            maxHeight: "calc(100vh - 32px)",
-            overflowY: "auto",
-            boxShadow: "0 0 16px rgba(0, 255, 65, 0.3), inset 0 0 8px rgba(0, 255, 65, 0.1)",
-            fontFamily: "var(--font-pixel), monospace",
-            fontSize: "13px",
-            letterSpacing: "1px",
-            textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
-            pointerEvents: "auto",
-          }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            <DebugButton
-              label={isDebugGroundVisible ? "Ocultar suelo" : "Mostrar suelo"}
-              onClick={() => setIsDebugGroundVisible((visible) => !visible)}
-            />
-            <DebugButton
-              label={isDebugWallsVisible ? "Ocultar paredes" : "Mostrar paredes"}
-              onClick={() => setIsDebugWallsVisible((visible) => !visible)}
-            />
-          </div>
-          <DebugButton
-            label={debugPanelSide === "left" ? "Panel a derecha" : "Panel a izquierda"}
-            onClick={() => setDebugPanelSide((side) => (side === "left" ? "right" : "left"))}
-          />
-        <PixelSelect
-          label="Escenario"
-          value={sceneId}
-          onChange={(value) => setScene(value)}
-          options={sceneOptions}
-        />
-        <strong style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "1px", lineHeight: "1.6" }}>{readyMessage}</strong>
-        <DebugButton label="Reaparecer en spawn" onClick={requestRespawn} />
-        {isDebug && (
-          <PixelSelect
-            label="Modo editor"
-            value={editorMode}
-            onChange={(value) => setEditorMode(value as DebugEditorMode)}
-            options={[
-              { label: "Editar paredes", value: "walls" },
-              { label: "Editar suelo", value: "ground" },
-              { label: "Editar items", value: "items" },
-              { label: "Editar targets", value: "targets" },
-            ]}
-          />
-        )}
-        {isDebug && (
-          <div style={{ display: "grid", gap: "8px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-            <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Bocadillo de dialogo</strong>
-            <textarea
-              value={speechDraft}
-              onChange={(e) => setSpeechDraft(e.target.value)}
-              placeholder="Escribe el texto para el personaje"
-              rows={4}
-              style={{
-                width: "100%",
-                minHeight: "84px",
-                borderRadius: "2px",
-                border: "2px solid #00ff41",
-                background: "rgb(8 12 32 / 90%)",
-                color: "#00ff41",
-                padding: "0.6rem",
-                fontSize: "11px",
-                fontFamily: "var(--font-pixel), monospace",
-                letterSpacing: "0.5px",
-                resize: "vertical",
-                outline: "none",
-                cursor: "auto",
-              }}
-            />
-            <DebugNumberInput
-              label="Velocidad (chars/seg)"
-              value={speechCharsPerSecond}
-              step={1}
-              onChange={(value) => setSpeechCharsPerSecond(Math.max(1, Math.round(value)))}
-            />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <DebugButton label="Hablar" onClick={runSpeechBubble} disabled={speechDraft.trim().length === 0} />
-              <DebugButton label="Ocultar" onClick={hideSpeechBubble} disabled={!speechVisible} />
-            </div>
-          </div>
-        )}
-        {isDebug && editorMode === "walls" && (
-          <WallEditorPanel
-            wallToolMode={wallToolMode}
-            setWallToolMode={handleWallToolModeChange}
-            onResetPointTool={() => setWallPointResetSignal((signal) => signal + 1)}
-          />
-        )}
-        {isDebug && editorMode === "ground" && <GroundEditorPanel />}
-        {isDebug && editorMode === "targets" && (
-          <InteractionTargetsEditorPanel
-            interactions={sceneInteractions}
-            onSetPosition={updateInteractionPosition}
-            onSetHalfSize={updateInteractionHalfSize}
-            onSetRotationDeg={updateInteractionRotationDeg}
-            onMoveToPlayer={moveInteractionToPlayer}
-            onResetFromSceneConfig={resetInteractionsFromSceneConfig}
-          />
-        )}
-        {isDebug && editorMode === "items" && (
-          <PlacedItemsEditorPanel
-            items={placedItems}
-            onSetPosition={updatePlacedItemPosition}
-            onMoveToPlayer={movePlacedItemToPlayer}
-            onRemove={removePlacedItemById}
-          />
-        )}
-        </div>
-      )}
+      <DebugOverlayPanel
+        isDebug={isDebug}
+        debugPanelSide={debugPanelSide}
+        onTogglePanelSide={() =>
+          setDebugPanelSide((side) => (side === "left" ? "right" : "left"))
+        }
+        isDebugGroundVisible={isDebugGroundVisible}
+        onToggleGround={() => setIsDebugGroundVisible((visible) => !visible)}
+        isDebugWallsVisible={isDebugWallsVisible}
+        onToggleWalls={() => setIsDebugWallsVisible((visible) => !visible)}
+        sceneId={sceneId}
+        onSceneChange={setScene}
+        sceneOptions={sceneOptions}
+        readyMessage={readyMessage}
+        onRespawn={requestRespawn}
+        editorMode={editorMode}
+        onEditorModeChange={setEditorMode}
+        speechDraft={speechDraft}
+        onSpeechDraftChange={setSpeechDraft}
+        speechCharsPerSecond={speechCharsPerSecond}
+        onSpeechCharsPerSecondChange={(value) =>
+          setSpeechCharsPerSecond(Math.max(1, Math.round(value)))
+        }
+        onRunSpeech={runSpeechBubble}
+        onHideSpeech={hideSpeechBubble}
+        speechVisible={speechVisible}
+        editorContent={debugEditorContent}
+      />
     </div>
   );
 }
