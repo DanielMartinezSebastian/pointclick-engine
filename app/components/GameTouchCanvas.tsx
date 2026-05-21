@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
@@ -21,6 +21,7 @@ import { useInteractionEditorController } from "../lib/engine/runtime/useInterac
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
+import type { RuntimeEvent } from "../lib/engine/types/runtimeEvents";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -32,6 +33,11 @@ const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const { isDebug } = useDebugModeEffects();
+
+  const handleRuntimeEvent = useCallback((event: RuntimeEvent) => {
+    if (!isDebug) return;
+    console.debug("[runtime-event]", event);
+  }, [isDebug]);
 
   const {
     debugPanelSide,
@@ -88,6 +94,7 @@ export default function GameTouchCanvas() {
     sceneId,
     sceneInteractions,
     playerPosition,
+    onRuntimeEvent: handleRuntimeEvent,
   });
 
   const {
@@ -147,6 +154,7 @@ export default function GameTouchCanvas() {
               speechCharsPerSecond={speechCharsPerSecond}
               onBoundaryHit={handleBoundaryHit}
               onSpeechDismiss={hideSpeechBubble}
+              onRuntimeEvent={handleRuntimeEvent}
             />
           </Suspense>
           <SceneDropTargets

@@ -6,7 +6,7 @@ Este documento sirve para verificar, en cualquier momento, si la ruta de PRs de 
 
 - [x] PR 1 completada: separar engine de UI
 - [x] PR 2 completada: mover contenido demo a modulo demo
-- [ ] PR 3 completada: cerrar calidad de runtime (tests/eventos)
+- [x] PR 3 completada: cerrar calidad de runtime (tests/eventos)
 
 ## Convenciones de seguimiento
 
@@ -106,27 +106,33 @@ Este documento sirve para verificar, en cualquier momento, si la ruta de PRs de 
 - Agregar pruebas deterministas y eventos runtime basicos.
 
 **Estado**
-- Estado: `Pendiente`
+- Estado: `Completada`
 - PR: 
-- Branch: 
-- Fecha de cierre: 
+- Branch: `main`
+- Fecha de cierre: 2026-05-22
 
 **Checklist tecnico**
-- [ ] Hay tests deterministas para movimiento/pathfinding.
-- [ ] Se cubren escenarios clave de interaccion (`drop`, `pickup`, colisiones relevantes).
-- [ ] Runtime expone/centraliza eventos base (`onMove`, `onCollide`, `onDrop`, `onDialog`) o equivalente definido.
-- [ ] Se documentan limites y riesgos residuales.
+- [x] Hay tests deterministas para movimiento/pathfinding.
+- [x] Se cubren escenarios clave de interaccion (`drop`, `pickup`, colisiones relevantes).
+- [x] Runtime expone/centraliza eventos base (`onMove`, `onCollide`, `onDrop`, `onDialog`) o equivalente definido.
+- [x] Se documentan limites y riesgos residuales.
 
 **Validacion**
-- [ ] `npm run lint` en verde
-- [ ] `npm run test` en verde
-- [ ] `npm run build` en verde
+- [x] `npm run lint` en verde
+- [x] `npm run test` en verde
+- [x] `npm run build` en verde
 
 **Evidencias**
 - Archivos clave tocados:
-  - 
+  - `app/lib/engine/types/runtimeEvents.ts`
+  - `app/lib/engine/runtime/GameTouchSpriteRuntime.tsx`
+  - `app/lib/engine/runtime/useInventoryRuntimeController.ts`
+  - `app/components/GameTouchCanvas.tsx`
+  - `app/lib/engine/movement/findPath.test.ts`
 - Notas:
-  - 
+  - Se añadieron eventos runtime tipados y callback central en canvas para observabilidad en debug.
+  - Se añadieron tests deterministas de `findPath` (ruta directa, desvio por obstaculo y caso sin solucion).
+  - Riesgo residual: `onCollide` actual refleja colision logica (`boundary`/`stuck`) y no eventos físicos de Rapier por contacto específico.
 
 ---
 
@@ -134,8 +140,8 @@ Este documento sirve para verificar, en cualquier momento, si la ruta de PRs de 
 
 Marcar la ruta como completada solo cuando:
 
-- [ ] Las 3 PRs esten en estado `Completada`.
-- [ ] Todas las validaciones de cada PR esten en verde.
+- [x] Las 3 PRs esten en estado `Completada`.
+- [x] Todas las validaciones de cada PR esten en verde.
 - [ ] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`.
 
 ## Registro rapido de avances
@@ -143,3 +149,4 @@ Marcar la ruta como completada solo cuando:
 - 2026-05-22: Se crea este checklist de control de ruta.
 - 2026-05-22: PR 1 completada. Engine deja de importar `app/components/**`; validado con lint, test y build.
 - 2026-05-22: PR 2 completada. Contenido demo (escenas/items/dialogos) movido a `app/demo/content/**`; validado con lint, test y build.
+- 2026-05-22: PR 3 completada. Se incorporan eventos runtime y tests de pathfinding; validado con lint, test y build.

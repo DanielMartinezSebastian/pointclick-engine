@@ -17,6 +17,7 @@ import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { type WallToolMode } from "../types/gameRuntime";
+import { emitRuntimeEvent, type RuntimeEventHandler } from "../types/runtimeEvents";
 import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
 import { SceneGround } from "../render/scene/SceneGround";
 import { SceneWallPointPreview } from "../render/scene/SceneWallPointPreview";
@@ -74,6 +75,7 @@ export function GameTouchSpriteRuntime({
   speechCharsPerSecond,
   onBoundaryHit,
   onSpeechDismiss,
+  onRuntimeEvent,
 }: {
   activeCharacter: GameCharacterName;
   debug: boolean;
@@ -87,6 +89,7 @@ export function GameTouchSpriteRuntime({
   speechCharsPerSecond: number;
   onBoundaryHit: (phrase: string) => void;
   onSpeechDismiss: () => void;
+  onRuntimeEvent?: RuntimeEventHandler;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -98,6 +101,7 @@ export function GameTouchSpriteRuntime({
   const wallInteractionRef = useRef<WallInteraction>(null);
   const wallPointStartRef = useRef<WallPointStart | null>(null);
   const lastBoundaryHitRef = useRef<number>(0);
+  const lastStuckHitRef = useRef<number>(0);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const sceneId = useSceneStore((s) => s.sceneId);
@@ -415,6 +419,11 @@ export function GameTouchSpriteRuntime({
       if (now - lastBoundaryHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
         lastBoundaryHitRef.current = now;
         const phrase = getRandomPhrase("boundaryHit");
+        emitRuntimeEvent(onRuntimeEvent, {
+          type: "onCollide",
+          reason: "boundary",
+          position: [clampedPosition.x, currentPosition.y, clampedPosition.z],
+        });
         onBoundaryHit(phrase);
       }
     }
@@ -431,6 +440,15 @@ export function GameTouchSpriteRuntime({
     if (stuck) {
       const vel = body.linvel();
       body.setLinvel({ x: 0, y: vel.y, z: 0 }, true);
+      const now = performance.now();
+      if (now - lastStuckHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
+        lastStuckHitRef.current = now;
+        emitRuntimeEvent(onRuntimeEvent, {
+          type: "onCollide",
+          reason: "stuck",
+          position: [safePosition.x, safePosition.y, safePosition.z],
+        });
+      }
     }
 
     const depthFactor = MathUtils.clamp(
@@ -447,6 +465,11 @@ export function GameTouchSpriteRuntime({
       console.log(`[player] x=${roundedX}, y=${roundedY}, z=${roundedZ}`);
       lastLoggedPositionRef.current = { x: roundedX, y: roundedY, z: roundedZ };
       setPlayerPosition([roundedX, roundedY, roundedZ]);
+      emitRuntimeEvent(onRuntimeEvent, {
+        type: "onMove",
+        position: [roundedX, roundedY, roundedZ],
+        action,
+      });
     }
 
     const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
