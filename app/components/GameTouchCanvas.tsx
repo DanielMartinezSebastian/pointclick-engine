@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Suspense, useCallback, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
-import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
+import { Physics, RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
+import { MathUtils, Vector2 } from "three";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import { DebugOverlayPanel } from "./DebugOverlayPanel";
@@ -21,7 +21,9 @@ import { useMobileInputStore } from "../store/mobileInputStore";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
 import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
+import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
+import { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
@@ -78,110 +80,6 @@ function getWallAxes(rotationY: number) {
 
 function projectDistance(originX: number, originZ: number, pointX: number, pointZ: number, axis: Vector2) {
   return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
-}
-
-// ---------------------------------------------------------------------------
-// BackgroundPlane — plano con textura anclado a la cámara
-// ---------------------------------------------------------------------------
-function BackgroundPlane({ url }: { url: string | null | undefined }) {
-  const [texture, setTexture] = useState<import("three").Texture | null>(null);
-  const meshRef = useRef<Mesh | null>(null);
-  const ground = useSceneStore((s) => s.scene.ground);
-
-  useEffect(() => {
-    if (!url) return;
-
-    const loader = new TextureLoader();
-    let mounted = true;
-    let loadedTexture: import("three").Texture | null = null;
-
-    loader.load(
-      url,
-      (tex) => {
-        if (!mounted) {
-          tex.dispose();
-          return;
-        }
-
-        loadedTexture = tex;
-        setTexture(tex);
-      },
-      undefined,
-      (err) => {
-        console.warn("BackgroundPlane: texture load error", err);
-      },
-    );
-
-    return () => {
-      mounted = false;
-      if (loadedTexture) {
-        loadedTexture.dispose();
-      }
-    };
-  }, [url]);
-
-  // calcular tamaño básico a partir del aspect de la imagen si está disponible
-  let aspect = 16 / 9;
-  const textureImage = texture?.image as { width?: number; height?: number } | undefined;
-  if (textureImage?.width && textureImage?.height) {
-    aspect = textureImage.width / textureImage.height;
-  }
-
-  const height = 19.28;
-  const groundCenterX = (ground.minX + ground.maxX) / 2;
-  // Tamaño pixel-perfecto: zoom fijo = 56 → 1 px = 1/56 unidades mundo.
-  // NO estirar: los muros están calibrados a esta escala exacta.
-  const width = height * aspect;
-
-  useFrame(({ camera }) => {
-    if (!meshRef.current) return;
-    const dir = new Vector3();
-    camera.getWorldDirection(dir);
-    const distance = 10;
-    // Seguir cámara en Y y Z para mantener la profundidad visual correcta,
-    // pero fijar X al centro del mundo: así el fondo se desplaza en bloque
-    // con los elementos del juego cuando la cámara panea horizontalmente.
-    meshRef.current.position
-      .copy(camera.position)
-      .addScaledVector(dir, distance);
-    meshRef.current.position.x = groundCenterX;
-    meshRef.current.quaternion.copy(camera.quaternion);
-  });
-
-  if (!url) return null;
-  if (!texture) return null;
-
-  return (
-    <mesh ref={meshRef} frustumCulled={false} renderOrder={-100}>
-      <planeGeometry args={[width, height]} />
-      <meshBasicMaterial map={texture} side={DoubleSide} depthTest={false} depthWrite={false} />
-    </mesh>
-  );
-}
-
-function CollisionSphere() {
-  const globeTexture = useLoader(TextureLoader, "/globe.svg");
-  const groundY = useSceneStore((s) => s.scene.ground.y);
-  // Posicionar sobre el suelo: groundY + collider-height + radio de la esfera
-  const posY = groundY + 0.1 + 0.5;
-
-  return (
-    <RigidBody
-      type="dynamic"
-      colliders={false}
-      position={[-1.09, posY, 13.01]}
-      gravityScale={1.2}
-      linearDamping={1.0}
-      angularDamping={0.8}
-      ccd
-    >
-      <BallCollider args={[0.5]} friction={1.5} restitution={0.05} />
-      <mesh>
-        <sphereGeometry args={[0.5, 48, 48]} />
-        <meshStandardMaterial map={globeTexture} roughness={0.55} metalness={0.02} />
-      </mesh>
-    </RigidBody>
-  );
 }
 
 function GameSceneContents({
@@ -669,7 +567,7 @@ function GameTouchSprite({
       {debug && wallToolMode === "points" && (
         <SceneWallPointPreview preview={wallPointPreview} groundY={ground.y} />
       )}
-      <CollisionSphere />
+      <SceneCollisionSphere />
       <RigidBody
         ref={characterBodyRef}
         type="dynamic"
@@ -841,7 +739,7 @@ export default function GameTouchCanvas() {
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
-        <BackgroundPlane url={sceneBackground} />
+        <SceneBackgroundPlane url={sceneBackground} />
         <CameraController />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
