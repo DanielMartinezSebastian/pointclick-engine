@@ -41,7 +41,7 @@ export default function Joystick() {
         zone: containerRef.current,
         mode: "static",
         position: { right: "20%", bottom: "20%" },
-        color: "white",
+        color: "skyblue",
         size: 50,
         restJoystick: true,
         threshold: 0.08,
