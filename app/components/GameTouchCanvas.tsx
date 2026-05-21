@@ -51,7 +51,7 @@ const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
-const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
+const CAMERA_FRONT_PLAYABLE_MARGIN = 1.2;
 const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
 const PLAYER_COLLIDER_HALF_HEIGHT = 0.95;
 const DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN = 0.05;
@@ -606,6 +606,8 @@ function GameTouchSprite({
     const maxX = ground.maxX - PLAYER_BOUND_MARGIN;
     const minZ = ground.minZ + PLAYER_BOUND_MARGIN;
     const maxZByGround = ground.maxZ - PLAYER_BOUND_MARGIN;
+    // Limita el frente para no entrar en clipping de cámara (corte del sprite).
+    // El margen se mantiene corto para permitir bajar más sin recortarse.
     const maxZByCamera = CAMERA_POSITION[2] - CAMERA_FRONT_PLAYABLE_MARGIN;
     const maxZ = Math.min(maxZByGround, maxZByCamera);
 
