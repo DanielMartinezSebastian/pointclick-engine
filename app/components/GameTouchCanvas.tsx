@@ -23,8 +23,16 @@ import { useMobileInputStore } from "../store/mobileInputStore";
 import { DraggedInventoryGhost, InventoryUI, type InventorySlots, type InventoryStack } from "./InventoryUI";
 import { SceneDropTargets, type DraggedInventoryPayload } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneItems";
-import { getItemDefinition, resolveItemRule } from "../items";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./movement";
+import {
+  addOneToInventory,
+  inventoryRuleMessages,
+  removeOneFromSlot,
+  resolveInventoryDropHitDecision,
+  resolveInventoryDropMissDialogKey,
+  resolveInventoryDropOnPlayerMessage,
+  resolvePickupPlacedItemDecision,
+} from "../lib/core/rules/inventoryRules";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -66,46 +74,6 @@ function createInitialInventorySlots(): InventorySlots {
       quantity: 1,
     } as InventoryStack;
   });
-}
-
-function removeOneFromSlot(slots: InventorySlots, slotIndex: number): InventorySlots {
-  const slot = slots[slotIndex];
-  if (!slot) return slots;
-  const next = [...slots];
-  if (slot.quantity <= 1) {
-    next[slotIndex] = null;
-  } else {
-    next[slotIndex] = { ...slot, quantity: slot.quantity - 1 };
-  }
-  return next;
-}
-
-function addOneToInventory(slots: InventorySlots, stack: Omit<InventoryStack, "quantity">): { slots: InventorySlots; added: boolean } {
-  const existingIndex = slots.findIndex((current) => current?.id === stack.id);
-  if (existingIndex >= 0) {
-    const next = [...slots];
-    const existing = next[existingIndex];
-    if (!existing) return { slots, added: false };
-    next[existingIndex] = { ...existing, quantity: existing.quantity + 1 };
-    return { slots: next, added: true };
-  }
-
-  const emptyIndex = slots.findIndex((current) => current == null);
-  if (emptyIndex < 0) {
-    return { slots, added: false };
-  }
-
-  const next = [...slots];
-  next[emptyIndex] = { ...stack, quantity: 1 };
-  return { slots: next, added: true };
-}
-
-function getInteractionWorldPosition(interaction: SceneInteraction): [number, number, number] {
-  return [
-    interaction.position[0],
-    interaction.position[1] + interaction.halfSize[1] + 0.175,
-    interaction.position[2],
-  ];
 }
 
 function keepInteractionCollidable(interaction: SceneInteraction, playerSpawnY: number): SceneInteraction {
@@ -1713,116 +1681,94 @@ export default function GameTouchCanvas() {
   }, []);
 
   const handleInventoryDropHit = useCallback((interaction: SceneInteraction, payload: DraggedInventoryPayload) => {
-    const itemDefinition = getItemDefinition(payload.stack.id);
-    if (!itemDefinition) {
-      showSpeechBubble("No conozco este item todavía.");
+    const decision = resolveInventoryDropHitDecision({
+      interaction,
+      payload,
+      now: Date.now(),
+    });
+
+    if (decision.kind === "unknown-item") {
+      showSpeechBubble(decision.message);
       setDraggedStack(null);
       return;
     }
 
-    const rule = resolveItemRule(itemDefinition.id, interaction.id);
-    if (!rule) {
-      showSpeechBubble(getRandomPhrase(interaction.dialogKeys.miss));
+    if (decision.kind === "rule-miss") {
+      showSpeechBubble(getRandomPhrase(decision.dialogKey));
       setDraggedStack(null);
       return;
     }
 
-    if (rule.outcome === "place") {
-      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
-      setPlacedItems((currentPlaced) => {
-        const worldPosition = getInteractionWorldPosition(interaction);
-        const placedId = `${itemDefinition.id}-${interaction.id}-${Date.now()}`;
-        return [
-          ...currentPlaced,
-          {
-            id: placedId,
-            itemId: itemDefinition.id,
-            interactionId: interaction.id,
-            name: itemDefinition.name,
-            spriteUrl: itemDefinition.spriteUrl,
-            worldPosition,
-            canPickup: rule.placeCanPickup ?? false,
-            hasCollision: rule.placeHasCollision ?? false,
-            collisionHalfSize: rule.placeCollisionHalfSize,
-            pickupSuccessDialogKey: rule.pickupSuccessDialogKey,
-            pickupBlockedDialogKey: rule.pickupBlockedDialogKey,
-          },
-        ];
-      });
-      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
+    if (decision.kind === "place") {
+      setInventorySlots((currentSlots) =>
+        removeOneFromSlot(currentSlots, decision.fromSlotIndex),
+      );
+      setPlacedItems((currentPlaced) => [...currentPlaced, decision.placedItem]);
+      showSpeechBubble(getRandomPhrase(decision.dialogKey));
       setDraggedStack(null);
       return;
     }
 
-    if (rule.outcome === "consume") {
-      setInventorySlots((currentSlots) => removeOneFromSlot(currentSlots, payload.fromSlotIndex));
-      showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? interaction.dialogKeys.hit));
+    if (decision.kind === "consume") {
+      setInventorySlots((currentSlots) =>
+        removeOneFromSlot(currentSlots, decision.fromSlotIndex),
+      );
+      showSpeechBubble(getRandomPhrase(decision.dialogKey));
       setDraggedStack(null);
       return;
     }
 
-    showSpeechBubble(getRandomPhrase(rule.hitDialogKey ?? rule.missDialogKey ?? interaction.dialogKeys.miss));
+    showSpeechBubble(getRandomPhrase(decision.dialogKey));
     setDraggedStack(null);
   }, [showSpeechBubble]);
 
   const handleInventoryDropMiss = useCallback((payload: DraggedInventoryPayload, interaction?: SceneInteraction) => {
-    const itemRule = interaction ? resolveItemRule(payload.stack.id, interaction.id) : null;
-    const fallbackMiss = itemRule?.missDialogKey
-      ?? interaction?.dialogKeys.miss
-      ?? sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys.miss
-      ?? "inventoryDropMiss";
+    const fallbackMiss = resolveInventoryDropMissDialogKey({
+      payload,
+      interaction,
+      sceneInteractions,
+    });
 
     showSpeechBubble(getRandomPhrase(fallbackMiss));
     setDraggedStack(null);
   }, [sceneInteractions, showSpeechBubble]);
 
   const handleInventoryDropOnPlayer = useCallback((payload: DraggedInventoryPayload) => {
-    const itemDefinition = getItemDefinition(payload.stack.id);
-    if (!itemDefinition) {
-      showSpeechBubble("No conozco este item todavía.");
-      setDraggedStack(null);
-      return;
-    }
-
-    const descriptionKey = itemDefinition.descriptionDialogKey;
-    if (descriptionKey) {
-      showSpeechBubble(getRandomPhrase(descriptionKey));
+    const message = resolveInventoryDropOnPlayerMessage({ payload });
+    if (message.kind === "dialog-key") {
+      showSpeechBubble(getRandomPhrase(message.dialogKey));
     } else {
-      showSpeechBubble(`Es ${itemDefinition.name}.`);
+      showSpeechBubble(message.text);
     }
 
     setDraggedStack(null);
   }, [showSpeechBubble]);
 
   const handlePickupPlacedItem = useCallback((placedItem: PlacedSceneItem) => {
-    const itemDefinition = getItemDefinition(placedItem.itemId);
-    if (!itemDefinition) {
+    const decision = resolvePickupPlacedItemDecision({ placedItem });
+    if (decision.kind === "ignore") {
       return;
     }
 
-    if (!placedItem.canPickup) {
-      showSpeechBubble(getRandomPhrase(placedItem.pickupBlockedDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.blocked"));
+    if (decision.kind === "blocked") {
+      showSpeechBubble(getRandomPhrase(decision.dialogKey));
       return;
     }
 
     let added = false;
     setInventorySlots((currentSlots) => {
-      const result = addOneToInventory(currentSlots, {
-        id: itemDefinition.id,
-        name: itemDefinition.name,
-        spriteUrl: itemDefinition.spriteUrl,
-      });
+      const result = addOneToInventory(currentSlots, decision.stack);
       added = result.added;
       return result.added ? result.slots : currentSlots;
     });
 
     if (!added) {
-      showSpeechBubble("Inventario lleno.");
+      showSpeechBubble(inventoryRuleMessages.inventoryFull);
       return;
     }
 
-    setPlacedItems((currentPlaced) => currentPlaced.filter((currentItem) => currentItem.id !== placedItem.id));
-    showSpeechBubble(getRandomPhrase(placedItem.pickupSuccessDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed"));
+    setPlacedItems((currentPlaced) => currentPlaced.filter((currentItem) => currentItem.id !== decision.placedItemId));
+    showSpeechBubble(getRandomPhrase(decision.successDialogKey));
   }, [showSpeechBubble]);
 
   const updatePlacedItemPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
