@@ -1,0 +1,42 @@
+"use client";
+
+import { useFrame } from "@react-three/fiber";
+import { MathUtils, OrthographicCamera as ThreeOrthoCamera } from "three";
+
+import { useSceneStore } from "../../store/sceneStore";
+
+export function CameraController() {
+  useFrame(({ camera, size }) => {
+    const {
+      playerPosition,
+      scene: { ground },
+    } = useSceneStore.getState();
+    const zoom = (camera as ThreeOrthoCamera).zoom;
+    const halfViewW = size.width / (2 * zoom);
+    const groundCenterX = (ground.minX + ground.maxX) / 2;
+    const minCamX = ground.minX + halfViewW;
+    const maxCamX = ground.maxX - halfViewW;
+    const targetX = playerPosition[0];
+    const clampedX =
+      minCamX <= maxCamX ? MathUtils.clamp(targetX, minCamX, maxCamX) : groundCenterX;
+    camera.position.setX(MathUtils.lerp(camera.position.x, clampedX, 0.1));
+  });
+
+  return null;
+}
+
+export function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHeight?: number }) {
+  useFrame(({ camera, size }) => {
+    const cam = camera as ThreeOrthoCamera;
+    if (!cam) return;
+
+    const pixelHeight = Math.max(1, size.height || (typeof window !== "undefined" ? window.innerHeight : 800));
+    const targetZoom = pixelHeight / desiredWorldHeight;
+
+    if (Math.abs(cam.zoom - targetZoom) <= 0.0001) return;
+    cam.zoom = targetZoom;
+    cam.updateProjectionMatrix();
+  });
+
+  return null;
+}

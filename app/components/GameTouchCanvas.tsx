@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
+import { MathUtils, Mesh, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import { DebugOverlayPanel } from "./DebugOverlayPanel";
@@ -21,7 +21,9 @@ import { useMobileInputStore } from "../store/mobileInputStore";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
 import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
+import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { SceneGround } from "./scene/SceneGround";
+import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 import { GroundEditorPanel } from "./debug/GroundEditorPanel";
 import { InteractionTargetsEditorPanel } from "./debug/InteractionTargetsEditorPanel";
@@ -76,48 +78,6 @@ function getWallAxes(rotationY: number) {
 
 function projectDistance(originX: number, originZ: number, pointX: number, pointZ: number, axis: Vector2) {
   return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
-}
-
-// ---------------------------------------------------------------------------
-// CameraController — sigue al jugador en X con lerp y clamping por ground
-// Obtiene camera y size del estado del frame para no violar la regla
-// react-hooks/immutability; usa setX() en lugar de asignación directa.
-// ---------------------------------------------------------------------------
-function CameraController() {
-  useFrame(({ camera, size }) => {
-    const { playerPosition, scene: { ground } } = useSceneStore.getState();
-    const zoom = (camera as ThreeOrthoCamera).zoom;
-    const halfViewW = size.width / (2 * zoom);
-    const groundCenterX = (ground.minX + ground.maxX) / 2;
-    const minCamX = ground.minX + halfViewW;
-    const maxCamX = ground.maxX - halfViewW;
-    const targetX = playerPosition[0];
-    const clampedX =
-      minCamX <= maxCamX
-        ? MathUtils.clamp(targetX, minCamX, maxCamX)
-        : groundCenterX;
-    camera.position.setX(MathUtils.lerp(camera.position.x, clampedX, 0.1));
-  });
-
-  return null;
-}
-
-// Ajusta el zoom de la cámara ortográfica para que la altura visible
-// en unidades mundo coincida con el alto deseado de la escena.
-function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHeight?: number }) {
-  useFrame(({ camera, size }) => {
-    const cam = camera as ThreeOrthoCamera;
-    if (!cam) return;
-
-    const pixelHeight = Math.max(1, size.height || (typeof window !== "undefined" ? window.innerHeight : 800));
-    const targetZoom = pixelHeight / desiredWorldHeight;
-
-    if (Math.abs(cam.zoom - targetZoom) <= 0.0001) return;
-    cam.zoom = targetZoom;
-    cam.updateProjectionMatrix();
-  });
-
-  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -689,18 +649,6 @@ function GameTouchSprite({
       ? wallPointPreviewState
       : null;
 
-  const pointPreviewLength = wallPointPreview
-    ? Math.sqrt(
-      (wallPointPreview.end.x - wallPointPreview.start.x) ** 2
-      + (wallPointPreview.end.y - wallPointPreview.start.y) ** 2,
-    )
-    : 0;
-  const pointPreviewMidX = wallPointPreview ? (wallPointPreview.start.x + wallPointPreview.end.x) / 2 : 0;
-  const pointPreviewMidZ = wallPointPreview ? (wallPointPreview.start.y + wallPointPreview.end.y) / 2 : 0;
-  const pointPreviewRotationY = wallPointPreview
-    ? -Math.atan2(wallPointPreview.end.y - wallPointPreview.start.y, wallPointPreview.end.x - wallPointPreview.start.x)
-    : 0;
-
   return (
     <>
       <SceneGround
@@ -718,23 +666,8 @@ function GameTouchSprite({
         depthFarZ={DEPTH_FAR_Z}
       />
       <SceneWalls debug={debug && showDebugWalls} onStartWallMove={handleStartWallMove} onStartWallResize={handleStartWallResize} />
-      {debug && wallToolMode === "points" && wallPointPreview && (
-        <>
-          <mesh position={[wallPointPreview.start.x, ground.y + 0.12, wallPointPreview.start.y]}>
-            <boxGeometry args={[0.22, 0.22, 0.22]} />
-            <meshBasicMaterial color="#00ff41" />
-          </mesh>
-          <mesh position={[wallPointPreview.end.x, ground.y + 0.12, wallPointPreview.end.y]}>
-            <boxGeometry args={[0.2, 0.2, 0.2]} />
-            <meshBasicMaterial color="#00d8ff" />
-          </mesh>
-          {pointPreviewLength >= 0.01 && (
-            <mesh position={[pointPreviewMidX, ground.y + 0.1, pointPreviewMidZ]} rotation={[0, pointPreviewRotationY, 0]}>
-              <boxGeometry args={[pointPreviewLength, 0.08, 0.08]} />
-              <meshBasicMaterial color="#00d8ff" transparent opacity={0.85} />
-            </mesh>
-          )}
-        </>
+      {debug && wallToolMode === "points" && (
+        <SceneWallPointPreview preview={wallPointPreview} groundY={ground.y} />
       )}
       <CollisionSphere />
       <RigidBody
