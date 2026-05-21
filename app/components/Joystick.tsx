@@ -3,6 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useMobileInputStore } from "../store/mobileInputStore";
 
+type JoystickMoveEvent = {
+  data?: {
+    vector?: {
+      x: number;
+      y: number;
+    };
+  };
+};
+
+type JoystickManager = {
+  on: (eventName: string, handler: (event: JoystickMoveEvent) => void) => void;
+  destroy: () => void;
+};
+
 /**
  * Joystick virtual estático usando nipplejs (importado dinámicamente para
  * evitar que nipplejs acceda a `window` durante SSR).
@@ -14,8 +28,7 @@ import { useMobileInputStore } from "../store/mobileInputStore";
  */
 export default function Joystick() {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Guardamos el manager como `any` porque nipplejs se importa dinámicamente
-  const managerRef = useRef<any>(null);
+  const managerRef = useRef<JoystickManager | null>(null);
 
   // window está garantizado: este componente solo se monta en cliente
   // gracias al dynamic import con ssr:false en GameTouchCanvas.
@@ -47,11 +60,11 @@ export default function Joystick() {
         threshold: 0.08,
       });
 
-      managerRef.current = manager;
+      managerRef.current = manager as unknown as JoystickManager;
 
       // trigger() llama al handler con { type, target, data: JoystickEventData }
       // JoystickEventData.vector: { x, y } normalizados en [-1, 1]
-      manager.on("move", (evt: any) => {
+      manager.on("move", (evt: JoystickMoveEvent) => {
         const vector = evt?.data?.vector;
         if (!vector) return;
         // nipplejs y positivo = pantalla arriba = norte en el juego = z negativo

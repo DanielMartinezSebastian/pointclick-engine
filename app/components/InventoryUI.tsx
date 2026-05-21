@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
 export type InventoryStack = {
@@ -148,9 +149,12 @@ export function InventoryUI({
           cursor: "pointer",
         }}
       >
-        <img
+        <Image
           src={backpackSpriteSrc}
           alt="Inventario"
+          width={isMobile ? 62 : 93}
+          height={isMobile ? 62 : 93}
+          unoptimized
           style={{
             width: isMobile ? "62px" : "93px",
             height: isMobile ? "62px" : "93px",
@@ -158,7 +162,6 @@ export function InventoryUI({
           }}
         />
       </button>
-
       {isOpen && (
         <div
           style={{
@@ -197,16 +200,27 @@ export function InventoryUI({
               >
                 {stack && (
                   <>
-                    <img
-                      src={stack.spriteUrl}
-                      alt={stack.name}
+                    <div
                       style={{
+                        position: "relative",
                         width: isMobile ? "62%" : "44px",
                         height: isMobile ? "62%" : "44px",
-                        imageRendering: "pixelated",
                         pointerEvents: "none",
                       }}
-                    />
+                    >
+                      <Image
+                        src={stack.spriteUrl}
+                        alt={stack.name}
+                        fill
+                        sizes={isMobile ? "62px" : "44px"}
+                        unoptimized
+                        style={{
+                          objectFit: "contain",
+                          imageRendering: "pixelated",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </div>
                     <span
                       style={{
                         position: "absolute",
@@ -243,10 +257,6 @@ export function DraggedInventoryGhost({
   const [pointer, setPointer] = useState({ x: initialPointerX, y: initialPointerY });
 
   useEffect(() => {
-    setPointer({ x: initialPointerX, y: initialPointerY });
-  }, [initialPointerX, initialPointerY]);
-
-  useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
       setPointer({ x: event.clientX, y: event.clientY });
     };
@@ -272,9 +282,12 @@ export function DraggedInventoryGhost({
         zIndex: 90,
       }}
     >
-      <img
+      <Image
         src={stack.spriteUrl}
         alt={stack.name}
+        width={46}
+        height={46}
+        unoptimized
         style={{ width: "46px", height: "46px", imageRendering: "pixelated", pointerEvents: "none" }}
       />
     </div>
