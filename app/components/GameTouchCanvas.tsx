@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense, useCallback, useRef } from "react";
+import { Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 
-import { DebugOverlayPanel } from "./DebugOverlayPanel";
 import { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import {
   type GameCharacterName,
@@ -17,10 +16,8 @@ import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { GameTouchSpriteRuntime } from "./scene/GameTouchSpriteRuntime";
-import { GroundEditorPanel } from "./debug/GroundEditorPanel";
-import { InteractionTargetsEditorPanel } from "./debug/InteractionTargetsEditorPanel";
-import { PlacedItemsEditorPanel } from "./debug/PlacedItemsEditorPanel";
-import { WallEditorPanel, type WallToolMode } from "./debug/WallEditorPanel";
+import { type WallToolMode } from "./debug/WallEditorPanel";
+import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
@@ -161,39 +158,6 @@ export default function GameTouchCanvas() {
     spriteRefRef.current = spriteRef;
   };
 
-  const runSpeechBubble = useCallback(() => {
-    const nextText = speechDraft.trim();
-    if (!nextText) return;
-    showSpeechBubble(nextText);
-  }, [showSpeechBubble, speechDraft]);
-
-  const debugEditorContent =
-    editorMode === "walls" ? (
-      <WallEditorPanel
-        wallToolMode={wallToolMode}
-        setWallToolMode={handleWallToolModeChange}
-        onResetPointTool={resetWallPointTool}
-      />
-    ) : editorMode === "ground" ? (
-      <GroundEditorPanel />
-    ) : editorMode === "targets" ? (
-      <InteractionTargetsEditorPanel
-        interactions={sceneInteractions}
-        onSetPosition={updateInteractionPosition}
-        onSetHalfSize={updateInteractionHalfSize}
-        onSetRotationDeg={updateInteractionRotationDeg}
-        onMoveToPlayer={moveInteractionToPlayer}
-        onResetFromSceneConfig={resetInteractionsFromSceneConfig}
-      />
-    ) : editorMode === "items" ? (
-      <PlacedItemsEditorPanel
-        items={placedItems}
-        onSetPosition={updatePlacedItemPosition}
-        onMoveToPlayer={movePlacedItemToPlayer}
-        onRemove={removePlacedItemById}
-      />
-    ) : null;
-
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
 
@@ -269,33 +233,41 @@ export default function GameTouchCanvas() {
           initialPointerY={draggedStack.pointerY}
         />
       )}
-      <DebugOverlayPanel
+      <DebugOverlayRuntimePanel
         isDebug={isDebug}
         debugPanelSide={debugPanelSide}
-        onTogglePanelSide={() =>
-          setDebugPanelSide((side) => (side === "left" ? "right" : "left"))
-        }
+        setDebugPanelSide={setDebugPanelSide}
         isDebugGroundVisible={isDebugGroundVisible}
-        onToggleGround={() => setIsDebugGroundVisible((visible) => !visible)}
+        setIsDebugGroundVisible={setIsDebugGroundVisible}
         isDebugWallsVisible={isDebugWallsVisible}
-        onToggleWalls={() => setIsDebugWallsVisible((visible) => !visible)}
+        setIsDebugWallsVisible={setIsDebugWallsVisible}
         sceneId={sceneId}
-        onSceneChange={setScene}
+        setScene={setScene}
         sceneOptions={sceneOptions}
         readyMessage={readyMessage}
-        onRespawn={requestRespawn}
+        requestRespawn={requestRespawn}
         editorMode={editorMode}
-        onEditorModeChange={setEditorMode}
+        setEditorMode={setEditorMode}
+        wallToolMode={wallToolMode}
+        handleWallToolModeChange={handleWallToolModeChange}
+        resetWallPointTool={resetWallPointTool}
         speechDraft={speechDraft}
-        onSpeechDraftChange={setSpeechDraft}
+        setSpeechDraft={setSpeechDraft}
         speechCharsPerSecond={speechCharsPerSecond}
-        onSpeechCharsPerSecondChange={(value) =>
-          setSpeechCharsPerSecond(Math.max(1, Math.round(value)))
-        }
-        onRunSpeech={runSpeechBubble}
-        onHideSpeech={hideSpeechBubble}
+        setSpeechCharsPerSecond={setSpeechCharsPerSecond}
+        showSpeechBubble={showSpeechBubble}
+        hideSpeechBubble={hideSpeechBubble}
         speechVisible={speechVisible}
-        editorContent={debugEditorContent}
+        sceneInteractions={sceneInteractions}
+        updateInteractionPosition={updateInteractionPosition}
+        updateInteractionHalfSize={updateInteractionHalfSize}
+        updateInteractionRotationDeg={updateInteractionRotationDeg}
+        moveInteractionToPlayer={moveInteractionToPlayer}
+        resetInteractionsFromSceneConfig={resetInteractionsFromSceneConfig}
+        placedItems={placedItems}
+        updatePlacedItemPosition={updatePlacedItemPosition}
+        movePlacedItemToPlayer={movePlacedItemToPlayer}
+        removePlacedItemById={removePlacedItemById}
       />
     </div>
   );
