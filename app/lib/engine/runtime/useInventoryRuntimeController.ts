@@ -95,7 +95,10 @@ export function useInventoryRuntimeController({
         setInventorySlots((currentSlots) =>
           removeOneFromSlot(currentSlots, decision.fromSlotIndex),
         );
-        setPlacedItems((currentPlaced) => [...currentPlaced, decision.placedItem]);
+        setPlacedItems((currentPlaced) => [
+          ...currentPlaced,
+          decision.placedItem,
+        ]);
         showSpeechBubble(getRandomPhrase(decision.dialogKey));
         setDraggedStack(null);
         return;
@@ -169,7 +172,9 @@ export function useInventoryRuntimeController({
       }
 
       setPlacedItems((currentPlaced) =>
-        currentPlaced.filter((currentItem) => currentItem.id !== decision.placedItemId),
+        currentPlaced.filter(
+          (currentItem) => currentItem.id !== decision.placedItemId,
+        ),
       );
       showSpeechBubble(getRandomPhrase(decision.successDialogKey));
     },
@@ -181,7 +186,11 @@ export function useInventoryRuntimeController({
       setPlacedItems((currentPlaced) =>
         currentPlaced.map((item) => {
           if (item.id !== id) return item;
-          const worldPosition = [...item.worldPosition] as [number, number, number];
+          const worldPosition = [...item.worldPosition] as [
+            number,
+            number,
+            number,
+          ];
           worldPosition[axis] = value;
           return { ...item, worldPosition };
         }),
@@ -197,7 +206,11 @@ export function useInventoryRuntimeController({
           if (item.id !== id) return item;
           return {
             ...item,
-            worldPosition: [playerPosition[0], item.worldPosition[1], playerPosition[2]],
+            worldPosition: [
+              playerPosition[0],
+              item.worldPosition[1],
+              playerPosition[2],
+            ],
           };
         }),
       );

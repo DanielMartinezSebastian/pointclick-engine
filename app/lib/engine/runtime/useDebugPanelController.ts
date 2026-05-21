@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import {
-  type DebugEditorMode,
-  type WallToolMode,
-} from "../types/gameRuntime";
+import { type DebugEditorMode, type WallToolMode } from "../types/gameRuntime";
 
 export function useDebugPanelController() {
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">(
@@ -20,13 +17,10 @@ export function useDebugPanelController() {
   );
   const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
 
-  const handleWallToolModeChange = useCallback(
-    (mode: WallToolMode) => {
-      setWallToolMode(mode);
-      setWallPointResetSignal((signal) => signal + 1);
-    },
-    [],
-  );
+  const handleWallToolModeChange = useCallback((mode: WallToolMode) => {
+    setWallToolMode(mode);
+    setWallPointResetSignal((signal) => signal + 1);
+  }, []);
 
   const resetWallPointTool = useCallback(() => {
     setWallPointResetSignal((signal) => signal + 1);
