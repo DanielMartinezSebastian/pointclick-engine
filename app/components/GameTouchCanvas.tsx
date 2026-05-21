@@ -26,6 +26,7 @@ import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneI
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./movement";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
+import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -1583,14 +1584,25 @@ export default function GameTouchCanvas() {
       styleEl.remove();
     };
   }, [isDebug]);
-  const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
-  const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
-  const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
-  const [editorMode, setEditorMode] = useState<DebugEditorMode>("walls");
-  const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
-  const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
-  const [speechDraft, setSpeechDraft] = useState("Hola. Este es un bocadillo de prueba.");
-  const [speechCharsPerSecond, setSpeechCharsPerSecond] = useState(28);
+
+  const {
+    debugPanelSide,
+    setDebugPanelSide,
+    isDebugGroundVisible,
+    setIsDebugGroundVisible,
+    isDebugWallsVisible,
+    setIsDebugWallsVisible,
+    editorMode,
+    setEditorMode,
+    wallToolMode,
+    wallPointResetSignal,
+    handleWallToolModeChange,
+    resetWallPointTool,
+    speechDraft,
+    setSpeechDraft,
+    speechCharsPerSecond,
+    setSpeechCharsPerSecond,
+  } = useDebugPanelController();
   const sceneId = useSceneStore((s) => s.sceneId);
   const sceneBackground = useSceneStore((s) => s.scene.background);
   const setScene = useSceneStore((s) => s.setScene);
@@ -1645,11 +1657,6 @@ export default function GameTouchCanvas() {
 
   const spriteRefRef = useRef<React.RefObject<DavidSpriteHandle | null> | null>(null);
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
-
-  const handleWallToolModeChange = useCallback((mode: WallToolMode) => {
-    setWallToolMode(mode);
-    setWallPointResetSignal((signal) => signal + 1);
-  }, []);
 
   const handleSpriteReady = (spriteRef: React.RefObject<DavidSpriteHandle | null>) => {
     spriteRefRef.current = spriteRef;
@@ -1840,7 +1847,7 @@ export default function GameTouchCanvas() {
           <WallEditorPanel
             wallToolMode={wallToolMode}
             setWallToolMode={handleWallToolModeChange}
-            onResetPointTool={() => setWallPointResetSignal((signal) => signal + 1)}
+            onResetPointTool={resetWallPointTool}
           />
         )}
         {isDebug && editorMode === "ground" && <GroundEditorPanel />}
