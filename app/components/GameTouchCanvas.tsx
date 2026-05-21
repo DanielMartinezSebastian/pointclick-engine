@@ -5,7 +5,7 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import PixelSelect from "./PixelSelect";
@@ -52,6 +52,7 @@ const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
+const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
 
 function createInitialInventorySlots(): InventorySlots {
   return Array.from({ length: 9 }, (_, index) => {
@@ -1347,12 +1348,11 @@ function GroundEditorPanel() {
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const isDebug = pathname === "/debug" || searchParams.has("debug");
+  const isDebug = DEBUG_ROUTE_ENABLED && pathname === "/debug";
 
   useEffect(() => {
-    console.log("GameTouchCanvas: debug mode ->", isDebug, { pathname, hasQuery: searchParams.has("debug") });
-  }, [isDebug, pathname, searchParams]);
+    console.log("GameTouchCanvas: debug mode ->", isDebug, { pathname });
+  }, [isDebug, pathname]);
 
   useEffect(() => {
     if (!isDebug) return;

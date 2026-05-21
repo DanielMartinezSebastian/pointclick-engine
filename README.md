@@ -33,6 +33,7 @@ npm install
 
 ```bash
 npm run dev    # entorno de desarrollo
+npm run dev:debug # desarrollo local con ruta /debug habilitada
 npm run build  # build de producción
 npm run start  # servir build de producción
 npm run lint   # lint con ESLint
@@ -60,10 +61,33 @@ El personaje activo y la escena se cambian desde el panel de control en pantalla
 
 ## Modo debug
 
-Puedes activar debug de dos formas:
+El modo debug está pensado solo para desarrollo local.
 
-- Entrando a `http://localhost:3000?debug`
-- O usando el botón `Entrar en debug`
+Tienes dos opciones:
+
+1. Opción rápida (recomendada):
+
+```bash
+npm run dev:debug
+```
+
+2. Opción manual:
+
+- Crea un `.env.local` en la raíz (puedes copiar `.env.example`).
+- Activa la variable:
+
+```bash
+NEXT_PUBLIC_ENABLE_DEBUG=true
+```
+
+3. Arranca en desarrollo y entra a:
+
+- `http://localhost:3000/debug`
+
+Notas:
+
+- En producción, `/debug` devuelve 404 aunque la variable exista.
+- Si `NEXT_PUBLIC_ENABLE_DEBUG` no está en `true`, la ruta `/debug` queda desactivada.
 
 Con debug activo tienes:
 
@@ -108,7 +132,7 @@ public/
 
 ## Flujo de trabajo recomendado para editar escenas
 
-1. Arranca en debug (`?debug`).
+1. Arranca en debug (`/debug` con `NEXT_PUBLIC_ENABLE_DEBUG=true`).
 2. Ajusta muros y/o suelo visualmente.
 3. Usa `Copiar JSON` en el panel correspondiente.
 4. Pega el resultado en la escena de `app/scenes/scenes.ts`.
