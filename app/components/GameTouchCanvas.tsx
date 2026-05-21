@@ -18,7 +18,7 @@ import {
 } from "./sprite/clips";
 import { useSceneStore } from "../store/sceneStore";
 import dynamic from "next/dynamic";
-import { SCENES, type SceneInteraction, type SceneWall } from "../scenes/scenes";
+import { type SceneInteraction, type SceneWall } from "../scenes/scenes";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
 import { SceneDropTargets } from "./inventory/SceneDropTargets";
@@ -37,7 +37,6 @@ const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 type MovementAction = GameDirection;
 type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 type WallToolMode = "manual" | "points";
-type DebugEditorMode = "walls" | "ground" | "items" | "targets";
 type WallPointStart = { point: Vector2; resetSignal: number };
 type WallPointPreview = { start: Vector2; end: Vector2; resetSignal: number };
 type WallInteraction =

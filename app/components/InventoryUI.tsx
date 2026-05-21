@@ -243,10 +243,6 @@ export function DraggedInventoryGhost({
   const [pointer, setPointer] = useState({ x: initialPointerX, y: initialPointerY });
 
   useEffect(() => {
-    setPointer({ x: initialPointerX, y: initialPointerY });
-  }, [initialPointerX, initialPointerY]);
-
-  useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
       setPointer({ x: event.clientX, y: event.clientY });
     };
