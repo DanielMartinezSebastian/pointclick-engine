@@ -1,11 +1,11 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody } from "@react-three/rapier";
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
 import PixelSelect from "./PixelSelect";
@@ -369,23 +369,17 @@ function CameraController() {
 // Ajusta el zoom de la cámara ortográfica para que la altura visible
 // en unidades mundo coincida con el alto deseado de la escena.
 function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHeight?: number }) {
-  const { camera, size } = useThree();
-
-  useEffect(() => {
+  useFrame(({ camera, size }) => {
     const cam = camera as ThreeOrthoCamera;
     if (!cam) return;
 
-    const compute = () => {
-      // Evitar división por cero
-      const pixelHeight = Math.max(1, size.height || (typeof window !== 'undefined' ? window.innerHeight : 800));
-      const zoom = pixelHeight / desiredWorldHeight;
-      cam.zoom = zoom;
-      cam.updateProjectionMatrix();
-    };
+    const pixelHeight = Math.max(1, size.height || (typeof window !== "undefined" ? window.innerHeight : 800));
+    const targetZoom = pixelHeight / desiredWorldHeight;
 
-    compute();
-    // Recalcular si cambia el tamaño del canvas
-  }, [camera, size.height, desiredWorldHeight]);
+    if (Math.abs(cam.zoom - targetZoom) <= 0.0001) return;
+    cam.zoom = targetZoom;
+    cam.updateProjectionMatrix();
+  });
 
   return null;
 }
@@ -394,40 +388,47 @@ function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHeight?: 
 // BackgroundPlane — plano con textura anclado a la cámara
 // ---------------------------------------------------------------------------
 function BackgroundPlane({ url }: { url: string | null | undefined }) {
-  const [texture, setTexture] = useState<any>(null);
+  const [texture, setTexture] = useState<import("three").Texture | null>(null);
   const meshRef = useRef<Mesh | null>(null);
   const ground = useSceneStore((s) => s.scene.ground);
 
   useEffect(() => {
     if (!url) return;
+
     const loader = new TextureLoader();
     let mounted = true;
+    let loadedTexture: import("three").Texture | null = null;
+
     loader.load(
       url,
       (tex) => {
-        if (!mounted) return;
+        if (!mounted) {
+          tex.dispose();
+          return;
+        }
+
+        loadedTexture = tex;
         setTexture(tex);
       },
       undefined,
       (err) => {
-         
         console.warn("BackgroundPlane: texture load error", err);
       },
     );
+
     return () => {
       mounted = false;
-      if (texture) try { texture.dispose(); } catch (e) {}
+      if (loadedTexture) {
+        loadedTexture.dispose();
+      }
     };
   }, [url]);
 
   // calcular tamaño básico a partir del aspect de la imagen si está disponible
   let aspect = 16 / 9;
-  try {
-    if (texture && texture.image && texture.image.width && texture.image.height) {
-      aspect = texture.image.width / texture.image.height;
-    }
-  } catch (e) {
-    // ignore
+  const textureImage = texture?.image as { width?: number; height?: number } | undefined;
+  if (textureImage?.width && textureImage?.height) {
+    aspect = textureImage.width / textureImage.height;
   }
 
   const height = 19.28;
@@ -578,6 +579,7 @@ function GameTouchSprite({
   const lastBoundaryHitRef = useRef<number>(0);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
+  const sceneId = useSceneStore((s) => s.sceneId);
   const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
   const addWallWithData = useSceneStore((s) => s.addWallWithData);
@@ -766,12 +768,13 @@ function GameTouchSprite({
   useEffect(() => {
     const body = characterBodyRef.current;
     if (!body) return;
-    body.setTranslation({ x: playerSpawn[0], y: playerSpawn[1], z: playerSpawn[2] }, true);
+    const spawn = useSceneStore.getState().scene.playerSpawn;
+    body.setTranslation({ x: spawn[0], y: spawn[1], z: spawn[2] }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     clickTargetRef.current = null;
     keysPressedRef.current.clear();
-    setPlayerPosition([playerSpawn[0], playerSpawn[1], playerSpawn[2]]);
-  }, [playerSpawn, respawnSignal, setPlayerPosition]);
+    setPlayerPosition([spawn[0], spawn[1], spawn[2]]);
+  }, [sceneId, respawnSignal, setPlayerPosition]);
 
   useEffect(() => {
     onSpriteReady(spriteRef);
@@ -1344,14 +1347,12 @@ function GroundEditorPanel() {
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const pathname = usePathname();
-  const [isDebug, setIsDebug] = useState(false);
+  const searchParams = useSearchParams();
+  const isDebug = pathname === "/debug" || searchParams.has("debug");
+
   useEffect(() => {
-    const hasQuery = typeof window !== "undefined" && window.location.search.includes("debug");
-    const next = pathname === "/debug" || hasQuery;
-    setIsDebug(next);
-     
-    console.log("GameTouchCanvas: debug mode ->", next, { pathname, hasQuery });
-  }, [pathname]);
+    console.log("GameTouchCanvas: debug mode ->", isDebug, { pathname, hasQuery: searchParams.has("debug") });
+  }, [isDebug, pathname, searchParams]);
 
   useEffect(() => {
     if (!isDebug) return;
