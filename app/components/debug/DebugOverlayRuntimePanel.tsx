@@ -8,7 +8,7 @@ import { InteractionTargetsEditorPanel } from "./InteractionTargetsEditorPanel";
 import { PlacedItemsEditorPanel } from "./PlacedItemsEditorPanel";
 import { WallEditorPanel, type WallToolMode } from "./WallEditorPanel";
 import { type SceneInteraction } from "../../scenes/scenes";
-import { type PlacedSceneItem } from "../../items/types";
+import { type PlacedSceneItem } from "../inventory/PlacedSceneItems";
 
 type EditorMode = "walls" | "ground" | "items" | "targets";
 
