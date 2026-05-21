@@ -32,6 +32,7 @@ const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 type MovementAction = GameDirection;
 type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 type WallToolMode = "manual" | "points";
+type DebugEditorMode = "walls" | "ground" | "items" | "targets";
 type WallPointStart = { point: Vector2; resetSignal: number };
 type WallPointPreview = { start: Vector2; end: Vector2; resetSignal: number };
 type WallInteraction =
@@ -53,6 +54,8 @@ const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 2.5;
 const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
+const PLAYER_COLLIDER_HALF_HEIGHT = 0.95;
+const DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN = 0.05;
 
 function createInitialInventorySlots(): InventorySlots {
   return Array.from({ length: 9 }, (_, index) => {
@@ -104,6 +107,18 @@ function getInteractionWorldPosition(interaction: SceneInteraction): [number, nu
     interaction.position[1] + interaction.halfSize[1] + 0.175,
     interaction.position[2],
   ];
+}
+
+function keepInteractionCollidable(interaction: SceneInteraction, playerSpawnY: number): SceneInteraction {
+  if (!interaction.hasCollision) return interaction;
+
+  const minTopY = playerSpawnY - PLAYER_COLLIDER_HALF_HEIGHT + DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN;
+  const minCenterY = minTopY - interaction.halfSize[1];
+  if (interaction.position[1] >= minCenterY) return interaction;
+
+  const position = [...interaction.position] as [number, number, number];
+  position[1] = minCenterY;
+  return { ...interaction, position };
 }
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
@@ -1345,6 +1360,273 @@ function GroundEditorPanel() {
   );
 }
 
+function PlacedItemsEditorPanel({
+  items,
+  onSetPosition,
+  onMoveToPlayer,
+  onRemove,
+}: {
+  items: PlacedSceneItem[];
+  onSetPosition: (id: string, axis: 0 | 1 | 2, value: number) => void;
+  onMoveToPlayer: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const effectiveSelectedItemId = useMemo(() => {
+    if (items.length === 0) return "";
+    const stillExists = items.some((item) => item.id === selectedItemId);
+    return stillExists ? selectedItemId : items[0].id;
+  }, [items, selectedItemId]);
+
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === effectiveSelectedItemId) ?? null,
+    [effectiveSelectedItemId, items],
+  );
+
+  const itemOptions = useMemo(
+    () => items.map((item, index) => ({ label: `${index + 1}. ${item.name}`, value: item.id })),
+    [items],
+  );
+
+  const itemsJson = useMemo(() => JSON.stringify(items, null, 2), [items]);
+  const [copyLabel, setCopyLabel] = useState("Copiar JSON items");
+
+  const handleCopyJson = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(itemsJson);
+      setCopyLabel("Copiado");
+      window.setTimeout(() => setCopyLabel("Copiar JSON items"), 1200);
+    } catch {
+      setCopyLabel("Sin portapapeles");
+      window.setTimeout(() => setCopyLabel("Copiar JSON items"), 1200);
+    }
+  }, [itemsJson]);
+
+  return (
+    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
+      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de items colocados</strong>
+      <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+        Reubica items ya colocados en vivo para ajustar su encaje exacto en la escena.
+      </span>
+
+      {items.length === 0 && (
+        <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+          No hay items colocados en esta escena todavía.
+        </span>
+      )}
+
+      {items.length > 0 && (
+        <>
+          <PixelSelect
+            label="Item seleccionado"
+            value={effectiveSelectedItemId}
+            onChange={(value) => setSelectedItemId(value)}
+            options={itemOptions}
+          />
+
+          {selectedItem && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                <DebugNumberInput
+                  label="Pos X"
+                  value={selectedItem.worldPosition[0]}
+                  onChange={(value) => onSetPosition(selectedItem.id, 0, value)}
+                />
+                <DebugNumberInput
+                  label="Pos Y"
+                  value={selectedItem.worldPosition[1]}
+                  onChange={(value) => onSetPosition(selectedItem.id, 1, value)}
+                />
+                <DebugNumberInput
+                  label="Pos Z"
+                  value={selectedItem.worldPosition[2]}
+                  onChange={(value) => onSetPosition(selectedItem.id, 2, value)}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <DebugButton label="Mover al jugador" onClick={() => onMoveToPlayer(selectedItem.id)} />
+                <DebugButton label="Borrar item" onClick={() => onRemove(selectedItem.id)} />
+              </div>
+            </>
+          )}
+
+          <textarea
+            readOnly
+            value={itemsJson}
+            style={{
+              width: "100%",
+              minHeight: "90px",
+              borderRadius: "2px",
+              border: "2px solid #00ff41",
+              background: "rgb(8 12 32 / 90%)",
+              color: "#00ff41",
+              padding: "0.6rem",
+              fontSize: "11px",
+              fontFamily: "var(--font-pixel), monospace",
+              letterSpacing: "0.5px",
+              resize: "vertical",
+              cursor: "auto",
+            }}
+          />
+
+          <DebugButton label={copyLabel} onClick={() => { void handleCopyJson(); }} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function InteractionTargetsEditorPanel({
+  interactions,
+  onSetPosition,
+  onSetHalfSize,
+  onSetRotationDeg,
+  onMoveToPlayer,
+  onResetFromSceneConfig,
+}: {
+  interactions: SceneInteraction[];
+  onSetPosition: (id: string, axis: 0 | 1 | 2, value: number) => void;
+  onSetHalfSize: (id: string, axis: 0 | 1 | 2, value: number) => void;
+  onSetRotationDeg: (id: string, value: number) => void;
+  onMoveToPlayer: (id: string) => void;
+  onResetFromSceneConfig: () => void;
+}) {
+  const [selectedInteractionId, setSelectedInteractionId] = useState<string>("");
+  const effectiveSelectedInteractionId = useMemo(() => {
+    if (interactions.length === 0) return "";
+    const stillExists = interactions.some((interaction) => interaction.id === selectedInteractionId);
+    return stillExists ? selectedInteractionId : interactions[0].id;
+  }, [interactions, selectedInteractionId]);
+
+  const selectedInteraction = useMemo(
+    () => interactions.find((interaction) => interaction.id === effectiveSelectedInteractionId) ?? null,
+    [effectiveSelectedInteractionId, interactions],
+  );
+
+  const interactionOptions = useMemo(
+    () => interactions.map((interaction, index) => ({ label: `${index + 1}. ${interaction.label}`, value: interaction.id })),
+    [interactions],
+  );
+
+  const interactionsJson = useMemo(() => JSON.stringify(interactions, null, 2), [interactions]);
+  const [copyLabel, setCopyLabel] = useState("Copiar JSON targets");
+
+  const handleCopyJson = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(interactionsJson);
+      setCopyLabel("Copiado");
+      window.setTimeout(() => setCopyLabel("Copiar JSON targets"), 1200);
+    } catch {
+      setCopyLabel("Sin portapapeles");
+      window.setTimeout(() => setCopyLabel("Copiar JSON targets"), 1200);
+    }
+  }, [interactionsJson]);
+
+  return (
+    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
+      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de targets de drop</strong>
+      <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+        Ajusta la zona donde se detecta y se permite colocar el item (posición y tamaño del detector).
+      </span>
+      <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+        Con hasCollision activo, el editor limita automáticamente la Y mínima para evitar perder colisión con el jugador.
+      </span>
+      <DebugButton label="Reiniciar targets (scenes.ts)" onClick={onResetFromSceneConfig} />
+
+      {interactions.length === 0 && (
+        <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
+          No hay targets de drop en esta escena.
+        </span>
+      )}
+
+      {interactions.length > 0 && (
+        <>
+          <PixelSelect
+            label="Target seleccionado"
+            value={effectiveSelectedInteractionId}
+            onChange={(value) => setSelectedInteractionId(value)}
+            options={interactionOptions}
+          />
+
+          {selectedInteraction && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                <DebugNumberInput
+                  label="Pos X"
+                  value={selectedInteraction.position[0]}
+                  onChange={(value) => onSetPosition(selectedInteraction.id, 0, value)}
+                />
+                <DebugNumberInput
+                  label="Pos Y"
+                  value={selectedInteraction.position[1]}
+                  onChange={(value) => onSetPosition(selectedInteraction.id, 1, value)}
+                />
+                <DebugNumberInput
+                  label="Pos Z"
+                  value={selectedInteraction.position[2]}
+                  onChange={(value) => onSetPosition(selectedInteraction.id, 2, value)}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                <DebugNumberInput
+                  label="Half X"
+                  value={selectedInteraction.halfSize[0]}
+                  onChange={(value) => onSetHalfSize(selectedInteraction.id, 0, value)}
+                />
+                <DebugNumberInput
+                  label="Half Y"
+                  value={selectedInteraction.halfSize[1]}
+                  onChange={(value) => onSetHalfSize(selectedInteraction.id, 1, value)}
+                />
+                <DebugNumberInput
+                  label="Half Z"
+                  value={selectedInteraction.halfSize[2]}
+                  onChange={(value) => onSetHalfSize(selectedInteraction.id, 2, value)}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <DebugNumberInput
+                  label="Rot Y deg"
+                  value={MathUtils.radToDeg(selectedInteraction.rotationY ?? 0)}
+                  step={1}
+                  onChange={(value) => onSetRotationDeg(selectedInteraction.id, value)}
+                />
+                <div style={{ display: "grid", alignItems: "end" }}>
+                  <DebugButton label="Mover al jugador" onClick={() => onMoveToPlayer(selectedInteraction.id)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          <textarea
+            readOnly
+            value={interactionsJson}
+            style={{
+              width: "100%",
+              minHeight: "90px",
+              borderRadius: "2px",
+              border: "2px solid #00ff41",
+              background: "rgb(8 12 32 / 90%)",
+              color: "#00ff41",
+              padding: "0.6rem",
+              fontSize: "11px",
+              fontFamily: "var(--font-pixel), monospace",
+              letterSpacing: "0.5px",
+              resize: "vertical",
+              cursor: "auto",
+            }}
+          />
+
+          <DebugButton label={copyLabel} onClick={() => { void handleCopyJson(); }} />
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function GameTouchCanvas() {
   const selectedCharacter: GameCharacterName = "Dave";
   const pathname = usePathname();
@@ -1367,7 +1649,7 @@ export default function GameTouchCanvas() {
   const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">("left");
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
-  const [editorMode, setEditorMode] = useState<"walls" | "ground">("walls");
+  const [editorMode, setEditorMode] = useState<DebugEditorMode>("walls");
   const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
   const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
   const [speechDraft, setSpeechDraft] = useState("Hola. Este es un bocadillo de prueba.");
@@ -1384,6 +1666,10 @@ export default function GameTouchCanvas() {
   const setScene = useSceneStore((s) => s.setScene);
   const sceneInteractions = useSceneStore((s) => s.scene.interactions);
   const requestRespawn = useSceneStore((s) => s.requestRespawn);
+  const playerPosition = useSceneStore((s) => s.playerPosition);
+  const scenePlayerSpawn = useSceneStore((s) => s.scene.playerSpawn);
+  const updateInteraction = useSceneStore((s) => s.updateInteraction);
+  const resetInteractionsFromSceneConfig = useSceneStore((s) => s.resetInteractionsFromSceneConfig);
 
   const sceneOptions = useMemo(
     () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
@@ -1518,6 +1804,59 @@ export default function GameTouchCanvas() {
     setPlacedItems((currentPlaced) => currentPlaced.filter((currentItem) => currentItem.id !== placedItem.id));
     showSpeechBubble(getRandomPhrase(placedItem.pickupSuccessDialogKey ?? "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed"));
   }, [showSpeechBubble]);
+
+  const updatePlacedItemPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
+    setPlacedItems((currentPlaced) => currentPlaced.map((item) => {
+      if (item.id !== id) return item;
+      const worldPosition = [...item.worldPosition] as [number, number, number];
+      worldPosition[axis] = value;
+      return { ...item, worldPosition };
+    }));
+  }, []);
+
+  const movePlacedItemToPlayer = useCallback((id: string) => {
+    setPlacedItems((currentPlaced) => currentPlaced.map((item) => {
+      if (item.id !== id) return item;
+      return {
+        ...item,
+        worldPosition: [playerPosition[0], item.worldPosition[1], playerPosition[2]],
+      };
+    }));
+  }, [playerPosition]);
+
+  const removePlacedItemById = useCallback((id: string) => {
+    setPlacedItems((currentPlaced) => currentPlaced.filter((item) => item.id !== id));
+  }, []);
+
+  const updateInteractionPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
+    updateInteraction(id, (interaction) => {
+      const position = [...interaction.position] as [number, number, number];
+      position[axis] = value;
+      return keepInteractionCollidable({ ...interaction, position }, scenePlayerSpawn[1]);
+    });
+  }, [scenePlayerSpawn, updateInteraction]);
+
+  const updateInteractionHalfSize = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
+    updateInteraction(id, (interaction) => {
+      const halfSize = [...interaction.halfSize] as [number, number, number];
+      halfSize[axis] = Math.max(0.05, value);
+      return keepInteractionCollidable({ ...interaction, halfSize }, scenePlayerSpawn[1]);
+    });
+  }, [scenePlayerSpawn, updateInteraction]);
+
+  const updateInteractionRotationDeg = useCallback((id: string, value: number) => {
+    updateInteraction(id, (interaction) => ({
+      ...interaction,
+      rotationY: (value * Math.PI) / 180,
+    }));
+  }, [updateInteraction]);
+
+  const moveInteractionToPlayer = useCallback((id: string) => {
+    updateInteraction(id, (interaction) => ({
+      ...interaction,
+      position: [playerPosition[0], interaction.position[1], playerPosition[2]],
+    }));
+  }, [playerPosition, updateInteraction]);
 
   const handleStartInventoryDrag = useCallback((slotIndex: number, clientX: number, clientY: number) => {
     const stack = inventorySlots[slotIndex];
@@ -1670,10 +2009,12 @@ export default function GameTouchCanvas() {
           <PixelSelect
             label="Modo editor"
             value={editorMode}
-            onChange={(value) => setEditorMode(value as "walls" | "ground")}
+            onChange={(value) => setEditorMode(value as DebugEditorMode)}
             options={[
               { label: "Editar paredes", value: "walls" },
               { label: "Editar suelo", value: "ground" },
+              { label: "Editar items", value: "items" },
+              { label: "Editar targets", value: "targets" },
             ]}
           />
         )}
@@ -1721,6 +2062,24 @@ export default function GameTouchCanvas() {
           />
         )}
         {isDebug && editorMode === "ground" && <GroundEditorPanel />}
+        {isDebug && editorMode === "targets" && (
+          <InteractionTargetsEditorPanel
+            interactions={sceneInteractions}
+            onSetPosition={updateInteractionPosition}
+            onSetHalfSize={updateInteractionHalfSize}
+            onSetRotationDeg={updateInteractionRotationDeg}
+            onMoveToPlayer={moveInteractionToPlayer}
+            onResetFromSceneConfig={resetInteractionsFromSceneConfig}
+          />
+        )}
+        {isDebug && editorMode === "items" && (
+          <PlacedItemsEditorPanel
+            items={placedItems}
+            onSetPosition={updatePlacedItemPosition}
+            onMoveToPlayer={movePlacedItemToPlayer}
+            onRemove={removePlacedItemById}
+          />
+        )}
         </div>
       )}
     </div>

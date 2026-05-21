@@ -235,7 +235,7 @@ export const SCENES: Record<string, Scene> = {
         id: "personal-room-gameboy-drop-target",
         kind: "drop-target",
         label: "Soporte del Gameboy",
-        position: [-3.83, -1.4, 11.01],
+        position: [3.27, -1.65, 19.71],
         halfSize: [0.95, 0.55, 0.95],
         hasCollision: true,
         acceptsItemIds: ["gameboy"],

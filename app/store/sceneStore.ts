@@ -50,6 +50,11 @@ type SceneStore = {
   addWallWithData: (wall: SceneWall) => void;
   removeSelectedWall: () => void;
   updateSelectedWall: (updater: (wall: SceneWall) => SceneWall) => void;
+  updateInteraction: (
+    id: string,
+    updater: (interaction: SceneInteraction) => SceneInteraction,
+  ) => void;
+  resetInteractionsFromSceneConfig: () => void;
   setPlayerPosition: (position: [number, number, number]) => void;
   requestRespawn: () => void;
 };
@@ -139,6 +144,27 @@ export const useSceneStore = create<SceneStore>((set) => ({
         scene: {
           ...state.scene,
           walls,
+        },
+      };
+    }),
+  updateInteraction: (id, updater) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        interactions: state.scene.interactions.map((interaction) => {
+          if (interaction.id !== id) return interaction;
+          return updater(cloneInteraction(interaction));
+        }),
+      },
+    })),
+  resetInteractionsFromSceneConfig: () =>
+    set((state) => {
+      const sceneFromConfig = SCENES[state.sceneId];
+      if (!sceneFromConfig) return state;
+      return {
+        scene: {
+          ...state.scene,
+          interactions: sceneFromConfig.interactions.map(cloneInteraction),
         },
       };
     }),
