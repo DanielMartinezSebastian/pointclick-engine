@@ -1774,6 +1774,24 @@ export default function GameTouchCanvas() {
     setDraggedStack(null);
   }, [sceneInteractions, showSpeechBubble]);
 
+  const handleInventoryDropOnPlayer = useCallback((payload: DraggedInventoryPayload) => {
+    const itemDefinition = getItemDefinition(payload.stack.id);
+    if (!itemDefinition) {
+      showSpeechBubble("No conozco este item todavía.");
+      setDraggedStack(null);
+      return;
+    }
+
+    const descriptionKey = itemDefinition.descriptionDialogKey;
+    if (descriptionKey) {
+      showSpeechBubble(getRandomPhrase(descriptionKey));
+    } else {
+      showSpeechBubble(`Es ${itemDefinition.name}.`);
+    }
+
+    setDraggedStack(null);
+  }, [showSpeechBubble]);
+
   const handlePickupPlacedItem = useCallback((placedItem: PlacedSceneItem) => {
     const itemDefinition = getItemDefinition(placedItem.itemId);
     if (!itemDefinition) {
@@ -1935,6 +1953,10 @@ export default function GameTouchCanvas() {
             draggedStack={draggedStack ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex } : null}
             onDropHit={handleInventoryDropHit}
             onDropMiss={handleInventoryDropMiss}
+            playerDropTarget={{
+              position: playerPosition,
+              onDrop: handleInventoryDropOnPlayer,
+            }}
           />
           <PlacedSceneItems items={placedItems} onPickup={handlePickupPlacedItem} />
         </Physics>

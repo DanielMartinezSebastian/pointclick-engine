@@ -71,6 +71,12 @@ export const dialogs: DialogLocales = {
         "No sale del soporte, está bloqueada.",
       ],
     },
+    "item.gameboy.description": {
+      phrases: [
+        "Una Gameboy clásica. Pantalla monocroma, nostalgia instantánea y pilas que duran menos de lo que recuerdas.",
+        "Mi Gameboy: portátil, retro y perfecta para perder la tarde en pixel-art.",
+      ],
+    },
   },
   en: {
     boundaryHit: {
@@ -140,6 +146,12 @@ export const dialogs: DialogLocales = {
       phrases: [
         "This Gameboy is fixed here. Cannot pick it up.",
         "It is locked to the stand.",
+      ],
+    },
+    "item.gameboy.description": {
+      phrases: [
+        "A classic Gameboy. Monochrome screen, instant nostalgia, and batteries that fade faster than you remember.",
+        "My Gameboy: portable, retro, and perfect for a pixel-art afternoon.",
       ],
     },
   },

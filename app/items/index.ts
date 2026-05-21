@@ -5,6 +5,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     id: "gameboy",
     name: "Gameboy",
     spriteUrl: "/assets/gameboy/gameboy.png",
+    descriptionDialogKey: "item.gameboy.description",
     interactionRules: {
       "personal-room-gameboy-drop-target": {
         outcome: "place",

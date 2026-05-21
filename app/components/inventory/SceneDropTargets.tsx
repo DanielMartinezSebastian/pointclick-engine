@@ -16,6 +16,10 @@ type SceneDropTargetsProps = {
   draggedStack: DraggedInventoryPayload | null;
   onDropHit: (interaction: SceneInteraction, payload: DraggedInventoryPayload) => void;
   onDropMiss: (payload: DraggedInventoryPayload, interaction?: SceneInteraction) => void;
+  playerDropTarget?: {
+    position: [number, number, number];
+    onDrop: (payload: DraggedInventoryPayload) => void;
+  };
 };
 
 function SceneDropTarget({
@@ -74,7 +78,13 @@ function SceneDropTarget({
   );
 }
 
-export function SceneDropTargets({ targets, draggedStack, onDropHit, onDropMiss }: SceneDropTargetsProps) {
+export function SceneDropTargets({
+  targets,
+  draggedStack,
+  onDropHit,
+  onDropMiss,
+  playerDropTarget,
+}: SceneDropTargetsProps) {
   const dropHandledRef = useRef(false);
 
   useEffect(() => {
@@ -97,7 +107,7 @@ export function SceneDropTargets({ targets, draggedStack, onDropHit, onDropMiss 
     };
   }, [draggedStack, onDropMiss]);
 
-  if (targets.length === 0) {
+  if (targets.length === 0 && !playerDropTarget) {
     return null;
   }
 
@@ -115,6 +125,24 @@ export function SceneDropTargets({ targets, draggedStack, onDropHit, onDropMiss 
           }}
         />
       ))}
+      {playerDropTarget && (
+        <mesh
+          position={[
+            playerDropTarget.position[0],
+            playerDropTarget.position[1] + 1.5,
+            playerDropTarget.position[2],
+          ]}
+          onPointerUp={(event) => {
+            event.stopPropagation();
+            if (!draggedStack) return;
+            dropHandledRef.current = true;
+            playerDropTarget.onDrop(draggedStack);
+          }}
+        >
+          <boxGeometry args={[1.7, 4.5, 1.2]} />
+          <meshBasicMaterial transparent opacity={0.01} depthWrite={false} />
+        </mesh>
+      )}
     </>
   );
 }

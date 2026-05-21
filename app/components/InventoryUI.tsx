@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
 export type InventoryStack = {
   id: string;
@@ -10,6 +10,19 @@ export type InventoryStack = {
 };
 
 export type InventorySlots = Array<InventoryStack | null>;
+
+const BACKPACK_ROTATION_FRAMES = [
+  "/assets/backpack/rotations/south.png",
+  "/assets/backpack/rotations/south-west.png",
+  "/assets/backpack/rotations/west.png",
+  "/assets/backpack/rotations/north-west.png",
+  "/assets/backpack/rotations/north.png",
+  "/assets/backpack/rotations/north-east.png",
+  "/assets/backpack/rotations/east.png",
+  "/assets/backpack/rotations/south-east.png",
+] as const;
+
+const BACKPACK_NORMAL_FRAME_INDEX = 0;
 
 function slotStyle(occupied: boolean): CSSProperties {
   return {
@@ -40,6 +53,10 @@ export function InventoryUI({
   onStartDrag: (slotIndex: number, clientX: number, clientY: number) => void;
 }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [isBackpackHovered, setIsBackpackHovered] = useState(false);
+  const [backpackFrameIndex, setBackpackFrameIndex] = useState(BACKPACK_NORMAL_FRAME_INDEX);
+  const [isMobileOpenSpinRunning, setIsMobileOpenSpinRunning] = useState(false);
+  const wasOpenRef = useRef(isOpen);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -57,19 +74,70 @@ export function InventoryUI({
     onStartDrag(slotIndex, event.clientX, event.clientY);
   };
 
+  useEffect(() => {
+    if (isMobile || isOpen || !isBackpackHovered || isMobileOpenSpinRunning) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setBackpackFrameIndex((current) => (current + 1) % BACKPACK_ROTATION_FRAMES.length);
+    }, 90);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isBackpackHovered, isMobile, isMobileOpenSpinRunning, isOpen]);
+
+  useEffect(() => {
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+
+    if (!isMobile || wasOpen || !isOpen) {
+      return;
+    }
+
+    setIsMobileOpenSpinRunning(true);
+    let steps = 0;
+    const totalSteps = BACKPACK_ROTATION_FRAMES.length * 3;
+
+    const intervalId = window.setInterval(() => {
+      steps += 1;
+      setBackpackFrameIndex((current) => (current + 1) % BACKPACK_ROTATION_FRAMES.length);
+
+      if (steps >= totalSteps) {
+        window.clearInterval(intervalId);
+        setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+        setIsMobileOpenSpinRunning(false);
+      }
+    }, 75);
+
+    return () => {
+      window.clearInterval(intervalId);
+      setIsMobileOpenSpinRunning(false);
+      setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+    };
+  }, [isMobile, isOpen]);
+
+  const backpackSpriteSrc =
+    isMobileOpenSpinRunning || (!isOpen && isBackpackHovered)
+      ? BACKPACK_ROTATION_FRAMES[backpackFrameIndex]
+      : BACKPACK_ROTATION_FRAMES[BACKPACK_NORMAL_FRAME_INDEX];
+
   return (
     <>
       <button
         type="button"
         onClick={onToggle}
+        onPointerEnter={() => setIsBackpackHovered(true)}
+        onPointerLeave={() => setIsBackpackHovered(false)}
         aria-label={isOpen ? "Cerrar inventario" : "Abrir inventario"}
         style={{
           position: "absolute",
           left: isMobile ? "22px" : "18px",
           bottom: isMobile ? "30px" : "18px",
           transform: undefined,
-          width: "84px",
-          height: "84px",
+          width: isMobile ? "84px" : "126px",
+          height: isMobile ? "84px" : "126px",
           border: "none",
           borderRadius: "0",
           background: "transparent",
@@ -81,9 +149,13 @@ export function InventoryUI({
         }}
       >
         <img
-          src="/assets/backpack/rotations/south.png"
+          src={backpackSpriteSrc}
           alt="Inventario"
-          style={{ width: "62px", height: "62px", imageRendering: "pixelated" }}
+          style={{
+            width: isMobile ? "62px" : "93px",
+            height: isMobile ? "62px" : "93px",
+            imageRendering: "pixelated",
+          }}
         />
       </button>
 

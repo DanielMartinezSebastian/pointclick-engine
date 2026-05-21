@@ -17,6 +17,7 @@ export type ItemDefinition = {
   id: string;
   name: string;
   spriteUrl: string;
+  descriptionDialogKey?: DialogKey;
   interactionRules: Record<string, ItemInteractionRule>;
   defaultRule: ItemInteractionRule;
 };
