@@ -25,6 +25,7 @@ import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems, type PlacedSceneItem } from "./inventory/PlacedSceneItems";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "./movement";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
+import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -53,20 +54,6 @@ const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 1.2;
 const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
-const PLAYER_COLLIDER_HALF_HEIGHT = 0.95;
-const DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN = 0.05;
-
-function keepInteractionCollidable(interaction: SceneInteraction, playerSpawnY: number): SceneInteraction {
-  if (!interaction.hasCollision) return interaction;
-
-  const minTopY = playerSpawnY - PLAYER_COLLIDER_HALF_HEIGHT + DEBUG_INTERACTION_COLLISION_OVERLAP_MARGIN;
-  const minCenterY = minTopY - interaction.halfSize[1];
-  if (interaction.position[1] >= minCenterY) return interaction;
-
-  const position = [...interaction.position] as [number, number, number];
-  position[1] = minCenterY;
-  return { ...interaction, position };
-}
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -1640,6 +1627,17 @@ export default function GameTouchCanvas() {
     playerPosition,
   });
 
+  const {
+    updateInteractionPosition,
+    updateInteractionHalfSize,
+    updateInteractionRotationDeg,
+    moveInteractionToPlayer,
+  } = useInteractionEditorController({
+    playerPosition,
+    scenePlayerSpawnY: scenePlayerSpawn[1],
+    updateInteraction,
+  });
+
   const sceneOptions = useMemo(
     () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
     [],
@@ -1662,36 +1660,6 @@ export default function GameTouchCanvas() {
     if (!nextText) return;
     showSpeechBubble(nextText);
   }, [showSpeechBubble, speechDraft]);
-
-  const updateInteractionPosition = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
-    updateInteraction(id, (interaction) => {
-      const position = [...interaction.position] as [number, number, number];
-      position[axis] = value;
-      return keepInteractionCollidable({ ...interaction, position }, scenePlayerSpawn[1]);
-    });
-  }, [scenePlayerSpawn, updateInteraction]);
-
-  const updateInteractionHalfSize = useCallback((id: string, axis: 0 | 1 | 2, value: number) => {
-    updateInteraction(id, (interaction) => {
-      const halfSize = [...interaction.halfSize] as [number, number, number];
-      halfSize[axis] = Math.max(0.05, value);
-      return keepInteractionCollidable({ ...interaction, halfSize }, scenePlayerSpawn[1]);
-    });
-  }, [scenePlayerSpawn, updateInteraction]);
-
-  const updateInteractionRotationDeg = useCallback((id: string, value: number) => {
-    updateInteraction(id, (interaction) => ({
-      ...interaction,
-      rotationY: (value * Math.PI) / 180,
-    }));
-  }, [updateInteraction]);
-
-  const moveInteractionToPlayer = useCallback((id: string) => {
-    updateInteraction(id, (interaction) => ({
-      ...interaction,
-      position: [playerPosition[0], interaction.position[1], playerPosition[2]],
-    }));
-  }, [playerPosition, updateInteraction]);
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
