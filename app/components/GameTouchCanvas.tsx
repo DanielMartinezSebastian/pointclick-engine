@@ -7,6 +7,7 @@ import { Physics, RigidBody, CuboidCollider, BallCollider, type RapierRigidBody 
 import { MathUtils, Mesh, OrthographicCamera as ThreeOrthoCamera, TextureLoader, Vector2, Vector3, DoubleSide } from "three";
 
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
+import { DebugOverlayPanel } from "./DebugOverlayPanel";
 import PixelSelect from "./PixelSelect";
 import SpeechBubble from "./SpeechBubble";
 import { getRandomPhrase } from "../dialogs/getRandomPhrase";
@@ -1650,6 +1651,33 @@ export default function GameTouchCanvas() {
     showSpeechBubble(nextText);
   }, [showSpeechBubble, speechDraft]);
 
+  const debugEditorContent =
+    editorMode === "walls" ? (
+      <WallEditorPanel
+        wallToolMode={wallToolMode}
+        setWallToolMode={handleWallToolModeChange}
+        onResetPointTool={resetWallPointTool}
+      />
+    ) : editorMode === "ground" ? (
+      <GroundEditorPanel />
+    ) : editorMode === "targets" ? (
+      <InteractionTargetsEditorPanel
+        interactions={sceneInteractions}
+        onSetPosition={updateInteractionPosition}
+        onSetHalfSize={updateInteractionHalfSize}
+        onSetRotationDeg={updateInteractionRotationDeg}
+        onMoveToPlayer={moveInteractionToPlayer}
+        onResetFromSceneConfig={resetInteractionsFromSceneConfig}
+      />
+    ) : editorMode === "items" ? (
+      <PlacedItemsEditorPanel
+        items={placedItems}
+        onSetPosition={updatePlacedItemPosition}
+        onMoveToPlayer={movePlacedItemToPlayer}
+        onRemove={removePlacedItemById}
+      />
+    ) : null;
+
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
 
@@ -1725,134 +1753,34 @@ export default function GameTouchCanvas() {
           initialPointerY={draggedStack.pointerY}
         />
       )}
-      {isDebug && (
-        <div
-          style={{
-            position: "fixed",
-            top: "16px",
-            left: debugPanelSide === "left" ? "16px" : undefined,
-            right: debugPanelSide === "right" ? "16px" : undefined,
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            zIndex: 10001,
-            padding: "1rem 1.2rem",
-            borderRadius: "2px",
-            border: "3px solid #00ff41",
-            background: "rgb(12 19 48 / 95%)",
-            color: "#00ff41",
-            backdropFilter: "blur(4px)",
-            minWidth: "260px",
-            maxWidth: "420px",
-            maxHeight: "calc(100vh - 32px)",
-            overflowY: "auto",
-            boxShadow: "0 0 16px rgba(0, 255, 65, 0.3), inset 0 0 8px rgba(0, 255, 65, 0.1)",
-            fontFamily: "var(--font-pixel), monospace",
-            fontSize: "13px",
-            letterSpacing: "1px",
-            textShadow: "0 0 10px rgba(0, 255, 65, 0.4)",
-            pointerEvents: "auto",
-          }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            <DebugButton
-              label={isDebugGroundVisible ? "Ocultar suelo" : "Mostrar suelo"}
-              onClick={() => setIsDebugGroundVisible((visible) => !visible)}
-            />
-            <DebugButton
-              label={isDebugWallsVisible ? "Ocultar paredes" : "Mostrar paredes"}
-              onClick={() => setIsDebugWallsVisible((visible) => !visible)}
-            />
-          </div>
-          <DebugButton
-            label={debugPanelSide === "left" ? "Panel a derecha" : "Panel a izquierda"}
-            onClick={() => setDebugPanelSide((side) => (side === "left" ? "right" : "left"))}
-          />
-        <PixelSelect
-          label="Escenario"
-          value={sceneId}
-          onChange={(value) => setScene(value)}
-          options={sceneOptions}
-        />
-        <strong style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "1px", lineHeight: "1.6" }}>{readyMessage}</strong>
-        <DebugButton label="Reaparecer en spawn" onClick={requestRespawn} />
-        {isDebug && (
-          <PixelSelect
-            label="Modo editor"
-            value={editorMode}
-            onChange={(value) => setEditorMode(value as DebugEditorMode)}
-            options={[
-              { label: "Editar paredes", value: "walls" },
-              { label: "Editar suelo", value: "ground" },
-              { label: "Editar items", value: "items" },
-              { label: "Editar targets", value: "targets" },
-            ]}
-          />
-        )}
-        {isDebug && (
-          <div style={{ display: "grid", gap: "8px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-            <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Bocadillo de dialogo</strong>
-            <textarea
-              value={speechDraft}
-              onChange={(e) => setSpeechDraft(e.target.value)}
-              placeholder="Escribe el texto para el personaje"
-              rows={4}
-              style={{
-                width: "100%",
-                minHeight: "84px",
-                borderRadius: "2px",
-                border: "2px solid #00ff41",
-                background: "rgb(8 12 32 / 90%)",
-                color: "#00ff41",
-                padding: "0.6rem",
-                fontSize: "11px",
-                fontFamily: "var(--font-pixel), monospace",
-                letterSpacing: "0.5px",
-                resize: "vertical",
-                outline: "none",
-                cursor: "auto",
-              }}
-            />
-            <DebugNumberInput
-              label="Velocidad (chars/seg)"
-              value={speechCharsPerSecond}
-              step={1}
-              onChange={(value) => setSpeechCharsPerSecond(Math.max(1, Math.round(value)))}
-            />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <DebugButton label="Hablar" onClick={runSpeechBubble} disabled={speechDraft.trim().length === 0} />
-              <DebugButton label="Ocultar" onClick={hideSpeechBubble} disabled={!speechVisible} />
-            </div>
-          </div>
-        )}
-        {isDebug && editorMode === "walls" && (
-          <WallEditorPanel
-            wallToolMode={wallToolMode}
-            setWallToolMode={handleWallToolModeChange}
-            onResetPointTool={resetWallPointTool}
-          />
-        )}
-        {isDebug && editorMode === "ground" && <GroundEditorPanel />}
-        {isDebug && editorMode === "targets" && (
-          <InteractionTargetsEditorPanel
-            interactions={sceneInteractions}
-            onSetPosition={updateInteractionPosition}
-            onSetHalfSize={updateInteractionHalfSize}
-            onSetRotationDeg={updateInteractionRotationDeg}
-            onMoveToPlayer={moveInteractionToPlayer}
-            onResetFromSceneConfig={resetInteractionsFromSceneConfig}
-          />
-        )}
-        {isDebug && editorMode === "items" && (
-          <PlacedItemsEditorPanel
-            items={placedItems}
-            onSetPosition={updatePlacedItemPosition}
-            onMoveToPlayer={movePlacedItemToPlayer}
-            onRemove={removePlacedItemById}
-          />
-        )}
-        </div>
-      )}
+      <DebugOverlayPanel
+        isDebug={isDebug}
+        debugPanelSide={debugPanelSide}
+        onTogglePanelSide={() =>
+          setDebugPanelSide((side) => (side === "left" ? "right" : "left"))
+        }
+        isDebugGroundVisible={isDebugGroundVisible}
+        onToggleGround={() => setIsDebugGroundVisible((visible) => !visible)}
+        isDebugWallsVisible={isDebugWallsVisible}
+        onToggleWalls={() => setIsDebugWallsVisible((visible) => !visible)}
+        sceneId={sceneId}
+        onSceneChange={setScene}
+        sceneOptions={sceneOptions}
+        readyMessage={readyMessage}
+        onRespawn={requestRespawn}
+        editorMode={editorMode}
+        onEditorModeChange={setEditorMode}
+        speechDraft={speechDraft}
+        onSpeechDraftChange={setSpeechDraft}
+        speechCharsPerSecond={speechCharsPerSecond}
+        onSpeechCharsPerSecondChange={(value) =>
+          setSpeechCharsPerSecond(Math.max(1, Math.round(value)))
+        }
+        onRunSpeech={runSpeechBubble}
+        onHideSpeech={hideSpeechBubble}
+        speechVisible={speechVisible}
+        editorContent={debugEditorContent}
+      />
     </div>
   );
 }
