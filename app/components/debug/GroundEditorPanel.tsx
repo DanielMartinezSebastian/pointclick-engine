@@ -2,13 +2,15 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { browserClipboardAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "../../store/sceneStore";
+import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
 
 export function GroundEditorPanel() {
   const sceneId = useSceneStore((s) => s.sceneId);
   const ground = useSceneStore((s) => s.scene.ground);
-  const updateGround = useSceneStore((s) => s.updateGround);
+  const updateGround = useSceneEditorStore((s) => s.updateGround);
   const [copyLabel, setCopyLabel] = useState("Copiar JSON suelo");
 
   const setGroundValue = useCallback((key: keyof typeof ground, value: number) => {
@@ -32,7 +34,7 @@ export function GroundEditorPanel() {
 
   const handleCopyJson = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(groundJson);
+      await browserClipboardAdapter.writeText(groundJson);
       setCopyLabel("Copiado");
       window.setTimeout(() => setCopyLabel("Copiar JSON suelo"), 1200);
     } catch {

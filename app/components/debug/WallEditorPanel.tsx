@@ -5,7 +5,9 @@ import { MathUtils } from "three";
 
 import PixelSelect from "../PixelSelect";
 import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
+import { browserClipboardAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "../../store/sceneStore";
+import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
 
 export function WallEditorPanel({
@@ -21,11 +23,11 @@ export function WallEditorPanel({
   const walls = useSceneStore((s) => s.scene.walls);
   const groundY = useSceneStore((s) => s.scene.ground.y);
   const playerPosition = useSceneStore((s) => s.playerPosition);
-  const selectedWallIndex = useSceneStore((s) => s.selectedWallIndex);
-  const selectWall = useSceneStore((s) => s.selectWall);
-  const addWall = useSceneStore((s) => s.addWall);
-  const removeSelectedWall = useSceneStore((s) => s.removeSelectedWall);
-  const updateSelectedWall = useSceneStore((s) => s.updateSelectedWall);
+  const selectedWallIndex = useSceneEditorStore((s) => s.selectedWallIndex);
+  const selectWall = useSceneEditorStore((s) => s.selectWall);
+  const addWall = useSceneEditorStore((s) => s.addWall);
+  const removeSelectedWall = useSceneEditorStore((s) => s.removeSelectedWall);
+  const updateSelectedWall = useSceneEditorStore((s) => s.updateSelectedWall);
   const [copyLabel, setCopyLabel] = useState("Copiar JSON");
 
   const selectedWall = selectedWallIndex == null ? null : walls[selectedWallIndex] ?? null;
@@ -67,7 +69,7 @@ export function WallEditorPanel({
 
   const handleCopyJson = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(wallsJson);
+      await browserClipboardAdapter.writeText(wallsJson);
       setCopyLabel("Copiado");
       window.setTimeout(() => setCopyLabel("Copiar JSON"), 1200);
     } catch {

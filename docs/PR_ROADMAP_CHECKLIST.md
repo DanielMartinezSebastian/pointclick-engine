@@ -18,11 +18,11 @@ Objetivo:
 
 Entregables minimos:
 
-- [ ] Crear modulo publico (por ejemplo `app/lib/engine/publicApi.ts`).
-- [ ] Incluir contrato para `createGameRuntime(config)`.
-- [ ] Incluir registro declarativo: `registerScene`, `registerItem`, `registerRule`.
-- [ ] Definir `GameViewport` como punto de integracion de canvas/runtime.
-- [ ] Añadir tipos publicos reutilizables para escenas/items/rules.
+- [x] Crear modulo publico (`app/lib/engine/publicApi.ts`).
+- [x] Incluir contrato para `createGameRuntime(config)`.
+- [x] Incluir registro declarativo: `registerScene`, `registerItem`, `registerRule`.
+- [x] Definir `GameViewportProps` como punto de integracion de canvas/runtime.
+- [x] Añadir tipos publicos reutilizables para escenas/items/rules.
 
 Validacion:
 
@@ -43,10 +43,10 @@ Objetivo:
 
 Entregables minimos:
 
-- [ ] Crear estructura `app/lib/platform-web/`.
-- [ ] Definir interfaces para `storage`, `routing`, `clipboard` y `network`.
-- [ ] Implementar al menos un adapter concreto (ejemplo: `localStorage`).
-- [ ] Conectar runtime para consumir interfaces, no llamadas web directas.
+- [x] Crear modulo `app/lib/platform-web.ts` con todos los adapters.
+- [x] Definir interfaces para `storage`, `routing`, `clipboard` y `network`.
+- [x] Implementar adapters concretos con fallback SSR seguro.
+- [x] Conectar paneles debug para consumir `browserClipboardAdapter` en lugar de llamadas directas.
 
 Validacion:
 
@@ -67,10 +67,10 @@ Objetivo:
 
 Entregables minimos:
 
-- [ ] Separar estado/acciones de editor en store independiente (por ejemplo `sceneEditorStore`).
-- [ ] Mantener `sceneStore` enfocado en estado runtime y transiciones de juego.
-- [ ] Ajustar hooks/controladores para consumir ambos stores sin acoplamiento circular.
-- [ ] Documentar invariantes de estado y ownership.
+- [x] Separar estado/acciones de editor en `sceneEditorStore`.
+- [x] Mantener `sceneStore` enfocado en estado runtime y transiciones de juego.
+- [x] Ajustar hooks/controladores para consumir ambos stores sin acoplamiento circular.
+- [x] Documentar invariantes de estado y ownership en ambos stores.
 
 Validacion:
 
@@ -87,9 +87,9 @@ Riesgos a vigilar:
 
 Marcar roadmap como cerrado solo cuando:
 
-- [ ] PR A completada
-- [ ] PR B completada
-- [ ] PR C completada
+- [x] PR A completada
+- [x] PR B completada
+- [x] PR C completada
 - [ ] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`
 
 ## Plan de ejecucion detallado (4 semanas)
@@ -193,3 +193,4 @@ Antes de cerrar cada semana:
 
 - 2026-05-22: Se completa Fase 1-3 (refactor y validaciones).
 - 2026-05-22: Se reescribe roadmap para enfocarlo exclusivamente en pendientes de Fase 4 y F4.
+- 2026-05-22: Se implementan PR A, PR B y PR C. Modulos creados: `publicApi.ts`, `platform-web.ts`, `sceneEditorStore.ts`. `sceneStore` reducido a runtime-only. Todos los consumidores actualizados.
