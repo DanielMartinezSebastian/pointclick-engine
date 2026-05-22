@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
 export type InventoryStack = {
   id: string;
@@ -30,9 +30,12 @@ function slotStyle(occupied: boolean): CSSProperties {
     width: "100%",
     aspectRatio: "1 / 1",
     minWidth: 0,
-    border: "2px solid rgb(185 216 255 / 55%)",
-    borderRadius: "8px",
-    background: occupied ? "rgb(18 31 55 / 90%)" : "rgb(10 16 30 / 80%)",
+    border: "3px solid rgb(132 230 255 / 78%)",
+    borderRadius: "4px",
+    background: occupied
+      ? "linear-gradient(180deg, rgb(26 82 112 / 100%) 0%, rgb(10 32 48 / 100%) 100%)"
+      : "linear-gradient(180deg, rgb(8 18 30 / 100%) 0%, rgb(5 11 20 / 100%) 100%)",
+    boxShadow: "inset 0 0 0 2px rgb(255 255 255 / 6%), inset 0 -3px 0 rgb(0 0 0 / 24%), 0 3px 0 rgb(0 0 0 / 24%)",
     display: "grid",
     placeItems: "center",
     position: "relative",
@@ -57,7 +60,14 @@ export function InventoryUI({
   const [isBackpackHovered, setIsBackpackHovered] = useState(false);
   const [backpackFrameIndex, setBackpackFrameIndex] = useState(BACKPACK_NORMAL_FRAME_INDEX);
   const [isMobileOpenSpinRunning, setIsMobileOpenSpinRunning] = useState(false);
-  const wasOpenRef = useRef(isOpen);
+  const [isMobileCloseSpinRunning, setIsMobileCloseSpinRunning] = useState(false);
+  const [isBackpackHoverSpinRunning, setIsBackpackHoverSpinRunning] = useState(false);
+  const [isPickupSpinRunning, setIsPickupSpinRunning] = useState(false);
+  const previousOpenRef = useRef(isOpen);
+  const previousItemCountRef = useRef<number | null>(null);
+  const backpackSpinIntervalRef = useRef<number | null>(null);
+  const backpackSpinStartTimeoutRef = useRef<number | null>(null);
+  const backpackSpinTokenRef = useRef(0);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -75,52 +85,138 @@ export function InventoryUI({
     onStartDrag(slotIndex, event.clientX, event.clientY);
   };
 
-  useEffect(() => {
-    if (isMobile || isOpen || !isBackpackHovered || isMobileOpenSpinRunning) {
-      return;
+  const clearBackpackSpinInterval = useCallback(() => {
+    if (backpackSpinIntervalRef.current !== null) {
+      window.clearInterval(backpackSpinIntervalRef.current);
+      backpackSpinIntervalRef.current = null;
+    }
+  }, []);
+
+  const resetBackpackSpinFlags = useCallback(() => {
+    setIsMobileOpenSpinRunning(false);
+    setIsMobileCloseSpinRunning(false);
+    setIsBackpackHoverSpinRunning(false);
+    setIsPickupSpinRunning(false);
+  }, []);
+
+  const startBackpackSpin = useCallback(
+    (direction: 1 | -1, setRunning: (value: boolean) => void) => {
+    backpackSpinTokenRef.current += 1;
+    const spinToken = backpackSpinTokenRef.current;
+
+    clearBackpackSpinInterval();
+    if (backpackSpinStartTimeoutRef.current !== null) {
+      window.clearTimeout(backpackSpinStartTimeoutRef.current);
+      backpackSpinStartTimeoutRef.current = null;
     }
 
-    const intervalId = window.setInterval(() => {
-      setBackpackFrameIndex((current) => (current + 1) % BACKPACK_ROTATION_FRAMES.length);
-    }, 90);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [isBackpackHovered, isMobile, isMobileOpenSpinRunning, isOpen]);
-
-  useEffect(() => {
-    const wasOpen = wasOpenRef.current;
-    wasOpenRef.current = isOpen;
-
-    if (!isMobile || wasOpen || !isOpen) {
-      return;
-    }
-
-    setIsMobileOpenSpinRunning(true);
-    let steps = 0;
-    const totalSteps = BACKPACK_ROTATION_FRAMES.length * 3;
-
-    const intervalId = window.setInterval(() => {
-      steps += 1;
-      setBackpackFrameIndex((current) => (current + 1) % BACKPACK_ROTATION_FRAMES.length);
-
-      if (steps >= totalSteps) {
-        window.clearInterval(intervalId);
-        setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
-        setIsMobileOpenSpinRunning(false);
+    backpackSpinStartTimeoutRef.current = window.setTimeout(() => {
+      if (backpackSpinTokenRef.current !== spinToken) {
+        return;
       }
-    }, 75);
+
+      resetBackpackSpinFlags();
+      setRunning(true);
+
+      let steps = 0;
+      const totalSteps = BACKPACK_ROTATION_FRAMES.length;
+
+      const intervalId = window.setInterval(() => {
+        if (backpackSpinTokenRef.current !== spinToken) {
+          window.clearInterval(intervalId);
+          return;
+        }
+
+        steps += 1;
+        setBackpackFrameIndex((current) => (current + direction + BACKPACK_ROTATION_FRAMES.length) % BACKPACK_ROTATION_FRAMES.length);
+
+        if (steps >= totalSteps) {
+          window.clearInterval(intervalId);
+          backpackSpinIntervalRef.current = null;
+          setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+          setRunning(false);
+        }
+      }, 75);
+
+      backpackSpinIntervalRef.current = intervalId;
+      backpackSpinStartTimeoutRef.current = null;
+    }, 0);
 
     return () => {
-      window.clearInterval(intervalId);
-      setIsMobileOpenSpinRunning(false);
+      if (backpackSpinTokenRef.current !== spinToken) {
+        return;
+      }
+
+      if (backpackSpinStartTimeoutRef.current !== null) {
+        window.clearTimeout(backpackSpinStartTimeoutRef.current);
+        backpackSpinStartTimeoutRef.current = null;
+      }
+
+      clearBackpackSpinInterval();
       setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+      setRunning(false);
     };
-  }, [isMobile, isOpen]);
+  }, [clearBackpackSpinInterval, resetBackpackSpinFlags]);
+
+  useEffect(() => {
+    if (
+      isMobile ||
+      isOpen ||
+      !isBackpackHovered ||
+      isMobileOpenSpinRunning ||
+      isMobileCloseSpinRunning ||
+      isPickupSpinRunning ||
+      isBackpackHoverSpinRunning
+    ) {
+      return;
+    }
+
+    return startBackpackSpin(1, setIsBackpackHoverSpinRunning);
+  }, [
+    isBackpackHoverSpinRunning,
+    isBackpackHovered,
+    isMobile,
+    isMobileCloseSpinRunning,
+    isMobileOpenSpinRunning,
+    isOpen,
+    isPickupSpinRunning,
+    startBackpackSpin,
+  ]);
+
+  useEffect(() => {
+    const wasOpen = previousOpenRef.current;
+
+    if (!isMobile || wasOpen === isOpen) {
+      return;
+    }
+
+    previousOpenRef.current = isOpen;
+
+    if (isOpen) {
+      return startBackpackSpin(1, setIsMobileOpenSpinRunning);
+    }
+
+    return startBackpackSpin(-1, setIsMobileCloseSpinRunning);
+  }, [isMobile, isOpen, startBackpackSpin]);
+
+  useEffect(() => {
+    const totalItems = slots.reduce((count, slot) => count + (slot ? slot.quantity : 0), 0);
+    const previousItemCount = previousItemCountRef.current;
+    previousItemCountRef.current = totalItems;
+
+    if (previousItemCount === null || totalItems <= previousItemCount) {
+      return;
+    }
+
+    return startBackpackSpin(1, setIsPickupSpinRunning);
+  }, [slots, startBackpackSpin]);
 
   const backpackSpriteSrc =
-    isMobileOpenSpinRunning || (!isOpen && isBackpackHovered)
+    isMobileOpenSpinRunning ||
+    isMobileCloseSpinRunning ||
+    isBackpackHoverSpinRunning ||
+    isPickupSpinRunning ||
+    (!isOpen && isBackpackHovered)
       ? BACKPACK_ROTATION_FRAMES[backpackFrameIndex]
       : BACKPACK_ROTATION_FRAMES[BACKPACK_NORMAL_FRAME_INDEX];
 
@@ -170,15 +266,58 @@ export function InventoryUI({
             bottom: isMobile ? "118px" : "118px",
             transform: isMobile ? "translateX(-50%)" : undefined,
             zIndex: 41,
-            border: "2px solid rgb(188 225 255 / 75%)",
-            borderRadius: isMobile ? "14px" : "12px",
-            background: "rgb(5 10 20 / 92%)",
-            boxShadow: "0 18px 36px rgb(0 0 0 / 35%)",
+            border: "4px solid rgb(140 227 255 / 88%)",
+            borderRadius: isMobile ? "8px" : "6px",
+            background: "linear-gradient(180deg, rgb(10 29 45 / 100%) 0%, rgb(4 11 18 / 100%) 100%)",
+            boxShadow:
+              "0 16px 0 rgb(0 0 0 / 26%), 0 18px 36px rgb(0 0 0 / 35%), inset 0 0 0 2px rgb(255 255 255 / 8%), inset 0 -4px 0 rgb(0 0 0 / 18%)",
             padding: isMobile ? "16px 18px" : "14px",
             width: isMobile ? "min(92vw, 420px)" : "236px",
           }}
         >
-          <strong style={{ color: "#d8ecff", fontSize: "12px", letterSpacing: "0.6px" }}>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Cerrar inventario"
+            style={{
+              position: "absolute",
+              top: isMobile ? "-18px" : "-16px",
+              right: isMobile ? "-18px" : "-16px",
+              width: isMobile ? "34px" : "30px",
+              height: isMobile ? "34px" : "30px",
+              border: "3px solid rgb(95 16 20 / 100%)",
+              borderRadius: "999px",
+              background: "linear-gradient(180deg, rgb(255 110 120 / 100%) 0%, rgb(173 31 44 / 100%) 100%)",
+              color: "#fff3f3",
+              boxShadow: "0 3px 0 rgb(0 0 0 / 26%), inset 0 0 0 2px rgb(255 255 255 / 16%)",
+              display: "grid",
+              placeItems: "center",
+              fontSize: isMobile ? "18px" : "16px",
+              lineHeight: 1,
+              fontWeight: 900,
+              textShadow: "0 2px 0 rgb(0 0 0 / 35%)",
+              cursor: "pointer",
+              zIndex: 3,
+              padding: 0,
+            }}
+          >
+            X
+          </button>
+
+          <strong
+            style={{
+              color: "#bff4ff",
+              fontSize: "18px",
+              letterSpacing: "1.5px",
+              display: "block",
+              width: "100%",
+              textAlign: "center",
+              textTransform: "uppercase",
+              textShadow: "0 3px 0 rgb(0 0 0 / 36%)",
+              borderBottom: "2px solid rgb(132 230 255 / 75%)",
+              paddingBottom: "4px",
+            }}
+          >
             Inventario
           </strong>
 
@@ -187,7 +326,7 @@ export function InventoryUI({
               marginTop: "10px",
               display: "grid",
               gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: isMobile ? "10px" : "8px",
+              gap: isMobile ? "10px" : "9px",
             }}
           >
             {slots.map((stack, index) => (
@@ -225,11 +364,12 @@ export function InventoryUI({
                       style={{
                         position: "absolute",
                         right: "4px",
-                        bottom: "3px",
-                        color: "#e7f4ff",
-                        textShadow: "0 1px 4px rgb(0 0 0 / 70%)",
+                        bottom: "4px",
+                        color: "#d6fbff",
+                        textShadow: "0 2px 0 rgb(0 0 0 / 72%)",
                         fontSize: "11px",
                         pointerEvents: "none",
+                        fontWeight: 700,
                       }}
                     >
                       x{stack.quantity}
