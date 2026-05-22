@@ -5,7 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import type { SceneInteraction } from "../../../demo/content/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
-import { emitRuntimeEvent, type RuntimeEventHandler } from "../types/runtimeEvents";
+import {
+  emitRuntimeEvent,
+  type RuntimeEventHandler,
+} from "../types/runtimeEvents";
 import {
   addOneToInventory,
   inventoryRuleMessages,
@@ -70,29 +73,38 @@ export function useInventoryRuntimeController({
   );
   const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
 
-  const handleBoundaryHit = useCallback((phrase: string) => {
-    setSpeechText(phrase);
-    setSpeechVisible(true);
-    setSpeechTrigger((current) => current + 1);
-    emitRuntimeEvent(onRuntimeEvent, {
-      type: "onDialog",
-      source: "boundary",
-      text: phrase,
-      dialogKey: "boundaryHit",
-    });
-  }, [onRuntimeEvent]);
+  const handleBoundaryHit = useCallback(
+    (phrase: string) => {
+      setSpeechText(phrase);
+      setSpeechVisible(true);
+      setSpeechTrigger((current) => current + 1);
+      emitRuntimeEvent(onRuntimeEvent, {
+        type: "onDialog",
+        source: "boundary",
+        text: phrase,
+        dialogKey: "boundaryHit",
+      });
+    },
+    [onRuntimeEvent],
+  );
 
-  const showSpeechBubble = useCallback((nextText: string, meta?: { source?: "inventory" | "debug"; dialogKey?: string }) => {
-    setSpeechText(nextText);
-    setSpeechVisible(true);
-    setSpeechTrigger((current) => current + 1);
-    emitRuntimeEvent(onRuntimeEvent, {
-      type: "onDialog",
-      source: meta?.source ?? "inventory",
-      text: nextText,
-      dialogKey: meta?.dialogKey,
-    });
-  }, [onRuntimeEvent]);
+  const showSpeechBubble = useCallback(
+    (
+      nextText: string,
+      meta?: { source?: "inventory" | "debug"; dialogKey?: string },
+    ) => {
+      setSpeechText(nextText);
+      setSpeechVisible(true);
+      setSpeechTrigger((current) => current + 1);
+      emitRuntimeEvent(onRuntimeEvent, {
+        type: "onDialog",
+        source: meta?.source ?? "inventory",
+        text: nextText,
+        dialogKey: meta?.dialogKey,
+      });
+    },
+    [onRuntimeEvent],
+  );
 
   const hideSpeechBubble = useCallback(() => {
     setSpeechVisible(false);
@@ -125,7 +137,9 @@ export function useInventoryRuntimeController({
           itemId: payload.stack.id,
           interactionId: interaction.id,
         });
-        showSpeechBubble(getRandomPhrase(decision.dialogKey), { dialogKey: decision.dialogKey });
+        showSpeechBubble(getRandomPhrase(decision.dialogKey), {
+          dialogKey: decision.dialogKey,
+        });
         setDraggedStack(null);
         return;
       }
@@ -144,7 +158,9 @@ export function useInventoryRuntimeController({
           ...currentPlaced,
           decision.placedItem,
         ]);
-        showSpeechBubble(getRandomPhrase(decision.dialogKey), { dialogKey: decision.dialogKey });
+        showSpeechBubble(getRandomPhrase(decision.dialogKey), {
+          dialogKey: decision.dialogKey,
+        });
         setDraggedStack(null);
         return;
       }
@@ -159,7 +175,9 @@ export function useInventoryRuntimeController({
         setInventorySlots((currentSlots) =>
           removeOneFromSlot(currentSlots, decision.fromSlotIndex),
         );
-        showSpeechBubble(getRandomPhrase(decision.dialogKey), { dialogKey: decision.dialogKey });
+        showSpeechBubble(getRandomPhrase(decision.dialogKey), {
+          dialogKey: decision.dialogKey,
+        });
         setDraggedStack(null);
         return;
       }
@@ -170,7 +188,9 @@ export function useInventoryRuntimeController({
         itemId: payload.stack.id,
         interactionId: interaction.id,
       });
-      showSpeechBubble(getRandomPhrase(decision.dialogKey), { dialogKey: decision.dialogKey });
+      showSpeechBubble(getRandomPhrase(decision.dialogKey), {
+        dialogKey: decision.dialogKey,
+      });
       setDraggedStack(null);
     },
     [onRuntimeEvent, showSpeechBubble],
@@ -190,7 +210,9 @@ export function useInventoryRuntimeController({
         itemId: payload.stack.id,
         interactionId: interaction?.id,
       });
-      showSpeechBubble(getRandomPhrase(fallbackMiss), { dialogKey: fallbackMiss });
+      showSpeechBubble(getRandomPhrase(fallbackMiss), {
+        dialogKey: fallbackMiss,
+      });
       setDraggedStack(null);
     },
     [onRuntimeEvent, sceneInteractions, showSpeechBubble],
@@ -205,7 +227,9 @@ export function useInventoryRuntimeController({
         itemId: payload.stack.id,
       });
       if (message.kind === "dialog-key") {
-        showSpeechBubble(getRandomPhrase(message.dialogKey), { dialogKey: message.dialogKey });
+        showSpeechBubble(getRandomPhrase(message.dialogKey), {
+          dialogKey: message.dialogKey,
+        });
       } else {
         showSpeechBubble(message.text);
       }
@@ -229,7 +253,9 @@ export function useInventoryRuntimeController({
           itemId: placedItem.itemId,
           interactionId: placedItem.interactionId,
         });
-        showSpeechBubble(getRandomPhrase(decision.dialogKey), { dialogKey: decision.dialogKey });
+        showSpeechBubble(getRandomPhrase(decision.dialogKey), {
+          dialogKey: decision.dialogKey,
+        });
         return;
       }
 
@@ -324,7 +350,9 @@ export function useInventoryRuntimeController({
     if (sceneId !== "personalRoom") return;
 
     const timeoutId = window.setTimeout(() => {
-      showSpeechBubble(getRandomPhrase("personalRoomWelcome"), { dialogKey: "personalRoomWelcome" });
+      showSpeechBubble(getRandomPhrase("personalRoomWelcome"), {
+        dialogKey: "personalRoomWelcome",
+      });
     }, 0);
 
     return () => {

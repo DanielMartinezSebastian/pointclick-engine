@@ -79,7 +79,11 @@ export function useInteractionEditorController({
     (id: string) => {
       updateInteraction(id, (interaction) => ({
         ...interaction,
-        position: [playerPosition[0], interaction.position[1], playerPosition[2]],
+        position: [
+          playerPosition[0],
+          interaction.position[1],
+          playerPosition[2],
+        ],
       }));
     },
     [playerPosition, updateInteraction],

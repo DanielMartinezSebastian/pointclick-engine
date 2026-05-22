@@ -209,8 +209,9 @@ export function resolveInventoryDropMissDialogKey({
   return (
     itemRule?.missDialogKey ??
     interaction?.dialogKeys.miss ??
-    sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys
-      .miss ??
+    sceneInteractions.find(
+      (currentInteraction) => currentInteraction.kind === "drop-target",
+    )?.dialogKeys.miss ??
     DEFAULT_DROP_MISS_DIALOG_KEY
   );
 }

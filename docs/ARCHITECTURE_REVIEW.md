@@ -93,24 +93,28 @@ Risk:
 Proposed layered model:
 
 1. Core Domain (framework-agnostic)
+
 - Scene graph contracts
 - Item/interactions rules engine
 - Navigation/pathfinding service interfaces
 - Dialog resolution contracts
 
 2. Runtime Engine (r3f/rapier adapters)
+
 - Rendering adapter
 - Physics adapter
 - Input adapter
 - Runtime event bus
 
 3. Web Integration Layer
+
 - Persistence adapters (localStorage/IndexedDB/remote)
 - URL/router integration
 - Clipboard/drag-drop/web APIs
 - Telemetry hooks
 
 4. UI Composition Layer
+
 - Reusable React components/hooks for HUD, inventory, speech bubble, editor panels
 - Demo app that consumes public APIs
 

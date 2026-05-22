@@ -1,152 +1,195 @@
-# PR Roadmap Checklist
+# PR Roadmap Pendiente
 
-Este documento sirve para verificar, en cualquier momento, si la ruta de PRs de arquitectura se completó correctamente.
+Este documento lista unicamente el trabajo pendiente para cerrar los hallazgos del review de arquitectura.
 
-## Estado general
+Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 
-- [x] PR 1 completada: separar engine de UI
-- [x] PR 2 completada: mover contenido demo a modulo demo
-- [x] PR 3 completada: cerrar calidad de runtime (tests/eventos)
+## Estado actual
 
-## Convenciones de seguimiento
+- Fase 1, 2 y 3: completadas.
+- Pendiente principal: Fase 4 (API publica de libreria + adapters de plataforma).
+- Pendiente adicional: separar mejor runtime/editor en `sceneStore`.
 
-- Estado por PR: `Pendiente` | `En progreso` | `Completada`
-- Cada PR debe incluir:
-  - Enlace al PR
-  - Commit(s) principales
-  - Evidencia de validacion (`npm run lint`, `npm run test`, `npm run build`)
-  - Riesgos o deuda remanente
+## PR A - API publica minima de libreria
 
----
+Objetivo:
 
-## PR 1 - Separar engine de UI
+- Exponer una API publica inicial alineada con el review.
 
-**Objetivo**
-- Eliminar acoplamiento directo `engine -> components`.
-- Dejar en engine solo runtime/controller/contratos/tipos.
+Entregables minimos:
 
-**Estado**
-- Estado: `Completada`
-- PR: 
-- Branch: `main`
-- Fecha de cierre: 2026-05-22
+- [ ] Crear modulo publico (por ejemplo `app/lib/engine/publicApi.ts`).
+- [ ] Incluir contrato para `createGameRuntime(config)`.
+- [ ] Incluir registro declarativo: `registerScene`, `registerItem`, `registerRule`.
+- [ ] Definir `GameViewport` como punto de integracion de canvas/runtime.
+- [ ] Añadir tipos publicos reutilizables para escenas/items/rules.
 
-**Checklist tecnico**
-- [x] No hay imports desde `app/lib/engine/**` hacia `app/components/**`.
-- [ ] Los contratos/tipos compartidos viven en `app/lib/engine/types/**`.
-- [x] `GameTouchCanvas` actua como shell de composicion.
-- [x] Se mantiene comportamiento funcional sin regresiones visibles.
+Validacion:
 
-**Validacion**
-- [x] `npm run lint` en verde
-- [x] `npm run test` en verde
-- [x] `npm run build` en verde
+- [ ] `npm run lint` en verde
+- [ ] `npm run test` en verde
+- [ ] `npm run build` en verde
 
-**Evidencias**
-- Archivos clave tocados:
-  - `app/lib/engine/runtime/GameTouchSpriteRuntime.tsx`
-  - `app/lib/engine/runtime/useInventoryRuntimeController.ts`
-  - `app/lib/engine/render/**`
-  - `app/components/scene/**` (re-exports de compatibilidad)
-  - `app/components/sprite/**` (re-exports de compatibilidad)
-  - `app/components/SpeechBubble.tsx` (re-export de compatibilidad)
-- Notas:
-  - Se movio la capa visual usada por runtime a `app/lib/engine/render/**`.
-  - Se mantuvieron wrappers en `app/components/**` para evitar roturas de imports existentes.
+Riesgos a vigilar:
 
----
+- Evitar acoplar API publica a detalles de `app/demo/content/**`.
+- Mantener compatibilidad con wiring actual del demo.
 
-## PR 2 - Mover contenido demo a modulo demo
+## PR B - Capa platform-web
 
-**Objetivo**
-- Separar contenido demo (escenas/items/dialogos/wiring demo) del core reusable.
-- Dejar una frontera clara entre `demo` y `lib`.
+Objetivo:
 
-**Estado**
-- Estado: `Completada`
-- PR: 
-- Branch: `main`
-- Fecha de cierre: 2026-05-22
+- Crear frontera de interoperabilidad web para evitar integraciones ad hoc.
 
-**Checklist tecnico**
-- [x] Existe area de demo dedicada (por ejemplo `app/demo/content/**`).
-- [x] Escenas/items/dialogos demo no quedan mezclados en core.
-- [x] Engine consume contratos normalizados, no contenido hardcodeado de app.
-- [x] Imports y wiring actualizados sin romper flujo de juego.
+Entregables minimos:
 
-**Validacion**
-- [x] `npm run lint` en verde
-- [x] `npm run test` en verde
-- [x] `npm run build` en verde
+- [ ] Crear estructura `app/lib/platform-web/`.
+- [ ] Definir interfaces para `storage`, `routing`, `clipboard` y `network`.
+- [ ] Implementar al menos un adapter concreto (ejemplo: `localStorage`).
+- [ ] Conectar runtime para consumir interfaces, no llamadas web directas.
 
-**Evidencias**
-- Archivos clave tocados:
-  - `app/demo/content/scenes.ts`
-  - `app/demo/content/items/index.ts`
-  - `app/demo/content/dialogs/index.ts`
-  - `app/demo/content/dialogs/getRandomPhrase.ts`
-  - `app/scenes/scenes.ts` (re-export de compatibilidad)
-  - `app/items/index.ts` (re-export de compatibilidad)
-  - `app/dialogs/index.ts` (re-export de compatibilidad)
-  - `app/dialogs/getRandomPhrase.ts` (re-export de compatibilidad)
-  - `app/store/sceneStore.ts`
-  - `app/lib/engine/runtime/useSceneRuntimeController.ts`
-  - `app/lib/engine/runtime/useInventoryRuntimeController.ts`
-  - `app/lib/engine/runtime/GameTouchSpriteRuntime.tsx`
-- Notas:
-  - Se movio el contenido demo a `app/demo/content/**` y se mantuvieron rutas legacy como puentes.
-  - Se actualizaron consumidores de runtime/store para depender de la nueva ubicacion demo.
+Validacion:
 
----
+- [ ] `npm run lint` en verde
+- [ ] `npm run test` en verde
+- [ ] `npm run build` en verde
 
-## PR 3 - Cerrar calidad de runtime
+Riesgos a vigilar:
 
-**Objetivo**
-- Subir cobertura de calidad en runtime: testabilidad y observabilidad.
-- Agregar pruebas deterministas y eventos runtime basicos.
+- No mezclar codigo de UI con adapters de plataforma.
+- Mantener fallback seguro para SSR/no-window.
 
-**Estado**
-- Estado: `Completada`
-- PR: 
-- Branch: `main`
-- Fecha de cierre: 2026-05-22
+## PR C - Separacion runtime vs editor store
 
-**Checklist tecnico**
-- [x] Hay tests deterministas para movimiento/pathfinding.
-- [x] Se cubren escenarios clave de interaccion (`drop`, `pickup`, colisiones relevantes).
-- [x] Runtime expone/centraliza eventos base (`onMove`, `onCollide`, `onDrop`, `onDialog`) o equivalente definido.
-- [x] Se documentan limites y riesgos residuales.
+Objetivo:
 
-**Validacion**
-- [x] `npm run lint` en verde
-- [x] `npm run test` en verde
-- [x] `npm run build` en verde
+- Reducir mezcla de responsabilidades en `sceneStore`.
 
-**Evidencias**
-- Archivos clave tocados:
-  - `app/lib/engine/types/runtimeEvents.ts`
-  - `app/lib/engine/runtime/GameTouchSpriteRuntime.tsx`
-  - `app/lib/engine/runtime/useInventoryRuntimeController.ts`
-  - `app/components/GameTouchCanvas.tsx`
-  - `app/lib/engine/movement/findPath.test.ts`
-- Notas:
-  - Se añadieron eventos runtime tipados y callback central en canvas para observabilidad en debug.
-  - Se añadieron tests deterministas de `findPath` (ruta directa, desvio por obstaculo y caso sin solucion).
-  - Riesgo residual: `onCollide` actual refleja colision logica (`boundary`/`stuck`) y no eventos físicos de Rapier por contacto específico.
+Entregables minimos:
 
----
+- [ ] Separar estado/acciones de editor en store independiente (por ejemplo `sceneEditorStore`).
+- [ ] Mantener `sceneStore` enfocado en estado runtime y transiciones de juego.
+- [ ] Ajustar hooks/controladores para consumir ambos stores sin acoplamiento circular.
+- [ ] Documentar invariantes de estado y ownership.
 
-## Criterio de cierre de la ruta
+Validacion:
 
-Marcar la ruta como completada solo cuando:
+- [ ] `npm run lint` en verde
+- [ ] `npm run test` en verde
+- [ ] `npm run build` en verde
 
-- [x] Las 3 PRs esten en estado `Completada`.
-- [x] Todas las validaciones de cada PR esten en verde.
-- [ ] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`.
+Riesgos a vigilar:
 
-## Registro rapido de avances
+- Evitar regresiones en paneles debug.
+- Mantener comportamiento del gameplay sin cambios funcionales.
 
-- 2026-05-22: Se crea este checklist de control de ruta.
-- 2026-05-22: PR 1 completada. Engine deja de importar `app/components/**`; validado con lint, test y build.
-- 2026-05-22: PR 2 completada. Contenido demo (escenas/items/dialogos) movido a `app/demo/content/**`; validado con lint, test y build.
-- 2026-05-22: PR 3 completada. Se incorporan eventos runtime y tests de pathfinding; validado con lint, test y build.
+## Criterio de cierre final
+
+Marcar roadmap como cerrado solo cuando:
+
+- [ ] PR A completada
+- [ ] PR B completada
+- [ ] PR C completada
+- [ ] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`
+
+## Plan de ejecucion detallado (4 semanas)
+
+Orden recomendado:
+
+- Semana 1 y 2: PR A
+- Semana 3: PR B
+- Semana 4: PR C
+
+Justificacion del orden:
+
+- PR A define contratos publicos que PR B y PR C deben respetar.
+- PR B necesita una API de runtime clara para conectar adapters sin acoplarse al demo.
+- PR C conviene al final para evitar mover stores dos veces mientras cambia la frontera publica.
+
+### Semana 1 - Diseño y base de PR A
+
+Objetivo:
+
+- Congelar el contrato publico minimo y preparar wiring inicial sin romper el juego.
+
+Tareas:
+
+- [ ] Definir tipos publicos en un modulo estable de API.
+- [ ] Crear esqueleto de `createGameRuntime(config)` sin comportamiento final completo.
+- [ ] Diseñar firmas de `registerScene`, `registerItem`, `registerRule`.
+- [ ] Definir interfaz objetivo de `GameViewport`.
+- [ ] Añadir documento corto con decisiones de diseño y ejemplos de uso.
+
+Salida esperada de la semana:
+
+- API tipada compilando y consumible desde el demo, aunque sea con implementaciones parciales.
+
+### Semana 2 - Implementacion completa de PR A
+
+Objetivo:
+
+- Completar el comportamiento funcional de la API publica minima.
+
+Tareas:
+
+- [ ] Implementar `createGameRuntime(config)` con estado y acciones base.
+- [ ] Conectar registro declarativo de escenas/items/rules al runtime.
+- [ ] Implementar `GameViewport` conectado a runtime.
+- [ ] Rewire del demo para usar API publica en vez de imports internos directos donde aplique.
+- [ ] Añadir tests de contrato (registro y consumo).
+
+Salida esperada de la semana:
+
+- PR A lista para merge con lint/test/build en verde.
+
+### Semana 3 - Implementacion de PR B (platform-web)
+
+Objetivo:
+
+- Introducir adapters web con contratos claros y al menos una implementacion real.
+
+Tareas:
+
+- [ ] Crear `app/lib/platform-web/storage`, `routing`, `clipboard`, `network`.
+- [ ] Definir interfaces comunes y puertos de entrada al runtime.
+- [ ] Implementar adapter `localStorage` con fallback seguro.
+- [ ] Integrar al runtime sin usar APIs web directas fuera de adapters.
+- [ ] Añadir tests de adapters y fallback SSR.
+
+Salida esperada de la semana:
+
+- PR B lista para merge con un adapter funcional y contratos listos para ampliar.
+
+### Semana 4 - Implementacion de PR C (runtime vs editor)
+
+Objetivo:
+
+- Separar responsabilidades del store sin romper herramientas de debug.
+
+Tareas:
+
+- [ ] Crear `sceneEditorStore` con acciones de edicion/debug.
+- [ ] Reducir `sceneStore` a estado runtime y transiciones de juego.
+- [ ] Adaptar hooks runtime y paneles debug a la nueva separacion.
+- [ ] Documentar invariantes y ownership de estado.
+- [ ] Ejecutar prueba manual en modo debug para validar UX del editor.
+
+Salida esperada de la semana:
+
+- PR C lista para merge con comportamiento de gameplay y debug intacto.
+
+## Checklist de control por semana
+
+Antes de cerrar cada semana:
+
+- [ ] Alcance semanal completado
+- [ ] Sin regresiones funcionales visibles en demo
+- [ ] `npm run lint` en verde
+- [ ] `npm run test` en verde
+- [ ] `npm run build` en verde
+- [ ] Riesgos y decisiones registradas en este archivo
+
+## Registro de trabajo
+
+- 2026-05-22: Se completa Fase 1-3 (refactor y validaciones).
+- 2026-05-22: Se reescribe roadmap para enfocarlo exclusivamente en pendientes de Fase 4 y F4.

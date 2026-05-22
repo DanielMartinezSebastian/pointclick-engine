@@ -12,7 +12,15 @@ export type RuntimeCollideEvent = {
 
 export type RuntimeDropEvent = {
   type: "onDrop";
-  outcome: "place" | "consume" | "return" | "rule-miss" | "unknown-item" | "on-player" | "pickup-blocked" | "pickup-success";
+  outcome:
+    | "place"
+    | "consume"
+    | "return"
+    | "rule-miss"
+    | "unknown-item"
+    | "on-player"
+    | "pickup-blocked"
+    | "pickup-success";
   itemId: string;
   interactionId?: string;
 };
