@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import type { SceneInteraction } from "../../../demo/content/scenes";
@@ -72,6 +72,20 @@ export function useInventoryRuntimeController({
     null,
   );
   const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
+  const pickupLockRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (pickupLockRef.current.size === 0) {
+      return;
+    }
+
+    for (const lockedItemId of Array.from(pickupLockRef.current)) {
+      const stillExists = placedItems.some((item) => item.id === lockedItemId);
+      if (!stillExists) {
+        pickupLockRef.current.delete(lockedItemId);
+      }
+    }
+  }, [placedItems]);
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
@@ -241,8 +255,19 @@ export function useInventoryRuntimeController({
 
   const handlePickupPlacedItem = useCallback(
     (placedItem: PlacedSceneItem) => {
+      if (isInventoryOpen) {
+        return;
+      }
+
+      if (pickupLockRef.current.has(placedItem.id)) {
+        return;
+      }
+
+      pickupLockRef.current.add(placedItem.id);
+
       const decision = resolvePickupPlacedItemDecision({ placedItem });
       if (decision.kind === "ignore") {
+        pickupLockRef.current.delete(placedItem.id);
         return;
       }
 
@@ -256,6 +281,7 @@ export function useInventoryRuntimeController({
         showSpeechBubble(getRandomPhrase(decision.dialogKey), {
           dialogKey: decision.dialogKey,
         });
+        pickupLockRef.current.delete(placedItem.id);
         return;
       }
 
@@ -268,6 +294,7 @@ export function useInventoryRuntimeController({
 
       if (!added) {
         showSpeechBubble(inventoryRuleMessages.inventoryFull);
+        pickupLockRef.current.delete(placedItem.id);
         return;
       }
 
@@ -284,7 +311,7 @@ export function useInventoryRuntimeController({
       });
       showSpeechBubble(getRandomPhrase(decision.successDialogKey));
     },
-    [onRuntimeEvent, showSpeechBubble],
+    [isInventoryOpen, onRuntimeEvent, showSpeechBubble],
   );
 
   const updatePlacedItemPosition = useCallback(

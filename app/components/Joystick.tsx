@@ -54,13 +54,33 @@ export default function Joystick() {
         zone: containerRef.current,
         mode: "static",
         position: { right: "20%", bottom: "20%" },
-        color: "skyblue",
-        size: 50,
+        color: "#84e6ff",
+        size: 72,
         restJoystick: true,
         threshold: 0.08,
       });
 
       managerRef.current = manager as unknown as JoystickManager;
+
+      const baseElement = containerRef.current.querySelector(".nipple .back");
+      const nippleElement = containerRef.current.querySelector(".nipple .front");
+      const nippleRoot = containerRef.current.querySelector(".nipple");
+
+      if (baseElement instanceof HTMLElement) {
+        baseElement.style.background = "radial-gradient(circle at 35% 35%, rgb(132 230 255 / 24%) 0%, rgb(10 29 45 / 10%) 45%, rgb(4 11 18 / 0%) 72%)";
+        baseElement.style.border = "3px solid rgb(140 227 255 / 34%)";
+        baseElement.style.boxShadow = "inset 0 0 0 2px rgb(255 255 255 / 8%), 0 0 0 4px rgb(4 11 18 / 55%)";
+      }
+
+      if (nippleElement instanceof HTMLElement) {
+        nippleElement.style.background = "linear-gradient(180deg, rgb(255 255 255 / 88%) 0%, rgb(132 230 255 / 78%) 45%, rgb(42 132 175 / 100%) 100%)";
+        nippleElement.style.border = "3px solid rgb(255 255 255 / 24%)";
+        nippleElement.style.boxShadow = "0 0 0 3px rgb(10 29 45 / 60%), 0 6px 18px rgb(0 0 0 / 28%)";
+      }
+
+      if (nippleRoot instanceof HTMLElement) {
+        nippleRoot.style.filter = "drop-shadow(0 0 8px rgb(132 230 255 / 18%))";
+      }
 
       // trigger() llama al handler con { type, target, data: JoystickEventData }
       // JoystickEventData.vector: { x, y } normalizados en [-1, 1]
@@ -94,10 +114,10 @@ export default function Joystick() {
       ref={containerRef}
       style={{
         position: "fixed",
-        bottom: "48px",
-        right: "40px",
-        width: "120px",
-        height: "120px",
+        bottom: "42px",
+        right: "34px",
+        width: "144px",
+        height: "144px",
         zIndex: 100,
         // Evita que el navegador intercepte los toques del joystick
         touchAction: "none",

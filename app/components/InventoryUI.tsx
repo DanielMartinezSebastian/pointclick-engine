@@ -1,5 +1,6 @@
 "use client";
 
+import gsap from "gsap";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
@@ -63,11 +64,14 @@ export function InventoryUI({
   const [isMobileCloseSpinRunning, setIsMobileCloseSpinRunning] = useState(false);
   const [isBackpackHoverSpinRunning, setIsBackpackHoverSpinRunning] = useState(false);
   const [isPickupSpinRunning, setIsPickupSpinRunning] = useState(false);
+  const [isPanelRendered, setIsPanelRendered] = useState(isOpen);
   const previousOpenRef = useRef(isOpen);
   const previousItemCountRef = useRef<number | null>(null);
   const backpackSpinIntervalRef = useRef<number | null>(null);
   const backpackSpinStartTimeoutRef = useRef<number | null>(null);
   const backpackSpinTokenRef = useRef(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelTweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -99,64 +103,99 @@ export function InventoryUI({
     setIsPickupSpinRunning(false);
   }, []);
 
+  const animatePanel = useCallback(
+    (open: boolean) => {
+      if (!panelRef.current) return;
+
+      panelTweenRef.current?.kill();
+
+      const transformOrigin = isMobile ? "50% 100%" : "0% 100%";
+
+      panelTweenRef.current = gsap.fromTo(
+        panelRef.current,
+        {
+          opacity: open ? 0 : 1,
+          y: open ? 18 : 0,
+          scale: open ? 0.92 : 1,
+          transformOrigin,
+        },
+        {
+          opacity: open ? 1 : 0,
+          y: open ? 0 : 18,
+          scale: open ? 1 : 0.92,
+          duration: open ? 0.34 : 0.24,
+          ease: open ? "back.out(1.7)" : "back.in(1.7)",
+          onComplete: () => {
+            if (!open) {
+              setIsPanelRendered(false);
+            }
+          },
+        },
+      );
+    },
+    [isMobile],
+  );
+
   const startBackpackSpin = useCallback(
     (direction: 1 | -1, setRunning: (value: boolean) => void) => {
-    backpackSpinTokenRef.current += 1;
-    const spinToken = backpackSpinTokenRef.current;
+      backpackSpinTokenRef.current += 1;
+      const spinToken = backpackSpinTokenRef.current;
 
-    clearBackpackSpinInterval();
-    if (backpackSpinStartTimeoutRef.current !== null) {
-      window.clearTimeout(backpackSpinStartTimeoutRef.current);
-      backpackSpinStartTimeoutRef.current = null;
-    }
-
-    backpackSpinStartTimeoutRef.current = window.setTimeout(() => {
-      if (backpackSpinTokenRef.current !== spinToken) {
-        return;
-      }
-
-      resetBackpackSpinFlags();
-      setRunning(true);
-
-      let steps = 0;
-      const totalSteps = BACKPACK_ROTATION_FRAMES.length;
-
-      const intervalId = window.setInterval(() => {
-        if (backpackSpinTokenRef.current !== spinToken) {
-          window.clearInterval(intervalId);
-          return;
-        }
-
-        steps += 1;
-        setBackpackFrameIndex((current) => (current + direction + BACKPACK_ROTATION_FRAMES.length) % BACKPACK_ROTATION_FRAMES.length);
-
-        if (steps >= totalSteps) {
-          window.clearInterval(intervalId);
-          backpackSpinIntervalRef.current = null;
-          setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
-          setRunning(false);
-        }
-      }, 75);
-
-      backpackSpinIntervalRef.current = intervalId;
-      backpackSpinStartTimeoutRef.current = null;
-    }, 0);
-
-    return () => {
-      if (backpackSpinTokenRef.current !== spinToken) {
-        return;
-      }
-
+      clearBackpackSpinInterval();
       if (backpackSpinStartTimeoutRef.current !== null) {
         window.clearTimeout(backpackSpinStartTimeoutRef.current);
         backpackSpinStartTimeoutRef.current = null;
       }
 
-      clearBackpackSpinInterval();
-      setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
-      setRunning(false);
-    };
-  }, [clearBackpackSpinInterval, resetBackpackSpinFlags]);
+      backpackSpinStartTimeoutRef.current = window.setTimeout(() => {
+        if (backpackSpinTokenRef.current !== spinToken) {
+          return;
+        }
+
+        resetBackpackSpinFlags();
+        setRunning(true);
+
+        let steps = 0;
+        const totalSteps = BACKPACK_ROTATION_FRAMES.length;
+
+        const intervalId = window.setInterval(() => {
+          if (backpackSpinTokenRef.current !== spinToken) {
+            window.clearInterval(intervalId);
+            return;
+          }
+
+          steps += 1;
+          setBackpackFrameIndex((current) => (current + direction + BACKPACK_ROTATION_FRAMES.length) % BACKPACK_ROTATION_FRAMES.length);
+
+          if (steps >= totalSteps) {
+            window.clearInterval(intervalId);
+            backpackSpinIntervalRef.current = null;
+            setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+            setRunning(false);
+          }
+        }, 75);
+
+        backpackSpinIntervalRef.current = intervalId;
+        backpackSpinStartTimeoutRef.current = null;
+      }, 0);
+
+      return () => {
+        if (backpackSpinTokenRef.current !== spinToken) {
+          return;
+        }
+
+        if (backpackSpinStartTimeoutRef.current !== null) {
+          window.clearTimeout(backpackSpinStartTimeoutRef.current);
+          backpackSpinStartTimeoutRef.current = null;
+        }
+
+        clearBackpackSpinInterval();
+        setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
+        setRunning(false);
+      };
+    },
+    [clearBackpackSpinInterval, resetBackpackSpinFlags],
+  );
 
   useEffect(() => {
     if (
@@ -211,6 +250,33 @@ export function InventoryUI({
     return startBackpackSpin(1, setIsPickupSpinRunning);
   }, [slots, startBackpackSpin]);
 
+  useEffect(() => {
+    if (isOpen) {
+      if (!isPanelRendered) {
+        const animationFrameId = window.requestAnimationFrame(() => {
+          setIsPanelRendered(true);
+        });
+
+        return () => {
+          window.cancelAnimationFrame(animationFrameId);
+        };
+      }
+
+      animatePanel(true);
+      return;
+    }
+
+    if (isPanelRendered) {
+      animatePanel(false);
+    }
+  }, [animatePanel, isOpen, isPanelRendered]);
+
+  useEffect(() => {
+    return () => {
+      panelTweenRef.current?.kill();
+    };
+  }, []);
+
   const backpackSpriteSrc =
     isMobileOpenSpinRunning ||
     isMobileCloseSpinRunning ||
@@ -258,7 +324,7 @@ export function InventoryUI({
           }}
         />
       </button>
-      {isOpen && (
+      {isPanelRendered && (
         <div
           style={{
             position: "absolute",
@@ -266,118 +332,126 @@ export function InventoryUI({
             bottom: isMobile ? "118px" : "118px",
             transform: isMobile ? "translateX(-50%)" : undefined,
             zIndex: 41,
-            border: "4px solid rgb(140 227 255 / 88%)",
-            borderRadius: isMobile ? "8px" : "6px",
-            background: "linear-gradient(180deg, rgb(10 29 45 / 100%) 0%, rgb(4 11 18 / 100%) 100%)",
-            boxShadow:
-              "0 16px 0 rgb(0 0 0 / 26%), 0 18px 36px rgb(0 0 0 / 35%), inset 0 0 0 2px rgb(255 255 255 / 8%), inset 0 -4px 0 rgb(0 0 0 / 18%)",
-            padding: isMobile ? "16px 18px" : "14px",
-            width: isMobile ? "min(92vw, 420px)" : "236px",
           }}
         >
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label="Cerrar inventario"
-            style={{
-              position: "absolute",
-              top: isMobile ? "-18px" : "-16px",
-              right: isMobile ? "-18px" : "-16px",
-              width: isMobile ? "34px" : "30px",
-              height: isMobile ? "34px" : "30px",
-              border: "3px solid rgb(95 16 20 / 100%)",
-              borderRadius: "999px",
-              background: "linear-gradient(180deg, rgb(255 110 120 / 100%) 0%, rgb(173 31 44 / 100%) 100%)",
-              color: "#fff3f3",
-              boxShadow: "0 3px 0 rgb(0 0 0 / 26%), inset 0 0 0 2px rgb(255 255 255 / 16%)",
-              display: "grid",
-              placeItems: "center",
-              fontSize: isMobile ? "18px" : "16px",
-              lineHeight: 1,
-              fontWeight: 900,
-              textShadow: "0 2px 0 rgb(0 0 0 / 35%)",
-              cursor: "pointer",
-              zIndex: 3,
-              padding: 0,
-            }}
-          >
-            X
-          </button>
-
-          <strong
-            style={{
-              color: "#bff4ff",
-              fontSize: "18px",
-              letterSpacing: "1.5px",
-              display: "block",
-              width: "100%",
-              textAlign: "center",
-              textTransform: "uppercase",
-              textShadow: "0 3px 0 rgb(0 0 0 / 36%)",
-              borderBottom: "2px solid rgb(132 230 255 / 75%)",
-              paddingBottom: "4px",
-            }}
-          >
-            Inventario
-          </strong>
-
           <div
+            ref={panelRef}
             style={{
-              marginTop: "10px",
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: isMobile ? "10px" : "9px",
+              position: "relative",
+              border: "4px solid rgb(140 227 255 / 88%)",
+              borderRadius: isMobile ? "8px" : "6px",
+              background: "linear-gradient(180deg, rgb(10 29 45 / 100%) 0%, rgb(4 11 18 / 100%) 100%)",
+              boxShadow:
+                "0 16px 0 rgb(0 0 0 / 26%), 0 18px 36px rgb(0 0 0 / 35%), inset 0 0 0 2px rgb(255 255 255 / 8%), inset 0 -4px 0 rgb(0 0 0 / 18%)",
+              padding: isMobile ? "16px 18px" : "14px",
+              width: isMobile ? "min(calc(100vw - 56px), 420px)" : "236px",
             }}
           >
-            {slots.map((stack, index) => (
-              <button
-                key={`slot-${index}`}
-                type="button"
-                onPointerDown={(event) => handlePointerDown(event, index)}
-                style={slotStyle(Boolean(stack))}
-                aria-label={stack ? `Slot ${index + 1}: ${stack.name}` : `Slot ${index + 1} vacio`}
-              >
-                {stack && (
-                  <>
-                    <div
-                      style={{
-                        position: "relative",
-                        width: isMobile ? "62%" : "44px",
-                        height: isMobile ? "62%" : "44px",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      <Image
-                        src={stack.spriteUrl}
-                        alt={stack.name}
-                        fill
-                        sizes={isMobile ? "62px" : "44px"}
-                        unoptimized
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-label="Cerrar inventario"
+              style={{
+                position: "absolute",
+                top: isMobile ? "-18px" : "-16px",
+                right: isMobile ? "-18px" : "-16px",
+                width: isMobile ? "34px" : "30px",
+                height: isMobile ? "34px" : "30px",
+                border: "3px solid rgb(95 16 20 / 100%)",
+                borderRadius: "999px",
+                background: "linear-gradient(180deg, rgb(255 110 120 / 100%) 0%, rgb(173 31 44 / 100%) 100%)",
+                color: "#fff3f3",
+                boxShadow: "0 3px 0 rgb(0 0 0 / 26%), inset 0 0 0 2px rgb(255 255 255 / 16%)",
+                display: "grid",
+                placeItems: "center",
+                fontSize: isMobile ? "18px" : "16px",
+                lineHeight: 1,
+                fontWeight: 900,
+                textShadow: "0 2px 0 rgb(0 0 0 / 35%)",
+                cursor: "pointer",
+                zIndex: 3,
+                padding: 0,
+              }}
+            >
+              X
+            </button>
+
+            <strong
+              style={{
+                color: "#bff4ff",
+                fontSize: "18px",
+                letterSpacing: "1.5px",
+                display: "block",
+                width: "100%",
+                textAlign: "center",
+                textTransform: "uppercase",
+                textShadow: "0 3px 0 rgb(0 0 0 / 36%)",
+                borderBottom: "2px solid rgb(132 230 255 / 75%)",
+                paddingBottom: "4px",
+              }}
+            >
+              Inventario
+            </strong>
+
+            <div
+              style={{
+                marginTop: "10px",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: isMobile ? "10px" : "9px",
+              }}
+            >
+              {slots.map((stack, index) => (
+                <button
+                  key={`slot-${index}`}
+                  type="button"
+                  onPointerDown={(event) => handlePointerDown(event, index)}
+                  style={slotStyle(Boolean(stack))}
+                  aria-label={stack ? `Slot ${index + 1}: ${stack.name}` : `Slot ${index + 1} vacio`}
+                >
+                  {stack && (
+                    <>
+                      <div
                         style={{
-                          objectFit: "contain",
-                          imageRendering: "pixelated",
+                          position: "relative",
+                          width: isMobile ? "62%" : "44px",
+                          height: isMobile ? "62%" : "44px",
                           pointerEvents: "none",
                         }}
-                      />
-                    </div>
-                    <span
-                      style={{
-                        position: "absolute",
-                        right: "4px",
-                        bottom: "4px",
-                        color: "#d6fbff",
-                        textShadow: "0 2px 0 rgb(0 0 0 / 72%)",
-                        fontSize: "11px",
-                        pointerEvents: "none",
-                        fontWeight: 700,
-                      }}
-                    >
-                      x{stack.quantity}
-                    </span>
-                  </>
-                )}
-              </button>
-            ))}
+                      >
+                        <Image
+                          src={stack.spriteUrl}
+                          alt={stack.name}
+                          fill
+                          sizes={isMobile ? "62px" : "44px"}
+                          unoptimized
+                          style={{
+                            objectFit: "contain",
+                            imageRendering: "pixelated",
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </div>
+                      {stack.quantity > 1 && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            right: "4px",
+                            bottom: "3px",
+                            fontSize: "12px",
+                            color: "#d9fbff",
+                            textShadow: "0 2px 0 rgb(0 0 0 / 50%)",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          x{stack.quantity}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -414,8 +488,8 @@ export function DraggedInventoryGhost({
         left: `${pointer.x}px`,
         top: `${pointer.y}px`,
         transform: "translate(-50%, -50%)",
-        width: "68px",
-        height: "68px",
+        width: "92px",
+        height: "92px",
         display: "grid",
         placeItems: "center",
         pointerEvents: "none",
@@ -425,10 +499,16 @@ export function DraggedInventoryGhost({
       <Image
         src={stack.spriteUrl}
         alt={stack.name}
-        width={46}
-        height={46}
+        width={64}
+        height={64}
         unoptimized
-        style={{ width: "46px", height: "46px", imageRendering: "pixelated", pointerEvents: "none" }}
+        style={{
+          width: "64px",
+          height: "64px",
+          objectFit: "contain",
+          imageRendering: "pixelated",
+          pointerEvents: "none",
+        }}
       />
     </div>
   );

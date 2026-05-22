@@ -167,7 +167,11 @@ export default function GameTouchCanvas() {
               onDrop: handleInventoryDropOnPlayer,
             }}
           />
-          <PlacedSceneItems items={placedItems} onPickup={handlePickupPlacedItem} />
+          <PlacedSceneItems
+            items={placedItems}
+            onPickup={handlePickupPlacedItem}
+            canPickup={!isInventoryOpen}
+          />
         </Physics>
       </Canvas>
 
