@@ -98,11 +98,11 @@ Con debug activo tienes:
   - Seleccionar muro
   - Editar posición, tamaño (`halfSize`) y rotación Y
   - Arrastrar wireframe/handles en viewport
-	- Copiar JSON para persistir en `app/demo/content/scenes.ts`
+  - Copiar JSON para persistir en `app/demo/content/scenes.ts`
 - Editor de suelo:
   - Editar `minX`, `maxX`, `minZ`, `maxZ`, `y`
   - Ver ancho/fondo calculados
-	- Copiar JSON para persistir en `app/demo/content/scenes.ts`
+  - Copiar JSON para persistir en `app/demo/content/scenes.ts`
 
 ## Estructura del proyecto
 
