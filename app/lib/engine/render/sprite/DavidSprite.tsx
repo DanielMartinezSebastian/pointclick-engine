@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import {
   ClampToEdgeWrapping,
   FrontSide,
@@ -15,8 +15,22 @@ import {
 
 import type { SpriteAnimation } from "./clips";
 
+const SHOULD_LOG_SPRITE_STATE = process.env.NODE_ENV !== "production";
+let spriteInstanceCounter = 0;
+
+function logSpriteState(event: string, payload: Record<string, unknown>) {
+  if (!SHOULD_LOG_SPRITE_STATE) return;
+  if (typeof window !== "undefined") {
+    const nextEntry = { scope: "sprite", event, payload, ts: Date.now() };
+    const currentTrace = ((window as unknown as { __gameTrace?: unknown[] }).__gameTrace ?? []);
+    (window as unknown as { __gameTrace: unknown[] }).__gameTrace = [...currentTrace, nextEntry].slice(-300);
+  }
+  console.info(`[sprite-state] ${event}`, payload);
+}
+
 type DavidSpriteProps = {
   animation: SpriteAnimation;
+  preloadAnimations?: readonly SpriteAnimation[];
   meshRef?: React.RefObject<Mesh | null>;
   scale?: [number, number, number];
   isPaused?: boolean;
@@ -39,13 +53,62 @@ function cloneTexture(sourceTexture: Texture) {
 }
 
 const DavidSprite = forwardRef<DavidSpriteHandle, DavidSpriteProps>(
-  ({ animation, meshRef, scale = [2.2, 2.2, 1], isPaused = false }, ref) => {
+  ({ animation, preloadAnimations, meshRef, scale = [2.2, 2.2, 1], isPaused = false }, ref) => {
+    const spriteInstanceIdRef = useRef<number | null>(null);
+    if (spriteInstanceIdRef.current == null) {
+      spriteInstanceIdRef.current = ++spriteInstanceCounter;
+    }
+
     const internalRef = useRef<Mesh>(null);
     const targetRef = meshRef ?? internalRef;
     const materialRef = useRef<MeshBasicMaterial>(null);
-    const sourceTextures = useLoader(TextureLoader, animation.frames) as unknown as Texture[];
+    const renderer = useThree((state) => state.gl);
+    const preloadedFrames = useMemo(() => {
+      if (!preloadAnimations?.length) {
+        return null;
+      }
 
-    const textures = useMemo(() => sourceTextures.map(cloneTexture), [sourceTextures]);
+      const uniqueFrames = new Set<string>();
+      preloadAnimations.forEach((clip) => {
+        clip.frames.forEach((frame) => {
+          uniqueFrames.add(frame);
+        });
+      });
+
+      return Array.from(uniqueFrames);
+    }, [preloadAnimations]);
+
+    const framesToLoad = preloadedFrames ?? animation.frames;
+
+    const sourceTextures = useLoader(TextureLoader, framesToLoad) as unknown as Texture[];
+
+    const texturesByFrame = useMemo(() => {
+      const byFrame = new Map<string, Texture>();
+      framesToLoad.forEach((frame, index) => {
+        const sourceTexture = sourceTextures[index];
+        if (!sourceTexture) return;
+        byFrame.set(frame, cloneTexture(sourceTexture));
+      });
+      return byFrame;
+    }, [framesToLoad, sourceTextures]);
+
+    const textures = useMemo(
+      () =>
+        animation.frames
+          .map((frame) => texturesByFrame.get(frame))
+          .filter((texture): texture is Texture => Boolean(texture)),
+      [animation.frames, texturesByFrame],
+    );
+
+    useEffect(() => {
+      const initTexture = (renderer as unknown as { initTexture?: (texture: Texture) => void }).initTexture;
+      if (!initTexture) return;
+
+      texturesByFrame.forEach((texture) => {
+        initTexture(texture);
+      });
+    }, [renderer, texturesByFrame]);
+
     const frameAspect = useMemo(() => {
       const image = textures[0]?.image as { width?: number; height?: number } | undefined;
       if (!image?.width || !image?.height) {
@@ -56,6 +119,28 @@ const DavidSprite = forwardRef<DavidSpriteHandle, DavidSpriteProps>(
     }, [textures]);
     const frameCursorRef = useRef(0);
     const frameTimeRef = useRef(0);
+
+    useEffect(() => {
+      const instanceId = spriteInstanceIdRef.current;
+      logSpriteState("mount", {
+        instanceId,
+        preloadClipCount: preloadAnimations?.length ?? 1,
+        loadedFrameCount: framesToLoad.length,
+      });
+
+      return () => {
+        logSpriteState("unmount", { instanceId });
+      };
+    }, [framesToLoad.length, preloadAnimations]);
+
+    useEffect(() => {
+      logSpriteState("animation-change", {
+        instanceId: spriteInstanceIdRef.current,
+        fps: animation.fps,
+        frameCount: animation.frames.length,
+        firstFrame: animation.frames[0],
+      });
+    }, [animation]);
 
     useEffect(() => {
       frameCursorRef.current = 0;

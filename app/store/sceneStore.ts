@@ -7,6 +7,22 @@ import {
   type SceneWall,
 } from "../demo/content/scenes";
 
+const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
+
+function logSceneStore(event: string, payload: Record<string, unknown>) {
+  if (!SHOULD_LOG_STATE_TRANSITIONS) return;
+  if (typeof window !== "undefined") {
+    const nextEntry = { scope: "scene-store", event, payload, ts: Date.now() };
+    const currentTrace =
+      (window as unknown as { __gameTrace?: unknown[] }).__gameTrace ?? [];
+    (window as unknown as { __gameTrace: unknown[] }).__gameTrace = [
+      ...currentTrace,
+      nextEntry,
+    ].slice(-300);
+  }
+  console.info(`[scene-store] ${event}`, payload);
+}
+
 function cloneWall(wall: SceneWall): SceneWall {
   return {
     position: [...wall.position] as [number, number, number],
@@ -79,6 +95,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     const scene = SCENES[id];
     if (!scene) return;
     const clonedScene = cloneScene(scene);
+    logSceneStore("set-scene", {
+      fromSceneId: useSceneStore.getState().sceneId,
+      toSceneId: id,
+      spawn: clonedScene.playerSpawn,
+    });
     set({
       sceneId: id,
       scene: clonedScene,
@@ -129,6 +150,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set((state) => {
       const sceneFromConfig = SCENES[state.sceneId];
       if (!sceneFromConfig) return state;
+      logSceneStore("reset-interactions", {
+        sceneId: state.sceneId,
+        interactionCount: sceneFromConfig.interactions.length,
+      });
       return {
         scene: {
           ...state.scene,
@@ -138,5 +163,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
     }),
   setPlayerPosition: (position) => set({ playerPosition: position }),
   requestRespawn: () =>
-    set((state) => ({ respawnSignal: state.respawnSignal + 1 })),
+    set((state) => {
+      const nextRespawnSignal = state.respawnSignal + 1;
+      logSceneStore("request-respawn", {
+        sceneId: state.sceneId,
+        previousRespawnSignal: state.respawnSignal,
+        nextRespawnSignal,
+        currentPlayerPosition: state.playerPosition,
+      });
+      return { respawnSignal: nextRespawnSignal };
+    }),
 }));

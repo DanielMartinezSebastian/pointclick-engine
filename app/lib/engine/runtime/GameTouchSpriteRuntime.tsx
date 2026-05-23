@@ -43,6 +43,32 @@ const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const CAMERA_FRONT_PLAYABLE_MARGIN = 1.2;
+const MOVEMENT_INPUT_DEADZONE = 0.12;
+const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
+const DEV_DUPLICATE_RESET_WINDOW_MS = 500;
+
+type LastRuntimeResetSnapshot = {
+  sceneId: string;
+  respawnSignal: number;
+  spawn: [number, number, number];
+  at: number;
+};
+
+let lastRuntimeResetSnapshot: LastRuntimeResetSnapshot | null = null;
+
+function logRuntimeState(event: string, payload: Record<string, unknown>) {
+  if (!SHOULD_LOG_STATE_TRANSITIONS) return;
+  if (typeof window !== "undefined") {
+    const nextEntry = { scope: "runtime", event, payload, ts: Date.now() };
+    const currentTrace = ((window as unknown as { __gameTrace?: unknown[] }).__gameTrace ?? []);
+    (window as unknown as { __gameTrace: unknown[] }).__gameTrace = [...currentTrace, nextEntry].slice(-300);
+  }
+  console.info(`[runtime-state] ${event}`, payload);
+}
+
+function applyDeadzone(value: number, threshold: number) {
+  return Math.abs(value) < threshold ? 0 : value;
+}
 
 function resolveAction(horizontal: number, vertical: number): MovementAction {
   if (horizontal === 0 && vertical === 0) return "idle";
@@ -97,7 +123,9 @@ export function GameTouchSpriteRuntime({
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
   const currentActionRef = useRef<MovementAction>("idle");
-  const lastLoggedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const currentInputModeRef = useRef<"auto" | "keyboard" | "joystick">("auto");
+  const lastPublishedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const lastResetRef = useRef<{ sceneId: string; respawnSignal: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
   const [wallPointPreviewState, setWallPointPreviewState] = useState<WallPointPreview | null>(null);
   const wallInteractionRef = useRef<WallInteraction>(null);
@@ -313,16 +341,65 @@ export function GameTouchSpriteRuntime({
     () => GAME_CHARACTER_SPRITES[activeCharacter],
     [activeCharacter],
   );
+  const characterAnimations = useMemo(
+    () => Object.values(characterClips),
+    [characterClips],
+  );
 
   useEffect(() => {
     const body = characterBodyRef.current;
     if (!body) return;
     const spawn = useSceneStore.getState().scene.playerSpawn;
+    const previousReset = lastResetRef.current;
+    const reason = !previousReset
+      ? "initial-mount"
+      : previousReset.sceneId !== sceneId
+        ? "scene-change"
+        : "respawn";
+
+    logRuntimeState("player-reset", {
+      reason,
+      sceneId,
+      respawnSignal,
+      spawn,
+    });
+
+    const now = Date.now();
+    const duplicateDevMountReset = SHOULD_LOG_STATE_TRANSITIONS
+      && (reason === "initial-mount" || reason === "respawn")
+      && lastRuntimeResetSnapshot != null
+      && now - lastRuntimeResetSnapshot.at < DEV_DUPLICATE_RESET_WINDOW_MS
+      && lastRuntimeResetSnapshot.sceneId === sceneId
+      && lastRuntimeResetSnapshot.respawnSignal === respawnSignal
+      && lastRuntimeResetSnapshot.spawn[0] === spawn[0]
+      && lastRuntimeResetSnapshot.spawn[1] === spawn[1]
+      && lastRuntimeResetSnapshot.spawn[2] === spawn[2];
+
+    if (duplicateDevMountReset) {
+      logRuntimeState("player-reset-skipped", {
+        reason: "duplicate-dev-reset",
+        originalReason: reason,
+        sceneId,
+        respawnSignal,
+        spawn,
+      });
+      lastResetRef.current = { sceneId, respawnSignal };
+      return;
+    }
+
     body.setTranslation({ x: spawn[0], y: spawn[1], z: spawn[2] }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     cancelTarget();
     clearPressedKeys();
     setPlayerPosition([spawn[0], spawn[1], spawn[2]]);
+    lastPublishedPositionRef.current = { x: spawn[0], y: spawn[1], z: spawn[2] };
+    lastResetRef.current = { sceneId, respawnSignal };
+    lastRuntimeResetSnapshot = {
+      sceneId,
+      respawnSignal,
+      spawn: [spawn[0], spawn[1], spawn[2]],
+      at: now,
+    };
   }, [cancelTarget, clearPressedKeys, sceneId, respawnSignal, setPlayerPosition]);
 
   useEffect(() => {
@@ -343,6 +420,20 @@ export function GameTouchSpriteRuntime({
 
     const joystick = useMobileInputStore.getState();
     const manualInputActive = anyKeyPressed || joystick.active;
+    const nextInputMode: "auto" | "keyboard" | "joystick" = joystick.active
+      ? "joystick"
+      : anyKeyPressed
+        ? "keyboard"
+        : "auto";
+
+    if (currentInputModeRef.current !== nextInputMode) {
+      logRuntimeState("input-mode-change", {
+        from: currentInputModeRef.current,
+        to: nextInputMode,
+        sceneId,
+      });
+      currentInputModeRef.current = nextInputMode;
+    }
 
     let horizontal = 0;
     let vertical = 0;
@@ -376,9 +467,18 @@ export function GameTouchSpriteRuntime({
       }
     }
 
+    horizontal = applyDeadzone(horizontal, MOVEMENT_INPUT_DEADZONE);
+    vertical = applyDeadzone(vertical, MOVEMENT_INPUT_DEADZONE);
+
     const nextAction: MovementAction = resolveAction(horizontal, vertical);
 
     if (currentActionRef.current !== nextAction) {
+      logRuntimeState("action-change", {
+        from: currentActionRef.current,
+        to: nextAction,
+        inputMode: currentInputModeRef.current,
+        sceneId,
+      });
       currentActionRef.current = nextAction;
       setAction(nextAction);
     }
@@ -463,15 +563,14 @@ export function GameTouchSpriteRuntime({
     const roundedX = Number(safePosition.x.toFixed(2));
     const roundedY = Number(safePosition.y.toFixed(2));
     const roundedZ = Number(safePosition.z.toFixed(2));
-    const lastLogged = lastLoggedPositionRef.current;
+    const lastLogged = lastPublishedPositionRef.current;
     if (!lastLogged || lastLogged.x !== roundedX || lastLogged.y !== roundedY || lastLogged.z !== roundedZ) {
-      console.log(`[player] x=${roundedX}, y=${roundedY}, z=${roundedZ}`);
-      lastLoggedPositionRef.current = { x: roundedX, y: roundedY, z: roundedZ };
+      lastPublishedPositionRef.current = { x: roundedX, y: roundedY, z: roundedZ };
       setPlayerPosition([roundedX, roundedY, roundedZ]);
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onMove",
         position: [roundedX, roundedY, roundedZ],
-        action,
+        action: nextAction,
       });
     }
 
@@ -525,6 +624,7 @@ export function GameTouchSpriteRuntime({
           ref={spriteRef}
           meshRef={meshRef}
           animation={characterClips[action]}
+          preloadAnimations={characterAnimations}
           scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
           isPaused={false}
         />
