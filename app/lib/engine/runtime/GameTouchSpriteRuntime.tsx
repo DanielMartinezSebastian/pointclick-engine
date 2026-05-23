@@ -124,6 +124,7 @@ export function GameTouchSpriteRuntime({
   const characterBodyRef = useRef<RapierRigidBody>(null);
   const currentActionRef = useRef<MovementAction>("idle");
   const currentInputModeRef = useRef<"auto" | "keyboard" | "joystick">("auto");
+  const hadManualInputRef = useRef(false);
   const lastPublishedPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const lastResetRef = useRef<{ sceneId: string; respawnSignal: number } | null>(null);
   const [action, setAction] = useState<MovementAction>("idle");
@@ -434,6 +435,17 @@ export function GameTouchSpriteRuntime({
       });
       currentInputModeRef.current = nextInputMode;
     }
+
+    // El primer input manual debe invalidar cualquier ruta pendiente de click-to-move.
+    if (manualInputActive && !hadManualInputRef.current) {
+      cancelTarget();
+      logRuntimeState("click-move-cancelled", {
+        reason: "manual-input",
+        inputMode: nextInputMode,
+        sceneId,
+      });
+    }
+    hadManualInputRef.current = manualInputActive;
 
     let horizontal = 0;
     let vertical = 0;
