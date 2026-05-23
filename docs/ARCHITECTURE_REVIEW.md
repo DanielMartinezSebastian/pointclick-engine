@@ -24,14 +24,19 @@ Observed structure:
 
 - App shell: `app/page.tsx` renders a single game root component.
 - Main runtime orchestration: `app/components/GameTouchCanvas.tsx`.
-- Domain data mixed with app concerns:
-  - Scenes in `app/scenes/scenes.ts`
-  - Items in `app/items/index.ts`
-  - Dialog catalog in `app/dialogs/index.ts`
+- Demo content separated from engine:
+  - Scenes in `app/demo/content/scenes.ts`
+  - Items in `app/demo/content/items/index.ts`
+  - Dialog catalog in `app/demo/content/dialogs/index.ts`
+  - Legacy routes in `app/scenes/scenes.ts`, `app/items/index.ts`, and `app/dialogs/index.ts` kept as compatibility re-exports.
 - State management:
-  - Scene state in `app/store/sceneStore.ts`
+  - Runtime scene state in `app/store/sceneStore.ts`
+  - Editor/debug state in `app/store/sceneEditorStore.ts`
   - Mobile input state in `app/store/mobileInputStore.ts`
-- Movement and pathfinding utilities under `app/components/movement/*`.
+- Movement and pathfinding utilities under `app/lib/engine/movement/*`.
+- Runtime render adapters under `app/lib/engine/render/*`.
+- Public API draft in `app/lib/engine/publicApi.ts`.
+- Web interoperability adapters in `app/lib/platform-web.ts`.
 
 ## 3. Main architecture findings
 
@@ -188,12 +193,33 @@ Phase 4 (high)
 
 ## 9. Immediate next tasks
 
-1. Create `app/lib/core/rules/inventoryRules.ts` and move drop/pickup decision logic.
-2. Add tests for placement/consume/return outcomes and inventory edge cases.
-3. Create `app/lib/engine/runtime/useGameRuntimeController.ts` and move input+movement orchestration there.
-4. Keep `GameTouchCanvas.tsx` as composition-only shell over extracted modules.
+1. Integrate the demo app through `app/lib/engine/publicApi.ts` as the primary boundary (instead of direct internal runtime wiring).
+2. Complete missing public API targets: `useGameState(selector)`, `useGameActions()`, and a concrete `GameViewport` export.
+3. Route runtime platform capabilities through `platform-web` ports wherever direct web API calls still exist.
+4. Add API-level tests for the public surface (registration, state selectors/actions, viewport integration contract).
 
-## 10. Review questions
+## 10. Implementation status (2026-05-23)
+
+Completed:
+
+- Fase 1 complete: pure inventory rules extracted and tested.
+- Fase 2 complete: runtime/editor concerns split into dedicated modules/hooks.
+- Fase 3 complete: demo content moved to `app/demo/content/*` with compatibility re-exports.
+- Runtime observability baseline in place: `onMove`, `onCollide`, `onDrop`, `onDialog` events.
+- Deterministic pathfinding tests added.
+- Runtime/editor store split implemented (`sceneStore` + `sceneEditorStore`).
+- Platform-web module implemented with storage/routing/clipboard/network adapters.
+- Public API draft implemented (`createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `GameViewportProps`).
+
+Pending to fully close the library-first direction:
+
+- Demo wiring still needs to consume the public API as first-class boundary.
+- `useGameState` and `useGameActions` are still missing from the public API.
+- `GameViewport` concrete integration export is still missing (only props contract exists).
+- Platform-web consumption should be generalized across runtime where applicable.
+- This document sections 3-7 should be treated as design intent; section 2 and section 10 are the current source of truth.
+
+## 11. Review questions
 
 1. Should debug editor tooling ship in the future library package, or remain demo-only?
 2. Is multiplayer/network synchronization in near-term scope (affects event/store model)?
