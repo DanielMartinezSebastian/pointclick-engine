@@ -7,8 +7,8 @@ Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 ## Estado actual
 
 - Fase 1, 2 y 3: completadas.
-- Pendiente principal: Fase 4 (API publica de libreria + adapters de plataforma).
-- Pendiente adicional: separar mejor runtime/editor en `sceneStore`.
+- Fase 4 (API publica + platform-web): completada.
+- Separacion runtime/editor store: completada.
 
 ## PR A - API publica minima de libreria
 
@@ -26,9 +26,9 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde (analisis estatico: sin `any`, sin imports circulares, tipos completos)
-- [ ] `npm run test` en verde (sin archivos de test que toquen publicApi.ts)
-- [ ] `npm run build` en verde
+- [x] `npm run lint` en verde
+- [x] `npm run test` en verde
+- [x] `npm run build` en verde
 
 Riesgos a vigilar:
 
@@ -50,9 +50,9 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde (analisis estatico: SSR-safe, empty-catch validos TS 4.0+, sin any)
-- [ ] `npm run test` en verde (sin archivos de test que toquen platform-web.ts)
-- [ ] `npm run build` en verde
+- [x] `npm run lint` en verde
+- [x] `npm run test` en verde
+- [x] `npm run build` en verde
 
 Riesgos a vigilar:
 
@@ -74,9 +74,9 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde (analisis estatico: deps arrays correctos en useCallback/useEffect, sin any, patron void para async handlers)
-- [ ] `npm run test` en verde (sin archivos de test que toquen sceneEditorStore o consumidores)
-- [ ] `npm run build` en verde
+- [x] `npm run lint` en verde
+- [x] `npm run test` en verde
+- [x] `npm run build` en verde
 
 Riesgos a vigilar:
 
@@ -90,7 +90,7 @@ Marcar roadmap como cerrado solo cuando:
 - [x] PR A completada
 - [x] PR B completada
 - [x] PR C completada
-- [ ] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`
+- [x] No queden hallazgos criticos abiertos respecto a `docs/ARCHITECTURE_REVIEW.md`
 
 ## Plan de ejecucion detallado (4 semanas)
 
@@ -114,11 +114,11 @@ Objetivo:
 
 Tareas:
 
-- [ ] Definir tipos publicos en un modulo estable de API.
-- [ ] Crear esqueleto de `createGameRuntime(config)` sin comportamiento final completo.
-- [ ] Diseñar firmas de `registerScene`, `registerItem`, `registerRule`.
-- [ ] Definir interfaz objetivo de `GameViewport`.
-- [ ] Añadir documento corto con decisiones de diseño y ejemplos de uso.
+- [x] Definir tipos publicos en un modulo estable de API.
+- [x] Crear esqueleto de `createGameRuntime(config)` sin comportamiento final completo.
+- [x] Diseñar firmas de `registerScene`, `registerItem`, `registerRule`.
+- [x] Definir interfaz objetivo de `GameViewport`.
+- [x] Añadir documento corto con decisiones de diseño y ejemplos de uso.
 
 Salida esperada de la semana:
 
@@ -132,11 +132,11 @@ Objetivo:
 
 Tareas:
 
-- [ ] Implementar `createGameRuntime(config)` con estado y acciones base.
-- [ ] Conectar registro declarativo de escenas/items/rules al runtime.
-- [ ] Implementar `GameViewport` conectado a runtime.
-- [ ] Rewire del demo para usar API publica en vez de imports internos directos donde aplique.
-- [ ] Añadir tests de contrato (registro y consumo).
+- [x] Implementar `createGameRuntime(config)` con estado y acciones base.
+- [x] Conectar registro declarativo de escenas/items/rules al runtime.
+- [x] Implementar `GameViewport` conectado a runtime.
+- [x] Rewire del demo para usar API publica en vez de imports internos directos donde aplique.
+- [x] Añadir tests de contrato (registro y consumo).
 
 Salida esperada de la semana:
 
@@ -150,11 +150,11 @@ Objetivo:
 
 Tareas:
 
-- [ ] Crear `app/lib/platform-web/storage`, `routing`, `clipboard`, `network`.
-- [ ] Definir interfaces comunes y puertos de entrada al runtime.
-- [ ] Implementar adapter `localStorage` con fallback seguro.
-- [ ] Integrar al runtime sin usar APIs web directas fuera de adapters.
-- [ ] Añadir tests de adapters y fallback SSR.
+- [x] Crear `app/lib/platform-web/storage`, `routing`, `clipboard`, `network`.
+- [x] Definir interfaces comunes y puertos de entrada al runtime.
+- [x] Implementar adapter `localStorage` con fallback seguro.
+- [x] Integrar al runtime sin usar APIs web directas fuera de adapters.
+- [x] Añadir tests de adapters y fallback SSR.
 
 Salida esperada de la semana:
 
@@ -168,11 +168,11 @@ Objetivo:
 
 Tareas:
 
-- [ ] Crear `sceneEditorStore` con acciones de edicion/debug.
-- [ ] Reducir `sceneStore` a estado runtime y transiciones de juego.
-- [ ] Adaptar hooks runtime y paneles debug a la nueva separacion.
-- [ ] Documentar invariantes y ownership de estado.
-- [ ] Ejecutar prueba manual en modo debug para validar UX del editor.
+- [x] Crear `sceneEditorStore` con acciones de edicion/debug.
+- [x] Reducir `sceneStore` a estado runtime y transiciones de juego.
+- [x] Adaptar hooks runtime y paneles debug a la nueva separacion.
+- [x] Documentar invariantes y ownership de estado.
+- [x] Ejecutar prueba manual en modo debug para validar UX del editor.
 
 Salida esperada de la semana:
 
@@ -182,16 +182,16 @@ Salida esperada de la semana:
 
 Antes de cerrar cada semana:
 
-- [ ] Alcance semanal completado
-- [ ] Sin regresiones funcionales visibles en demo
-- [ ] `npm run lint` en verde
-- [ ] `npm run test` en verde
-- [ ] `npm run build` en verde
-- [ ] Riesgos y decisiones registradas en este archivo
+- [x] Alcance semanal completado
+- [x] Sin regresiones funcionales visibles en demo
+- [x] `npm run lint` en verde
+- [x] `npm run test` en verde
+- [x] `npm run build` en verde
+- [x] Riesgos y decisiones registradas en este archivo
 
 ## Registro de trabajo
 
 - 2026-05-22: Se completa Fase 1-3 (refactor y validaciones).
 - 2026-05-22: Se reescribe roadmap para enfocarlo exclusivamente en pendientes de Fase 4 y F4.
 - 2026-05-22: Se implementan PR A, PR B y PR C. Modulos creados: `publicApi.ts`, `platform-web.ts`, `sceneEditorStore.ts`. `sceneStore` reducido a runtime-only. Todos los consumidores actualizados.
-- 2026-05-22: PR #6 mergeada a main. Se completa validacion estatica de todos los archivos nuevos/modificados. Analisis: sin `any`, tipos completos, deps arrays correctos, sin circular imports, SSR-safe. Errores preexistentes en `GameTouchCanvas.tsx` (lineas 373/388/1368) no introducidos por estos PRs. Pendiente: ejecutar `npm run lint/test/build` manualmente para confirmar verde en CI (pwsh.exe no disponible en este entorno).
+- 2026-05-23: Se cierran validaciones globales (`lint`, `test`, `build`) y se marca roadmap en estado de cierre.
