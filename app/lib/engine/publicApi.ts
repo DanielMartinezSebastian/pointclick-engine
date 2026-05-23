@@ -256,10 +256,7 @@ export function useGameActions(): GameActions {
 }
 
 /** Integración pública de viewport/canvas para consumir el runtime. */
-export function GameViewport({
-  debug,
-  onRuntimeEvent,
-}: GameViewportProps) {
+export function GameViewport({ debug, onRuntimeEvent }: GameViewportProps) {
   return createElement(GameTouchCanvas as ComponentType<GameViewportProps>, {
     debug,
     onRuntimeEvent,

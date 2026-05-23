@@ -122,7 +122,9 @@ describe("publicApi", () => {
 
     expect(actionsFromHook).not.toBeNull();
     expect(actionsFromHook?.setScene).toBe(runtimeActions.setScene);
-    expect(actionsFromHook?.setPlayerPosition).toBe(runtimeActions.setPlayerPosition);
+    expect(actionsFromHook?.setPlayerPosition).toBe(
+      runtimeActions.setPlayerPosition,
+    );
     expect(actionsFromHook?.requestRespawn).toBe(runtimeActions.requestRespawn);
   });
 

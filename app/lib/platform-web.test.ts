@@ -45,7 +45,10 @@ describe("platform-web", () => {
     expect(adapter.getCurrentPath()).toBe("/debug");
 
     adapter.navigate("/play");
-    expect((globalThis as { window: { location: { href: string } } }).window.location.href).toBe("/play");
+    expect(
+      (globalThis as { window: { location: { href: string } } }).window.location
+        .href,
+    ).toBe("/play");
   });
 
   it("BrowserClipboardAdapter no falla sin navigator.clipboard", async () => {
@@ -138,9 +141,15 @@ describe("platform-web", () => {
     expect(media.matches).toBe(true);
 
     const off = media.subscribe(() => {});
-    expect(addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+    expect(addEventListener).toHaveBeenCalledWith(
+      "change",
+      expect.any(Function),
+    );
     off();
-    expect(removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+    expect(removeEventListener).toHaveBeenCalledWith(
+      "change",
+      expect.any(Function),
+    );
 
     expect(adapter.getInnerHeight(800)).toBe(720);
     expect(adapter.requestAnimationFrame(() => {})).toBe(123);
@@ -201,16 +210,38 @@ describe("platform-web", () => {
     const adapter = new BrowserEnvironmentAdapter();
 
     const winHandler = () => {};
-    const disposeWindow = adapter.addWindowEventListener("pointerup", winHandler);
-    expect(addWindowListener).toHaveBeenCalledWith("pointerup", winHandler, undefined);
+    const disposeWindow = adapter.addWindowEventListener(
+      "pointerup",
+      winHandler,
+    );
+    expect(addWindowListener).toHaveBeenCalledWith(
+      "pointerup",
+      winHandler,
+      undefined,
+    );
     disposeWindow();
-    expect(removeWindowListener).toHaveBeenCalledWith("pointerup", winHandler, undefined);
+    expect(removeWindowListener).toHaveBeenCalledWith(
+      "pointerup",
+      winHandler,
+      undefined,
+    );
 
     const docHandler = () => {};
-    const disposeDocument = adapter.addDocumentEventListener("mousedown", docHandler);
-    expect(addDocumentListener).toHaveBeenCalledWith("mousedown", docHandler, undefined);
+    const disposeDocument = adapter.addDocumentEventListener(
+      "mousedown",
+      docHandler,
+    );
+    expect(addDocumentListener).toHaveBeenCalledWith(
+      "mousedown",
+      docHandler,
+      undefined,
+    );
     disposeDocument();
-    expect(removeDocumentListener).toHaveBeenCalledWith("mousedown", docHandler, undefined);
+    expect(removeDocumentListener).toHaveBeenCalledWith(
+      "mousedown",
+      docHandler,
+      undefined,
+    );
   });
 
   it("BrowserEnvironmentAdapter monta y desmonta style tag", () => {
@@ -244,10 +275,17 @@ describe("platform-web", () => {
     });
 
     const adapter = new BrowserEnvironmentAdapter();
-    const unmount = adapter.mountStyleTag("data-debug", "true", "*{cursor:auto}");
+    const unmount = adapter.mountStyleTag(
+      "data-debug",
+      "true",
+      "*{cursor:auto}",
+    );
 
     expect(createElement).toHaveBeenCalledWith("style");
-    expect(styleElement.setAttribute).toHaveBeenCalledWith("data-debug", "true");
+    expect(styleElement.setAttribute).toHaveBeenCalledWith(
+      "data-debug",
+      "true",
+    );
     expect(styleElement.innerHTML).toBe("*{cursor:auto}");
     expect(appendChild).toHaveBeenCalledWith(styleElement);
 

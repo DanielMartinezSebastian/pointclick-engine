@@ -254,7 +254,10 @@ export interface EnvironmentPort {
 /** Adapter de entorno con fallback seguro para SSR. */
 export class BrowserEnvironmentAdapter implements EnvironmentPort {
   matchMedia(query: string): EnvironmentMediaQuery {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
       return {
         matches: false,
         subscribe: () => () => {},
