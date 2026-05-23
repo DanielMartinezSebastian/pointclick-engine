@@ -1,4 +1,4 @@
-# 2D Game Test
+# Point And Click Game Engine
 
 Prototipo de juego 2D/2.5D hecho con Next.js, React Three Fiber y Rapier.
 
