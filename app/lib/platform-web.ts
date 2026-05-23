@@ -2,7 +2,7 @@
  * platform-web – Capa de interoperabilidad web.
  *
  * Define puertos (interfaces) para las capacidades de plataforma web:
- * storage, routing, clipboard y network.
+ * storage, routing, clipboard, network y timers.
  *
  * El runtime consume estos puertos en lugar de llamar directamente a APIs
  * web (localStorage, navigator.clipboard, fetch, etc.), lo que permite:
@@ -180,6 +180,44 @@ export class FetchNetworkAdapter implements NetworkPort {
 export const fetchNetworkAdapter: NetworkPort = new FetchNetworkAdapter();
 
 // ---------------------------------------------------------------------------
+// TimerPort – temporizadores
+// ---------------------------------------------------------------------------
+
+export type TimerHandle = ReturnType<typeof globalThis.setTimeout>;
+
+/** Puerto para temporizadores (timeout/interval) desacoplado de window. */
+export interface TimerPort {
+  setTimeout(callback: () => void, delayMs?: number): TimerHandle;
+  clearTimeout(handle: TimerHandle | null | undefined): void;
+  setInterval(callback: () => void, delayMs?: number): TimerHandle;
+  clearInterval(handle: TimerHandle | null | undefined): void;
+}
+
+/** Adapter de temporizadores usando globalThis para SSR/cliente. */
+export class BrowserTimerAdapter implements TimerPort {
+  setTimeout(callback: () => void, delayMs?: number): TimerHandle {
+    return globalThis.setTimeout(callback, delayMs);
+  }
+
+  clearTimeout(handle: TimerHandle | null | undefined): void {
+    if (handle == null) return;
+    globalThis.clearTimeout(handle);
+  }
+
+  setInterval(callback: () => void, delayMs?: number): TimerHandle {
+    return globalThis.setInterval(callback, delayMs);
+  }
+
+  clearInterval(handle: TimerHandle | null | undefined): void {
+    if (handle == null) return;
+    globalThis.clearInterval(handle);
+  }
+}
+
+/** Adapter de temporizadores listo para usar. */
+export const browserTimerAdapter: TimerPort = new BrowserTimerAdapter();
+
+// ---------------------------------------------------------------------------
 // Barrel: plataforma completa lista para usar
 // ---------------------------------------------------------------------------
 
@@ -189,6 +227,7 @@ export const webPlatform = {
   clipboard: browserClipboardAdapter,
   routing: browserRoutingAdapter,
   network: fetchNetworkAdapter,
+  timer: browserTimerAdapter,
 } as const;
 
 export type WebPlatform = typeof webPlatform;

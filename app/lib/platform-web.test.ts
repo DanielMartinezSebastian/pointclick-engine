@@ -3,12 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BrowserClipboardAdapter,
   BrowserRoutingAdapter,
+  BrowserTimerAdapter,
   FetchNetworkAdapter,
   LocalStorageAdapter,
   NoopStorageAdapter,
 } from "./platform-web";
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -71,5 +73,42 @@ describe("platform-web", () => {
     const adapter = new FetchNetworkAdapter();
     const response = await adapter.request("/api/fail");
     expect(response).toEqual({ ok: false, status: 0, data: null });
+  });
+
+  it("BrowserTimerAdapter ejecuta y cancela timeouts", () => {
+    vi.useFakeTimers();
+    const adapter = new BrowserTimerAdapter();
+    const onTimeout = vi.fn();
+    const onCanceled = vi.fn();
+
+    const timeoutHandle = adapter.setTimeout(onTimeout, 25);
+    const canceledHandle = adapter.setTimeout(onCanceled, 25);
+    adapter.clearTimeout(canceledHandle);
+
+    vi.advanceTimersByTime(30);
+
+    expect(onTimeout).toHaveBeenCalledTimes(1);
+    expect(onCanceled).not.toHaveBeenCalled();
+
+    adapter.clearTimeout(timeoutHandle);
+    adapter.clearTimeout(null);
+    adapter.clearTimeout(undefined);
+  });
+
+  it("BrowserTimerAdapter ejecuta y cancela intervals", () => {
+    vi.useFakeTimers();
+    const adapter = new BrowserTimerAdapter();
+    const onInterval = vi.fn();
+
+    const intervalHandle = adapter.setInterval(onInterval, 10);
+    vi.advanceTimersByTime(35);
+    expect(onInterval).toHaveBeenCalledTimes(3);
+
+    adapter.clearInterval(intervalHandle);
+    vi.advanceTimersByTime(30);
+    expect(onInterval).toHaveBeenCalledTimes(3);
+
+    adapter.clearInterval(null);
+    adapter.clearInterval(undefined);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { browserClipboardAdapter } from "../../lib/platform-web";
+import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "../../store/sceneStore";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
@@ -36,10 +36,10 @@ export function GroundEditorPanel() {
     try {
       await browserClipboardAdapter.writeText(groundJson);
       setCopyLabel("Copiado");
-      window.setTimeout(() => setCopyLabel("Copiar JSON suelo"), 1200);
+      browserTimerAdapter.setTimeout(() => setCopyLabel("Copiar JSON suelo"), 1200);
     } catch {
       setCopyLabel("Sin portapapeles");
-      window.setTimeout(() => setCopyLabel("Copiar JSON suelo"), 1200);
+      browserTimerAdapter.setTimeout(() => setCopyLabel("Copiar JSON suelo"), 1200);
     }
   }, [groundJson]);
 

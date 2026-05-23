@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
+import { browserTimerAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../demo/content/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 import {
@@ -376,14 +377,14 @@ export function useInventoryRuntimeController({
   useEffect(() => {
     if (sceneId !== "personalRoom") return;
 
-    const timeoutId = window.setTimeout(() => {
+    const timeoutId = browserTimerAdapter.setTimeout(() => {
       showSpeechBubble(getRandomPhrase("personalRoomWelcome"), {
         dialogKey: "personalRoomWelcome",
       });
     }, 0);
 
     return () => {
-      window.clearTimeout(timeoutId);
+      browserTimerAdapter.clearTimeout(timeoutId);
     };
   }, [sceneId, showSpeechBubble]);
 

@@ -5,7 +5,7 @@ import { MathUtils } from "three";
 
 import PixelSelect from "../PixelSelect";
 import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
-import { browserClipboardAdapter } from "../../lib/platform-web";
+import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "../../store/sceneStore";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
@@ -71,10 +71,10 @@ export function WallEditorPanel({
     try {
       await browserClipboardAdapter.writeText(wallsJson);
       setCopyLabel("Copiado");
-      window.setTimeout(() => setCopyLabel("Copiar JSON"), 1200);
+      browserTimerAdapter.setTimeout(() => setCopyLabel("Copiar JSON"), 1200);
     } catch {
       setCopyLabel("Sin portapapeles");
-      window.setTimeout(() => setCopyLabel("Copiar JSON"), 1200);
+      browserTimerAdapter.setTimeout(() => setCopyLabel("Copiar JSON"), 1200);
     }
   }, [wallsJson]);
 

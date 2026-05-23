@@ -3,6 +3,7 @@
 import { RoundedBox, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { browserTimerAdapter, type TimerHandle } from "../../platform-web";
 import { useSceneStore } from "../../../store/sceneStore";
 
 type SpeechBubbleProps = {
@@ -76,7 +77,7 @@ export default function SpeechBubble({
   const ground = useSceneStore((state) => state.scene.ground);
   const normalizedText = useMemo(() => text.trim(), [text]);
   const [displayedText, setDisplayedText] = useState("");
-  const dismissTimerRef = useRef<number | null>(null);
+  const dismissTimerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     if (!visible || normalizedText.length === 0) return;
@@ -84,25 +85,25 @@ export default function SpeechBubble({
     let index = 0;
     const msPerChar = Math.max(14, Math.floor(1000 / Math.max(1, charsPerSecond)));
 
-    const timer = window.setInterval(() => {
+    const timer = browserTimerAdapter.setInterval(() => {
       index += 1;
       setDisplayedText(normalizedText.slice(0, index));
 
       if (index >= normalizedText.length) {
-        window.clearInterval(timer);
+        browserTimerAdapter.clearInterval(timer);
 
         if (onDismiss) {
           const wordCount = normalizedText.trim().split(/\s+/).filter(Boolean).length;
           const readMs = clamp(wordCount * MS_PER_WORD_READ, MIN_READ_MS, MAX_READ_MS);
-          dismissTimerRef.current = Number(window.setTimeout(onDismiss, readMs));
+          dismissTimerRef.current = browserTimerAdapter.setTimeout(onDismiss, readMs);
         }
       }
     }, msPerChar);
 
     return () => {
-      window.clearInterval(timer);
+      browserTimerAdapter.clearInterval(timer);
       if (dismissTimerRef.current !== null) {
-        window.clearTimeout(dismissTimerRef.current);
+        browserTimerAdapter.clearTimeout(dismissTimerRef.current);
         dismissTimerRef.current = null;
       }
     };

@@ -4,6 +4,8 @@ import gsap from "gsap";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
+import { browserTimerAdapter, type TimerHandle } from "../lib/platform-web";
+
 export type InventoryStack = {
   id: string;
   name: string;
@@ -67,8 +69,8 @@ export function InventoryUI({
   const [isPanelRendered, setIsPanelRendered] = useState(isOpen);
   const previousOpenRef = useRef(isOpen);
   const previousItemCountRef = useRef<number | null>(null);
-  const backpackSpinIntervalRef = useRef<number | null>(null);
-  const backpackSpinStartTimeoutRef = useRef<number | null>(null);
+  const backpackSpinIntervalRef = useRef<TimerHandle | null>(null);
+  const backpackSpinStartTimeoutRef = useRef<TimerHandle | null>(null);
   const backpackSpinTokenRef = useRef(0);
   const panelRef = useRef<HTMLDivElement>(null);
   const panelTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -91,7 +93,7 @@ export function InventoryUI({
 
   const clearBackpackSpinInterval = useCallback(() => {
     if (backpackSpinIntervalRef.current !== null) {
-      window.clearInterval(backpackSpinIntervalRef.current);
+      browserTimerAdapter.clearInterval(backpackSpinIntervalRef.current);
       backpackSpinIntervalRef.current = null;
     }
   }, []);
@@ -143,11 +145,11 @@ export function InventoryUI({
 
       clearBackpackSpinInterval();
       if (backpackSpinStartTimeoutRef.current !== null) {
-        window.clearTimeout(backpackSpinStartTimeoutRef.current);
+        browserTimerAdapter.clearTimeout(backpackSpinStartTimeoutRef.current);
         backpackSpinStartTimeoutRef.current = null;
       }
 
-      backpackSpinStartTimeoutRef.current = window.setTimeout(() => {
+      backpackSpinStartTimeoutRef.current = browserTimerAdapter.setTimeout(() => {
         if (backpackSpinTokenRef.current !== spinToken) {
           return;
         }
@@ -158,9 +160,9 @@ export function InventoryUI({
         let steps = 0;
         const totalSteps = BACKPACK_ROTATION_FRAMES.length;
 
-        const intervalId = window.setInterval(() => {
+        const intervalId = browserTimerAdapter.setInterval(() => {
           if (backpackSpinTokenRef.current !== spinToken) {
-            window.clearInterval(intervalId);
+            browserTimerAdapter.clearInterval(intervalId);
             return;
           }
 
@@ -168,7 +170,7 @@ export function InventoryUI({
           setBackpackFrameIndex((current) => (current + direction + BACKPACK_ROTATION_FRAMES.length) % BACKPACK_ROTATION_FRAMES.length);
 
           if (steps >= totalSteps) {
-            window.clearInterval(intervalId);
+            browserTimerAdapter.clearInterval(intervalId);
             backpackSpinIntervalRef.current = null;
             setBackpackFrameIndex(BACKPACK_NORMAL_FRAME_INDEX);
             setRunning(false);
@@ -185,7 +187,7 @@ export function InventoryUI({
         }
 
         if (backpackSpinStartTimeoutRef.current !== null) {
-          window.clearTimeout(backpackSpinStartTimeoutRef.current);
+          browserTimerAdapter.clearTimeout(backpackSpinStartTimeoutRef.current);
           backpackSpinStartTimeoutRef.current = null;
         }
 
