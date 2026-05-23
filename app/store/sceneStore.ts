@@ -37,19 +37,24 @@ function cloneScene(scene: Scene): Scene {
   };
 }
 
+/**
+ * sceneStore – estado runtime de la escena activa.
+ *
+ * Invariantes de ownership:
+ * - Propietario de: sceneId, scene (datos runtime), playerPosition, respawnSignal.
+ * - NO gestiona estado de editor (selección de muros, etc). Ver sceneEditorStore.
+ * - appendWall / removeWall / updateWall son helpers de mutación que el editor
+ *   puede invocar vía sceneEditorStore sin acoplar stores en sentido contrario.
+ */
 type SceneStore = {
+  // Runtime state
   sceneId: string;
   scene: Scene;
-  selectedWallIndex: number | null;
   playerPosition: [number, number, number];
   respawnSignal: number;
+
+  // Runtime actions
   setScene: (id: string) => void;
-  updateGround: (updater: (ground: Scene["ground"]) => Scene["ground"]) => void;
-  selectWall: (index: number | null) => void;
-  addWall: () => void;
-  addWallWithData: (wall: SceneWall) => void;
-  removeSelectedWall: () => void;
-  updateSelectedWall: (updater: (wall: SceneWall) => SceneWall) => void;
   updateInteraction: (
     id: string,
     updater: (interaction: SceneInteraction) => SceneInteraction,
@@ -57,12 +62,17 @@ type SceneStore = {
   resetInteractionsFromSceneConfig: () => void;
   setPlayerPosition: (position: [number, number, number]) => void;
   requestRespawn: () => void;
+
+  // Mutation helpers used by sceneEditorStore (no selection tracking)
+  updateGround: (updater: (ground: Scene["ground"]) => Scene["ground"]) => void;
+  appendWall: (wall: SceneWall) => void;
+  removeWall: (index: number) => void;
+  updateWall: (index: number, updater: (wall: SceneWall) => SceneWall) => void;
 };
 
 export const useSceneStore = create<SceneStore>((set) => ({
   sceneId: DEFAULT_SCENE_ID,
   scene: cloneScene(SCENES[DEFAULT_SCENE_ID]),
-  selectedWallIndex: SCENES[DEFAULT_SCENE_ID].walls.length > 0 ? 0 : null,
   playerPosition: cloneScene(SCENES[DEFAULT_SCENE_ID]).playerSpawn,
   respawnSignal: 0,
   setScene: (id: string) => {
@@ -72,7 +82,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({
       sceneId: id,
       scene: clonedScene,
-      selectedWallIndex: clonedScene.walls.length > 0 ? 0 : null,
       playerPosition: [...clonedScene.playerSpawn] as [number, number, number],
     });
   },
@@ -83,70 +92,29 @@ export const useSceneStore = create<SceneStore>((set) => ({
         ground: updater({ ...state.scene.ground }),
       },
     })),
-  selectWall: (index) => set({ selectedWallIndex: index }),
-  addWall: () =>
-    set((state) => {
-      const groundY = state.scene.ground.y;
-      const newWall: SceneWall = {
-        position: [
-          state.playerPosition[0],
-          groundY + 2,
-          state.playerPosition[2],
-        ],
-        halfSize: [2, 2, 0.25],
-        rotationY: 0,
-      };
-
-      return {
-        scene: {
-          ...state.scene,
-          walls: [...state.scene.walls, newWall],
-        },
-        selectedWallIndex: state.scene.walls.length,
-      };
-    }),
-  addWallWithData: (wall) =>
-    set((state) => {
-      const nextWall = cloneWall(wall);
-      return {
-        scene: {
-          ...state.scene,
-          walls: [...state.scene.walls, nextWall],
-        },
-        selectedWallIndex: state.scene.walls.length,
-      };
-    }),
-  removeSelectedWall: () =>
-    set((state) => {
-      if (state.selectedWallIndex == null) return state;
-      const walls = state.scene.walls.filter(
-        (_, index) => index !== state.selectedWallIndex,
-      );
-      return {
-        scene: {
-          ...state.scene,
-          walls,
-        },
-        selectedWallIndex:
-          walls.length === 0
-            ? null
-            : Math.min(state.selectedWallIndex, walls.length - 1),
-      };
-    }),
-  updateSelectedWall: (updater) =>
-    set((state) => {
-      if (state.selectedWallIndex == null) return state;
-      const walls = state.scene.walls.map((wall, index) => {
-        if (index !== state.selectedWallIndex) return wall;
-        return updater(cloneWall(wall));
-      });
-      return {
-        scene: {
-          ...state.scene,
-          walls,
-        },
-      };
-    }),
+  appendWall: (wall) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        walls: [...state.scene.walls, cloneWall(wall)],
+      },
+    })),
+  removeWall: (index) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        walls: state.scene.walls.filter((_, i) => i !== index),
+      },
+    })),
+  updateWall: (index, updater) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        walls: state.scene.walls.map((wall, i) =>
+          i !== index ? wall : updater(cloneWall(wall)),
+        ),
+      },
+    })),
   updateInteraction: (id, updater) =>
     set((state) => ({
       scene: {

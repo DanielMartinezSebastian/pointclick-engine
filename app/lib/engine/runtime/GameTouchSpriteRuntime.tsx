@@ -15,6 +15,7 @@ import {
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
+import { useSceneEditorStore } from "../../../store/sceneEditorStore";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { type WallToolMode } from "../types/gameRuntime";
 import { emitRuntimeEvent, type RuntimeEventHandler } from "../types/runtimeEvents";
@@ -107,7 +108,7 @@ export function GameTouchSpriteRuntime({
   const sceneId = useSceneStore((s) => s.sceneId);
   const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
-  const addWallWithData = useSceneStore((s) => s.addWallWithData);
+  const addWallWithData = useSceneEditorStore((s) => s.addWallWithData);
   const respawnSignal = useSceneStore((s) => s.respawnSignal);
 
   const { setTarget, setRoute, cancelTarget, resolveDirection, registerProgress } = useClickToMoveController();
@@ -214,7 +215,7 @@ export function GameTouchSpriteRuntime({
   }, []);
 
   const handleStartWallResize = useCallback((index: number, handle: WallResizeHandle) => {
-    useSceneStore.getState().selectWall(index);
+    useSceneEditorStore.getState().selectWall(index);
     wallInteractionRef.current = {
       mode: "resize",
       handle,
@@ -225,17 +226,18 @@ export function GameTouchSpriteRuntime({
     const interaction = wallInteractionRef.current;
     if (!interaction) return;
 
-    const state = useSceneStore.getState();
-    const selectedWallIndex = state.selectedWallIndex;
+    const sceneState = useSceneStore.getState();
+    const editorState = useSceneEditorStore.getState();
+    const selectedWallIndex = editorState.selectedWallIndex;
     if (selectedWallIndex == null) return;
 
-    const wall = state.scene.walls[selectedWallIndex];
+    const wall = sceneState.scene.walls[selectedWallIndex];
     if (!wall) return;
 
     if (interaction.mode === "move") {
-      state.updateSelectedWall((currentWall) => ({
+      editorState.updateSelectedWall((currentWall) => ({
         ...currentWall,
-        position: [x - interaction.offsetX, state.scene.ground.y + currentWall.halfSize[1], z - interaction.offsetZ],
+        position: [x - interaction.offsetX, sceneState.scene.ground.y + currentWall.halfSize[1], z - interaction.offsetZ],
       }));
       return;
     }
@@ -245,7 +247,7 @@ export function GameTouchSpriteRuntime({
     const centerX = wall.position[0];
     const centerZ = wall.position[2];
 
-    state.updateSelectedWall((currentWall) => {
+    editorState.updateSelectedWall((currentWall) => {
       const currentRotation = currentWall.rotationY ?? 0;
       const axes = getWallAxes(currentRotation);
       let nextPosition: [number, number, number] = [...currentWall.position] as [number, number, number];

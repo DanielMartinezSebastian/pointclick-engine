@@ -4,6 +4,7 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
 import { type SceneWall } from "../../../../demo/content/scenes";
 import { useSceneStore } from "../../../../store/sceneStore";
+import { useSceneEditorStore } from "../../../../store/sceneEditorStore";
 
 export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 
@@ -17,8 +18,8 @@ export function SceneWalls({
   onStartWallResize: (index: number, handle: WallResizeHandle) => void;
 }) {
   const walls = useSceneStore((s) => s.scene.walls);
-  const selectedWallIndex = useSceneStore((s) => s.selectedWallIndex);
-  const selectWall = useSceneStore((s) => s.selectWall);
+  const selectedWallIndex = useSceneEditorStore((s) => s.selectedWallIndex);
+  const selectWall = useSceneEditorStore((s) => s.selectWall);
 
   return (
     <>
