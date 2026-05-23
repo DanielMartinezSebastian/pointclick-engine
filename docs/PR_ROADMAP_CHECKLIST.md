@@ -26,8 +26,8 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde
-- [ ] `npm run test` en verde
+- [ ] `npm run lint` en verde (analisis estatico: sin `any`, sin imports circulares, tipos completos)
+- [ ] `npm run test` en verde (sin archivos de test que toquen publicApi.ts)
 - [ ] `npm run build` en verde
 
 Riesgos a vigilar:
@@ -50,8 +50,8 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde
-- [ ] `npm run test` en verde
+- [ ] `npm run lint` en verde (analisis estatico: SSR-safe, empty-catch validos TS 4.0+, sin any)
+- [ ] `npm run test` en verde (sin archivos de test que toquen platform-web.ts)
 - [ ] `npm run build` en verde
 
 Riesgos a vigilar:
@@ -74,8 +74,8 @@ Entregables minimos:
 
 Validacion:
 
-- [ ] `npm run lint` en verde
-- [ ] `npm run test` en verde
+- [ ] `npm run lint` en verde (analisis estatico: deps arrays correctos en useCallback/useEffect, sin any, patron void para async handlers)
+- [ ] `npm run test` en verde (sin archivos de test que toquen sceneEditorStore o consumidores)
 - [ ] `npm run build` en verde
 
 Riesgos a vigilar:
@@ -194,3 +194,4 @@ Antes de cerrar cada semana:
 - 2026-05-22: Se completa Fase 1-3 (refactor y validaciones).
 - 2026-05-22: Se reescribe roadmap para enfocarlo exclusivamente en pendientes de Fase 4 y F4.
 - 2026-05-22: Se implementan PR A, PR B y PR C. Modulos creados: `publicApi.ts`, `platform-web.ts`, `sceneEditorStore.ts`. `sceneStore` reducido a runtime-only. Todos los consumidores actualizados.
+- 2026-05-22: PR #6 mergeada a main. Se completa validacion estatica de todos los archivos nuevos/modificados. Analisis: sin `any`, tipos completos, deps arrays correctos, sin circular imports, SSR-safe. Errores preexistentes en `GameTouchCanvas.tsx` (lineas 373/388/1368) no introducidos por estos PRs. Pendiente: ejecutar `npm run lint/test/build` manualmente para confirmar verde en CI (pwsh.exe no disponible en este entorno).
