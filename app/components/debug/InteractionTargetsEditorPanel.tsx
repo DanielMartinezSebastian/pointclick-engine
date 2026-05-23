@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { MathUtils } from "three";
 
+import { browserClipboardAdapter } from "../../lib/platform-web";
 import type { SceneInteraction } from "../../demo/content/scenes";
 import PixelSelect from "../PixelSelect";
 import { DebugButton, DebugNumberInput } from "./controls";
@@ -44,7 +45,7 @@ export function InteractionTargetsEditorPanel({
 
   const handleCopyJson = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(interactionsJson);
+      await browserClipboardAdapter.writeText(interactionsJson);
       setCopyLabel("Copiado");
       window.setTimeout(() => setCopyLabel("Copiar JSON targets"), 1200);
     } catch {

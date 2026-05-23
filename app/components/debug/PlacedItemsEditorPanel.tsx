@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { browserClipboardAdapter } from "../../lib/platform-web";
 import type { PlacedSceneItem } from "../../lib/engine/types/gameRuntime";
 import PixelSelect from "../PixelSelect";
 import { DebugButton, DebugNumberInput } from "./controls";
@@ -39,7 +40,7 @@ export function PlacedItemsEditorPanel({
 
   const handleCopyJson = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(itemsJson);
+      await browserClipboardAdapter.writeText(itemsJson);
       setCopyLabel("Copiado");
       window.setTimeout(() => setCopyLabel("Copiar JSON items"), 1200);
     } catch {
