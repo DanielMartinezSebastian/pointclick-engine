@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
 import type { SceneInteraction } from "../../demo/content/scenes";
+import { browserEnvironmentAdapter } from "../../lib/platform-web";
 import type { InventoryStack } from "../InventoryUI";
 
 export type DraggedInventoryPayload = {
@@ -100,11 +101,10 @@ export function SceneDropTargets({
       onDropMiss(draggedStack);
     };
 
-    window.addEventListener("pointerup", handleWindowPointerUp);
-
-    return () => {
-      window.removeEventListener("pointerup", handleWindowPointerUp);
-    };
+    return browserEnvironmentAdapter.addWindowEventListener(
+      "pointerup",
+      handleWindowPointerUp,
+    );
   }, [draggedStack, onDropMiss]);
 
   if (targets.length === 0 && !playerDropTarget) {

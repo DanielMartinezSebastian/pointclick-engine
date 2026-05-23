@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { browserEnvironmentAdapter } from "../../platform-web";
 
 const MOVEMENT_KEYS = new Set([
   "arrowleft",
@@ -45,30 +46,40 @@ export function useKeyboardMovementInput() {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const normalizedKey = event.key.toLowerCase();
+    const handleKeyDown: EventListener = (event) => {
+      const keyboardEvent = event as KeyboardEvent;
+      const normalizedKey = keyboardEvent.key.toLowerCase();
 
       if (MOVEMENT_KEYS.has(normalizedKey)) {
-        event.preventDefault();
+        keyboardEvent.preventDefault();
         keysPressedRef.current.add(normalizedKey);
       }
     };
 
-    const handleKeyUp = (event: KeyboardEvent) => {
-      const normalizedKey = event.key.toLowerCase();
+    const handleKeyUp: EventListener = (event) => {
+      const keyboardEvent = event as KeyboardEvent;
+      const normalizedKey = keyboardEvent.key.toLowerCase();
 
       if (MOVEMENT_KEYS.has(normalizedKey)) {
-        event.preventDefault();
+        keyboardEvent.preventDefault();
         keysPressedRef.current.delete(normalizedKey);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown, { passive: false });
-    window.addEventListener("keyup", handleKeyUp, { passive: false });
+    const disposeKeyDown = browserEnvironmentAdapter.addWindowEventListener(
+      "keydown",
+      handleKeyDown,
+      { passive: false },
+    );
+    const disposeKeyUp = browserEnvironmentAdapter.addWindowEventListener(
+      "keyup",
+      handleKeyUp,
+      { passive: false },
+    );
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      disposeKeyDown();
+      disposeKeyUp();
     };
   }, []);
 

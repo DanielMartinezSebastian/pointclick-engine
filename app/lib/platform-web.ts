@@ -2,7 +2,7 @@
  * platform-web – Capa de interoperabilidad web.
  *
  * Define puertos (interfaces) para las capacidades de plataforma web:
- * storage, routing, clipboard, network y timers.
+ * storage, routing, clipboard, network, timers y entorno del navegador.
  *
  * El runtime consume estos puertos en lugar de llamar directamente a APIs
  * web (localStorage, navigator.clipboard, fetch, etc.), lo que permite:
@@ -218,6 +218,130 @@ export class BrowserTimerAdapter implements TimerPort {
 export const browserTimerAdapter: TimerPort = new BrowserTimerAdapter();
 
 // ---------------------------------------------------------------------------
+// EnvironmentPort – APIs de entorno (DOM, media, RAF, eventos)
+// ---------------------------------------------------------------------------
+
+export type AnimationFrameHandle = number;
+
+export type EnvironmentMediaQuery = {
+  matches: boolean;
+  subscribe: (listener: (matches: boolean) => void) => () => void;
+};
+
+/** Puerto para capacidades de entorno del navegador. */
+export interface EnvironmentPort {
+  matchMedia(query: string): EnvironmentMediaQuery;
+  getInnerHeight(fallback?: number): number;
+  requestAnimationFrame(callback: () => void): AnimationFrameHandle;
+  cancelAnimationFrame(handle: AnimationFrameHandle | null | undefined): void;
+  addWindowEventListener(
+    eventName: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): () => void;
+  addDocumentEventListener(
+    eventName: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): () => void;
+  mountStyleTag(
+    attributeName: string,
+    attributeValue: string,
+    cssText: string,
+  ): () => void;
+}
+
+/** Adapter de entorno con fallback seguro para SSR. */
+export class BrowserEnvironmentAdapter implements EnvironmentPort {
+  matchMedia(query: string): EnvironmentMediaQuery {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return {
+        matches: false,
+        subscribe: () => () => {},
+      };
+    }
+
+    const mediaQuery = window.matchMedia(query);
+    return {
+      matches: mediaQuery.matches,
+      subscribe: (listener) => {
+        const onChange = (event: MediaQueryListEvent) => {
+          listener(event.matches);
+        };
+        mediaQuery.addEventListener("change", onChange);
+        return () => {
+          mediaQuery.removeEventListener("change", onChange);
+        };
+      },
+    };
+  }
+
+  getInnerHeight(fallback = 800): number {
+    if (typeof window === "undefined") return fallback;
+    return window.innerHeight;
+  }
+
+  requestAnimationFrame(callback: () => void): AnimationFrameHandle {
+    if (typeof window === "undefined") {
+      return Number(globalThis.setTimeout(callback, 16));
+    }
+    return window.requestAnimationFrame(callback);
+  }
+
+  cancelAnimationFrame(handle: AnimationFrameHandle | null | undefined): void {
+    if (handle == null) return;
+    if (typeof window === "undefined") {
+      globalThis.clearTimeout(handle);
+      return;
+    }
+    window.cancelAnimationFrame(handle);
+  }
+
+  addWindowEventListener(
+    eventName: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): () => void {
+    if (typeof window === "undefined") return () => {};
+    window.addEventListener(eventName, listener, options);
+    return () => {
+      window.removeEventListener(eventName, listener, options);
+    };
+  }
+
+  addDocumentEventListener(
+    eventName: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): () => void {
+    if (typeof document === "undefined") return () => {};
+    document.addEventListener(eventName, listener, options);
+    return () => {
+      document.removeEventListener(eventName, listener, options);
+    };
+  }
+
+  mountStyleTag(
+    attributeName: string,
+    attributeValue: string,
+    cssText: string,
+  ): () => void {
+    if (typeof document === "undefined") return () => {};
+    const styleEl = document.createElement("style");
+    styleEl.setAttribute(attributeName, attributeValue);
+    styleEl.innerHTML = cssText;
+    document.head.appendChild(styleEl);
+    return () => {
+      styleEl.remove();
+    };
+  }
+}
+
+/** Adapter de entorno del navegador listo para usar. */
+export const browserEnvironmentAdapter: EnvironmentPort =
+  new BrowserEnvironmentAdapter();
+
+// ---------------------------------------------------------------------------
 // Barrel: plataforma completa lista para usar
 // ---------------------------------------------------------------------------
 
@@ -228,6 +352,7 @@ export const webPlatform = {
   routing: browserRoutingAdapter,
   network: fetchNetworkAdapter,
   timer: browserTimerAdapter,
+  env: browserEnvironmentAdapter,
 } as const;
 
 export type WebPlatform = typeof webPlatform;

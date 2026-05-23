@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { browserEnvironmentAdapter } from "../../platform-web";
 
 const DEBUG_ROUTE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
 
@@ -16,14 +17,11 @@ export function useDebugModeEffects() {
   useEffect(() => {
     if (!isDebug) return;
 
-    const styleEl = document.createElement("style");
-    styleEl.setAttribute("data-debug-cursor-override", "true");
-    styleEl.innerHTML = "* { cursor: auto !important; }";
-    document.head.appendChild(styleEl);
-
-    return () => {
-      styleEl.remove();
-    };
+    return browserEnvironmentAdapter.mountStyleTag(
+      "data-debug-cursor-override",
+      "true",
+      "* { cursor: auto !important; }",
+    );
   }, [isDebug]);
 
   return {

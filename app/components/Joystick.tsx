@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { browserEnvironmentAdapter } from "../lib/platform-web";
 import { useMobileInputStore } from "../store/mobileInputStore";
 
 type JoystickMoveEvent = {
@@ -35,7 +36,7 @@ export default function Joystick() {
   // Solo `pointer: coarse` identifica dispositivos táctiles reales;
   // `maxTouchPoints > 0` puede ser true en Windows/Chrome con ratón.
   const [isTouchDevice] = useState(
-    () => window.matchMedia("(pointer: coarse)").matches,
+    () => browserEnvironmentAdapter.matchMedia("(pointer: coarse)").matches,
   );
 
   useEffect(() => {

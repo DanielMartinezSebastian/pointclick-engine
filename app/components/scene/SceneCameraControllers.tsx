@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { MathUtils, OrthographicCamera as ThreeOrthoCamera } from "three";
 
+import { browserEnvironmentAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "../../store/sceneStore";
 
 export function CameraController() {
@@ -30,7 +31,10 @@ export function CameraFitHeight({ desiredWorldHeight = 19.28 }: { desiredWorldHe
     const cam = camera as ThreeOrthoCamera;
     if (!cam) return;
 
-    const pixelHeight = Math.max(1, size.height || (typeof window !== "undefined" ? window.innerHeight : 800));
+    const pixelHeight = Math.max(
+      1,
+      size.height || browserEnvironmentAdapter.getInnerHeight(800),
+    );
     const targetZoom = pixelHeight / desiredWorldHeight;
 
     if (Math.abs(cam.zoom - targetZoom) <= 0.0001) return;

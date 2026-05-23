@@ -17,6 +17,7 @@ import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
 import { useSceneEditorStore } from "../../../store/sceneEditorStore";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
+import { browserEnvironmentAdapter } from "../../platform-web";
 import { type WallToolMode } from "../types/gameRuntime";
 import { emitRuntimeEvent, type RuntimeEventHandler } from "../types/runtimeEvents";
 import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
@@ -325,10 +326,10 @@ export function GameTouchSpriteRuntime({
   }, [cancelTarget, clearPressedKeys, sceneId, respawnSignal, setPlayerPosition]);
 
   useEffect(() => {
-    window.addEventListener("pointerup", stopWallInteraction);
-    return () => {
-      window.removeEventListener("pointerup", stopWallInteraction);
-    };
+    return browserEnvironmentAdapter.addWindowEventListener(
+      "pointerup",
+      stopWallInteraction,
+    );
   }, [stopWallInteraction]);
 
   useFrame((_, delta) => {

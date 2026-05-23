@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "pixelarticons/react";
+import { browserEnvironmentAdapter } from "../lib/platform-web";
 
 interface PixelSelectProps {
   value: string;
@@ -22,20 +23,21 @@ export default function PixelSelect({
   const selectedOption = options.find((opt) => opt.value === value);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside: EventListener = (event) => {
+      const mouseEvent = event as MouseEvent;
       if (
         containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
+        !containerRef.current.contains(mouseEvent.target as Node)
       ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
+      return browserEnvironmentAdapter.addDocumentEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
     }
   }, [isOpen]);
 

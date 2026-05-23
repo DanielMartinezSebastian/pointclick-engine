@@ -4,7 +4,12 @@ import gsap from "gsap";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
-import { browserTimerAdapter, type TimerHandle } from "../lib/platform-web";
+import {
+  browserEnvironmentAdapter,
+  browserTimerAdapter,
+  type AnimationFrameHandle,
+  type TimerHandle,
+} from "../lib/platform-web";
 
 export type InventoryStack = {
   id: string;
@@ -76,13 +81,10 @@ export function InventoryUI({
   const panelTweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
-    const apply = () => setIsMobile(mediaQuery.matches);
+    const media = browserEnvironmentAdapter.matchMedia("(max-width: 768px)");
+    const apply = (matches?: boolean) => setIsMobile(matches ?? media.matches);
     apply();
-    mediaQuery.addEventListener("change", apply);
-    return () => {
-      mediaQuery.removeEventListener("change", apply);
-    };
+    return media.subscribe(apply);
   }, []);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slotIndex: number) => {
@@ -255,12 +257,12 @@ export function InventoryUI({
   useEffect(() => {
     if (isOpen) {
       if (!isPanelRendered) {
-        const animationFrameId = window.requestAnimationFrame(() => {
+        const animationFrameId: AnimationFrameHandle = browserEnvironmentAdapter.requestAnimationFrame(() => {
           setIsPanelRendered(true);
         });
 
         return () => {
-          window.cancelAnimationFrame(animationFrameId);
+          browserEnvironmentAdapter.cancelAnimationFrame(animationFrameId);
         };
       }
 
@@ -473,14 +475,15 @@ export function DraggedInventoryGhost({
   const [pointer, setPointer] = useState({ x: initialPointerX, y: initialPointerY });
 
   useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      setPointer({ x: event.clientX, y: event.clientY });
+    const handlePointerMove: EventListener = (event) => {
+      const pointerEvent = event as PointerEvent;
+      setPointer({ x: pointerEvent.clientX, y: pointerEvent.clientY });
     };
 
-    window.addEventListener("pointermove", handlePointerMove);
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-    };
+    return browserEnvironmentAdapter.addWindowEventListener(
+      "pointermove",
+      handlePointerMove,
+    );
   }, []);
 
   return (

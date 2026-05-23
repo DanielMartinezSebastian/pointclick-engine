@@ -7,13 +7,13 @@ Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 ## Estado actual
 
 - Fase 1, 2 y 3: completadas.
-- Fase 4 (API publica + platform-web): implementada con cierre funcional mayoritario, pendiente de cierre final.
+- Fase 4 (API publica + platform-web): completada.
 - Separacion runtime/editor store: completada.
 
 Estado de cierre real:
 
 - Implementacion de PR A, PR B y PR C: completada.
-- Cierre arquitectonico library-first: pendiente (ver `docs/ARCHITECTURE_REVIEW.md`, secciones 9 y 10).
+- Cierre arquitectonico library-first: completado.
 
 ## PR A - API publica minima de libreria
 
@@ -95,19 +95,20 @@ Marcar roadmap como cerrado solo cuando:
 - [x] PR A completada
 - [x] PR B completada
 - [x] PR C completada
-- [ ] No queden pendientes arquitectonicos de cierre library-first respecto a `docs/ARCHITECTURE_REVIEW.md`
+- [x] No queden pendientes arquitectonicos de cierre library-first respecto a `docs/ARCHITECTURE_REVIEW.md`
 
 Pendientes de cierre library-first (seguimiento activo):
 
 - [x] Rewire del demo para consumir `app/lib/engine/publicApi.ts` como boundary principal.
 - [x] Completar API publica con `useGameState(selector)` y `useGameActions()`.
 - [x] Exponer `GameViewport` funcional (no solo `GameViewportProps`).
-- [ ] Generalizar el uso de `app/lib/platform-web.ts` donde aplique en runtime.
+- [x] Generalizar el uso de `app/lib/platform-web.ts` donde aplique en runtime.
 
-Detalle del pendiente activo:
+Detalle de cierre:
 
-- Clipboard y timers ya estan en `platform-web` para runtime/debug.
-- Aun quedan APIs web directas en areas de UI que deben evaluarse para decidir si pasan por puertos (p. ej. `matchMedia`, `requestAnimationFrame`, manipulacion de `document` en debug).
+- Se incorpora `EnvironmentPort` en `platform-web` para `matchMedia`, RAF, listeners globales y style tag injection.
+- Runtime/UI migrados a adapters de interoperabilidad (`env` y `timer`) en los puntos objetivo.
+- Validacion global completada en verde (`lint`, `test`, `build`).
 
 ## Plan de ejecucion detallado (4 semanas)
 
@@ -215,3 +216,4 @@ Antes de cerrar cada semana:
 - 2026-05-23: Se ajusta estado documental. PR A/B/C quedan como implementacion completada, pero el cierre final library-first permanece abierto hasta resolver pendientes de API publica y wiring demo.
 - 2026-05-23: Se completa wiring del demo a `GameViewport`, se incorporan `useGameState`/`useGameActions`, se agrega `GameViewport` funcional y se amplian tests de contrato de API publica.
 - 2026-05-23: Se introduce `TimerPort` en `platform-web` y se migra uso de timers en runtime/debug a `browserTimerAdapter`; validacion global (`lint`, `test`, `build`) en verde.
+- 2026-05-23: Se incorpora `EnvironmentPort` en `platform-web` y se migra uso de `matchMedia`, RAF, listeners globales e inyeccion de estilo en runtime/UI; se cierra el check final de convergencia web para library-first.

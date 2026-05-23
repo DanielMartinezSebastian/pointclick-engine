@@ -193,9 +193,9 @@ Phase 4 (high)
 
 ## 9. Immediate next tasks
 
-1. Continue platform-web convergence for remaining direct web APIs where it is architecturally justified (e.g. `matchMedia`, `requestAnimationFrame`, selected debug DOM hooks).
-2. Define explicit v1 scope for which web capabilities must be port-driven vs UI-local implementation details.
-3. Add a focused follow-up pass for store/public API ergonomics once the interoperability boundary is fully frozen.
+1. Freeze and document v1 interoperability boundary now that public API and platform-web convergence are in place.
+2. Start follow-up pass focused on ergonomics of public store/actions for external consumers.
+3. Evaluate packaging strategy for publishing engine modules beyond demo app consumption.
 
 ## 10. Implementation status (2026-05-23)
 
@@ -212,10 +212,11 @@ Completed:
 - Demo app now wired through public boundary (`app/page.tsx` -> `GameViewport`).
 - API-level tests expanded for registration/state/actions/viewport contract.
 - TimerPort introduced in `platform-web`; runtime/debug timers routed through adapter.
+- EnvironmentPort introduced in `platform-web`; runtime/UI migrated for `matchMedia`, RAF, global listeners, and debug style injection.
 
 Pending to fully close the library-first direction:
 
-- Platform-web consumption should still be reviewed for remaining direct web APIs that may deserve ports (scope decision pending).
+- No critical architecture blockers remain for the current library-first checklist.
 - This document sections 3-7 should be treated as design intent; section 2 and section 10 are the current source of truth.
 
 ## 11. Review questions

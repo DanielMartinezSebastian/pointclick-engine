@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   BrowserClipboardAdapter,
+  BrowserEnvironmentAdapter,
   BrowserRoutingAdapter,
   BrowserTimerAdapter,
   FetchNetworkAdapter,
@@ -110,5 +111,147 @@ describe("platform-web", () => {
 
     adapter.clearInterval(null);
     adapter.clearInterval(undefined);
+  });
+
+  it("BrowserEnvironmentAdapter resuelve matchMedia y subscribe", () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+
+    vi.stubGlobal("window", {
+      matchMedia: vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener,
+        removeEventListener,
+      }),
+      innerHeight: 720,
+      requestAnimationFrame: vi.fn((cb: () => void) => {
+        cb();
+        return 123;
+      }),
+      cancelAnimationFrame: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+
+    const adapter = new BrowserEnvironmentAdapter();
+    const media = adapter.matchMedia("(max-width: 768px)");
+    expect(media.matches).toBe(true);
+
+    const off = media.subscribe(() => {});
+    expect(addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+    off();
+    expect(removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+
+    expect(adapter.getInnerHeight(800)).toBe(720);
+    expect(adapter.requestAnimationFrame(() => {})).toBe(123);
+    adapter.cancelAnimationFrame(123);
+  });
+
+  it("BrowserEnvironmentAdapter usa fallback SSR seguro", () => {
+    const adapter = new BrowserEnvironmentAdapter();
+    const media = adapter.matchMedia("(max-width: 768px)");
+    expect(media.matches).toBe(false);
+    const off = media.subscribe(() => {});
+    expect(typeof off).toBe("function");
+    off();
+
+    expect(adapter.getInnerHeight(640)).toBe(640);
+
+    const disposeWindow = adapter.addWindowEventListener("click", () => {});
+    const disposeDocument = adapter.addDocumentEventListener("click", () => {});
+    expect(typeof disposeWindow).toBe("function");
+    expect(typeof disposeDocument).toBe("function");
+
+    const unmountStyle = adapter.mountStyleTag("data-test", "x", "body{}");
+    expect(typeof unmountStyle).toBe("function");
+    unmountStyle();
+  });
+
+  it("BrowserEnvironmentAdapter registra y desregistra listeners globales", () => {
+    const addWindowListener = vi.fn();
+    const removeWindowListener = vi.fn();
+    const addDocumentListener = vi.fn();
+    const removeDocumentListener = vi.fn();
+
+    vi.stubGlobal("window", {
+      addEventListener: addWindowListener,
+      removeEventListener: removeWindowListener,
+      matchMedia: vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+      innerHeight: 800,
+      requestAnimationFrame: vi.fn(() => 1),
+      cancelAnimationFrame: vi.fn(),
+    });
+
+    vi.stubGlobal("document", {
+      addEventListener: addDocumentListener,
+      removeEventListener: removeDocumentListener,
+      createElement: vi.fn(() => ({
+        setAttribute: vi.fn(),
+        remove: vi.fn(),
+      })),
+      head: {
+        appendChild: vi.fn(),
+      },
+    });
+
+    const adapter = new BrowserEnvironmentAdapter();
+
+    const winHandler = () => {};
+    const disposeWindow = adapter.addWindowEventListener("pointerup", winHandler);
+    expect(addWindowListener).toHaveBeenCalledWith("pointerup", winHandler, undefined);
+    disposeWindow();
+    expect(removeWindowListener).toHaveBeenCalledWith("pointerup", winHandler, undefined);
+
+    const docHandler = () => {};
+    const disposeDocument = adapter.addDocumentEventListener("mousedown", docHandler);
+    expect(addDocumentListener).toHaveBeenCalledWith("mousedown", docHandler, undefined);
+    disposeDocument();
+    expect(removeDocumentListener).toHaveBeenCalledWith("mousedown", docHandler, undefined);
+  });
+
+  it("BrowserEnvironmentAdapter monta y desmonta style tag", () => {
+    const styleElement = {
+      setAttribute: vi.fn(),
+      remove: vi.fn(),
+      innerHTML: "",
+    };
+
+    const createElement = vi.fn().mockReturnValue(styleElement);
+    const appendChild = vi.fn();
+
+    vi.stubGlobal("window", {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      matchMedia: vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+      innerHeight: 800,
+      requestAnimationFrame: vi.fn(() => 1),
+      cancelAnimationFrame: vi.fn(),
+    });
+
+    vi.stubGlobal("document", {
+      createElement,
+      head: { appendChild },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+
+    const adapter = new BrowserEnvironmentAdapter();
+    const unmount = adapter.mountStyleTag("data-debug", "true", "*{cursor:auto}");
+
+    expect(createElement).toHaveBeenCalledWith("style");
+    expect(styleElement.setAttribute).toHaveBeenCalledWith("data-debug", "true");
+    expect(styleElement.innerHTML).toBe("*{cursor:auto}");
+    expect(appendChild).toHaveBeenCalledWith(styleElement);
+
+    unmount();
+    expect(styleElement.remove).toHaveBeenCalledTimes(1);
   });
 });
