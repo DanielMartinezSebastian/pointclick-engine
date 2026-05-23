@@ -29,15 +29,24 @@ const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 
+type GameTouchCanvasProps = {
+  debug?: boolean;
+  onRuntimeEvent?: (event: RuntimeEvent) => void;
+};
 
-export default function GameTouchCanvas() {
+export default function GameTouchCanvas({
+  debug: debugOverride,
+  onRuntimeEvent,
+}: GameTouchCanvasProps = {}) {
   const selectedCharacter: GameCharacterName = "Dave";
   const { isDebug } = useDebugModeEffects();
+  const runtimeDebug = typeof debugOverride === "boolean" ? debugOverride : isDebug;
 
   const handleRuntimeEvent = useCallback((event: RuntimeEvent) => {
-    if (!isDebug) return;
+    onRuntimeEvent?.(event);
+    if (!runtimeDebug) return;
     console.debug("[runtime-event]", event);
-  }, [isDebug]);
+  }, [onRuntimeEvent, runtimeDebug]);
 
   const {
     debugPanelSide,
@@ -143,7 +152,7 @@ export default function GameTouchCanvas() {
           <Suspense fallback={null}>
             <GameTouchSpriteRuntime
               activeCharacter={selectedCharacter}
-              debug={isDebug}
+              debug={runtimeDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}
               wallToolMode={wallToolMode}
@@ -190,7 +199,7 @@ export default function GameTouchCanvas() {
         />
       )}
       <DebugOverlayRuntimePanel
-        isDebug={isDebug}
+        isDebug={runtimeDebug}
         debugPanelSide={debugPanelSide}
         setDebugPanelSide={setDebugPanelSide}
         isDebugGroundVisible={isDebugGroundVisible}

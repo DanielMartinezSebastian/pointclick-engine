@@ -1,7 +1,7 @@
-import GameTouchCanvas from "./components/GameTouchCanvas";
+import { GameViewport } from "./lib/engine/publicApi";
 
 export default function Home() {
   return (
-    <GameTouchCanvas />
+    <GameViewport />
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Public API mínima del motor de juego.
  *
@@ -5,6 +7,13 @@
  * Usa estos tipos y funciones para integrar el engine desde fuera sin
  * acoplar a imports internos de app/demo/content.
  */
+
+import { useShallow } from "zustand/react/shallow";
+import { createElement } from "react";
+import type { ComponentType } from "react";
+
+import GameTouchCanvas from "../../components/GameTouchCanvas";
+import { useSceneStore } from "../../store/sceneStore";
 
 // ---------------------------------------------------------------------------
 // Tipos públicos reutilizables
@@ -115,6 +124,27 @@ export type GameRuntime = {
   getRules: () => Record<string, GameRuleConfig>;
 };
 
+type SceneStoreSnapshot = ReturnType<typeof useSceneStore.getState>;
+
+export type GameState = Pick<
+  SceneStoreSnapshot,
+  "sceneId" | "scene" | "playerPosition" | "respawnSignal"
+>;
+
+export type GameActions = Pick<
+  SceneStoreSnapshot,
+  "setScene" | "setPlayerPosition" | "requestRespawn"
+>;
+
+function toGameState(state: SceneStoreSnapshot): GameState {
+  return {
+    sceneId: state.sceneId,
+    scene: state.scene,
+    playerPosition: state.playerPosition,
+    respawnSignal: state.respawnSignal,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Configuración de createGameRuntime
 // ---------------------------------------------------------------------------
@@ -192,4 +222,46 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     getItems: () => Object.fromEntries(_itemRegistry),
     getRules: () => Object.fromEntries(_ruleRegistry),
   };
+}
+
+/** Lee snapshot del estado público del runtime sin usar hooks React. */
+export function getGameState(): GameState {
+  return toGameState(useSceneStore.getState());
+}
+
+/** Lee acciones públicas del runtime sin usar hooks React. */
+export function getGameActions(): GameActions {
+  const state = useSceneStore.getState();
+  return {
+    setScene: state.setScene,
+    setPlayerPosition: state.setPlayerPosition,
+    requestRespawn: state.requestRespawn,
+  };
+}
+
+/** Hook para seleccionar estado de juego desde la API pública. */
+export function useGameState<T>(selector: (state: GameState) => T): T {
+  return useSceneStore((state) => selector(toGameState(state)));
+}
+
+/** Hook para obtener acciones públicas con referencia estable. */
+export function useGameActions(): GameActions {
+  return useSceneStore(
+    useShallow((state) => ({
+      setScene: state.setScene,
+      setPlayerPosition: state.setPlayerPosition,
+      requestRespawn: state.requestRespawn,
+    })),
+  );
+}
+
+/** Integración pública de viewport/canvas para consumir el runtime. */
+export function GameViewport({
+  debug,
+  onRuntimeEvent,
+}: GameViewportProps) {
+  return createElement(GameTouchCanvas as ComponentType<GameViewportProps>, {
+    debug,
+    onRuntimeEvent,
+  });
 }
