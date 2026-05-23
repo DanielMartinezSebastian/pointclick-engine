@@ -1,0 +1,82 @@
+# Documentación del Proyecto
+
+Índice maestro. **Punto de entrada para subagentes y humanos.**
+
+---
+
+## 🏛️ Architecture (estable — cambia poco)
+
+Diseño del sistema. Lee antes de tocar arquitectura.
+
+- [`architecture/01-layers.md`](architecture/01-layers.md) — Las 4 capas y su responsabilidad
+- [`architecture/02-public-api.md`](architecture/02-public-api.md) — Contrato de `publicApi.ts` (estable v1)
+- [`architecture/03-rules-core-vs-render.md`](architecture/03-rules-core-vs-render.md) — Decisión: ¿este código va en core o renderer?
+- [`architecture/04-platform-ports.md`](architecture/04-platform-ports.md) — Adapters web (storage, clipboard, timer)
+
+---
+
+## 🔧 Workflow (estable — guías reutilizables)
+
+Cómo trabajar en este repo.
+
+- [`workflow/how-to-create-plan.md`](workflow/how-to-create-plan.md) — Crear un nuevo plan modular
+- [`workflow/how-to-track-tasks.md`](workflow/how-to-track-tasks.md) — Marcar checks en tracking
+- [`workflow/how-to-spawn-subagent.md`](workflow/how-to-spawn-subagent.md) — Delegar tareas autocontenidas
+- [`workflow/pre-commit-checklist.md`](workflow/pre-commit-checklist.md) — Validación antes de commit
+- [`workflow/commit-convention.md`](workflow/commit-convention.md) — Formato de commits
+
+---
+
+## 🚀 Phases (activo — fases en curso)
+
+Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
+
+- [`phases/phase-2-core-extraction/`](phases/phase-2-core-extraction/) — **ACTIVA**: Extracción de core a `packages/engine-core/`
+- `phases/phase-3-renderer-abstract/` — FUTURA: Abstracción del renderer
+- `phases/phase-4-bidirectional/` — FUTURA: Comunicación web ↔ juego
+- `phases/phase-5-publish/` — FUTURA: Publicación en npm
+
+---
+
+## 🧩 Components (demo R3F)
+
+Documentación por componente. **Una página por componente.**
+
+- [`components/README.md`](components/README.md) — Lista de componentes
+- [`components/_template.md`](components/_template.md) — Template para nuevos
+
+---
+
+## 📋 Decisions (ADRs ligeros)
+
+Decisiones arquitectónicas registradas.
+
+- [`decisions/README.md`](decisions/README.md) — Índice de ADRs
+- [`decisions/0001-zustand-for-state.md`](decisions/0001-zustand-for-state.md)
+- [`decisions/0002-useframe-for-loop.md`](decisions/0002-useframe-for-loop.md)
+- [`decisions/0003-monorepo-with-demo.md`](decisions/0003-monorepo-with-demo.md)
+- [`decisions/0004-modular-docs-strategy.md`](decisions/0004-modular-docs-strategy.md)
+
+---
+
+## 📚 Otros
+
+- [`ROADMAP_FRAMEWORK_AGNOSTIC_REFACTORING.md`](ROADMAP_FRAMEWORK_AGNOSTIC_REFACTORING.md) — Plan high-level de 5 fases
+- [`LIBRARY_API_CONTRACT_V1.md`](LIBRARY_API_CONTRACT_V1.md) — Contrato v1 de API pública
+- [`LIBRARY_CONSUMPTION_GUIDE.md`](LIBRARY_CONSUMPTION_GUIDE.md) — Cómo consumir la librería
+- [`_archive/`](_archive/) — Documentos reemplazados (referencia histórica)
+
+---
+
+## Para subagentes
+
+Si vas a ejecutar una tarea específica:
+
+1. Lee **solo** el archivo de la tarea: `docs/phases/<fase>/tasks/NN-*.md`
+2. Si necesitas contexto, lee el archivo de arquitectura referenciado en la tarea
+3. **No leas todos los docs**: cada tarea es autocontenida
+
+Si vas a crear un nuevo plan:
+
+1. Lee `docs/workflow/how-to-create-plan.md`
+2. Sigue el template
