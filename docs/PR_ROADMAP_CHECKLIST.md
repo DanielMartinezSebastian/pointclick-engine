@@ -128,11 +128,11 @@ Problema detectado:
 
 Plan recomendado para continuar:
 
-- [ ] Revisar diff de cambios locales y separar por alcance (documentacion vs codigo).
-- [ ] Crear commit 1 solo documental: `README.md`, `docs/LIBRARY_CONSUMPTION_GUIDE.md`, `docs/LIBRARY_API_CONTRACT_V1.md`, y este roadmap.
-- [ ] Ejecutar `npm run lint`, `npm run test`, `npm run build` antes del commit de codigo (si aplica).
-- [ ] Crear commit 2 tecnico para cambios de `publicApi`/`platform-web` solo si se confirma que forman parte del alcance actual.
-- [ ] Actualizar `docs/ARCHITECTURE_REVIEW.md` con enlace a la guia de consumo cuando se publique el commit documental.
+- [x] Revisar diff de cambios locales y separar por alcance (documentacion vs codigo).
+- [x] Crear commit 1 solo documental: `README.md`, `docs/LIBRARY_CONSUMPTION_GUIDE.md`, `docs/LIBRARY_API_CONTRACT_V1.md`, y este roadmap.
+- [x] Ejecutar `npm run lint`, `npm run test`, `npm run build` antes del commit de codigo (si aplica).
+- [x] Crear commit 2 tecnico para cambios de `publicApi`/`platform-web` solo si se confirma que forman parte del alcance actual.
+- [x] Actualizar `docs/ARCHITECTURE_REVIEW.md` con enlace a la guia de consumo cuando se publique el commit documental.
 
 ## Plan de ejecucion detallado (4 semanas)
 
@@ -241,3 +241,4 @@ Antes de cerrar cada semana:
 - 2026-05-23: Se completa wiring del demo a `GameViewport`, se incorporan `useGameState`/`useGameActions`, se agrega `GameViewport` funcional y se amplian tests de contrato de API publica.
 - 2026-05-23: Se introduce `TimerPort` en `platform-web` y se migra uso de timers en runtime/debug a `browserTimerAdapter`; validacion global (`lint`, `test`, `build`) en verde.
 - 2026-05-23: Se incorpora `EnvironmentPort` en `platform-web` y se migra uso de `matchMedia`, RAF, listeners globales e inyeccion de estilo en runtime/UI; se cierra el check final de convergencia web para library-first.
+- 2026-05-23: Se completa el plan de ejecucion de cierre (separacion documental/tecnica), con commits `3011763` (docs) y `44817fd` (codigo), validaciones globales en verde y push a `origin/main`.
