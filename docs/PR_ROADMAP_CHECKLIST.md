@@ -4,6 +4,11 @@ Este documento lista unicamente el trabajo pendiente para cerrar los hallazgos d
 
 Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 
+Documentacion de consumo de libreria:
+
+- Guia de consumo: [LIBRARY_CONSUMPTION_GUIDE.md](./LIBRARY_CONSUMPTION_GUIDE.md)
+- Contrato API v1: [LIBRARY_API_CONTRACT_V1.md](./LIBRARY_API_CONTRACT_V1.md)
+
 ## Estado actual
 
 - Fase 1, 2 y 3: completadas.
@@ -109,6 +114,25 @@ Detalle de cierre:
 - Se incorpora `EnvironmentPort` en `platform-web` para `matchMedia`, RAF, listeners globales y style tag injection.
 - Runtime/UI migrados a adapters de interoperabilidad (`env` y `timer`) en los puntos objetivo.
 - Validacion global completada en verde (`lint`, `test`, `build`).
+
+## Siguientes pasos (ejecucion)
+
+Objetivo inmediato:
+
+- Consolidar y publicar la documentacion de consumo como fuente oficial para integradores.
+
+Problema detectado:
+
+- Existen cambios locales sin commit mezclados entre documentacion y codigo (`README.md`, `app/lib/engine/publicApi.ts`, `app/lib/engine/publicApi.test.ts`, `app/lib/platform-web.ts`, `app/lib/platform-web.test.ts`), mas dos nuevos docs sin trackear.
+- Riesgo: mezclar en un mismo commit cambios de naturaleza distinta y perder trazabilidad de release.
+
+Plan recomendado para continuar:
+
+- [ ] Revisar diff de cambios locales y separar por alcance (documentacion vs codigo).
+- [ ] Crear commit 1 solo documental: `README.md`, `docs/LIBRARY_CONSUMPTION_GUIDE.md`, `docs/LIBRARY_API_CONTRACT_V1.md`, y este roadmap.
+- [ ] Ejecutar `npm run lint`, `npm run test`, `npm run build` antes del commit de codigo (si aplica).
+- [ ] Crear commit 2 tecnico para cambios de `publicApi`/`platform-web` solo si se confirma que forman parte del alcance actual.
+- [ ] Actualizar `docs/ARCHITECTURE_REVIEW.md` con enlace a la guia de consumo cuando se publique el commit documental.
 
 ## Plan de ejecucion detallado (4 semanas)
 

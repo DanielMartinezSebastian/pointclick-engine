@@ -155,3 +155,8 @@ npm run start
 ```
 
 Puedes desplegar en cualquier entorno compatible con Next.js (por ejemplo Vercel).
+
+## Documentacion de libreria
+
+- Guia de consumo: [docs/LIBRARY_CONSUMPTION_GUIDE.md](docs/LIBRARY_CONSUMPTION_GUIDE.md)
+- Contrato de API v1: [docs/LIBRARY_API_CONTRACT_V1.md](docs/LIBRARY_API_CONTRACT_V1.md)

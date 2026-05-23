@@ -6,6 +6,8 @@ Status: Draft for team review
 Execution tracking:
 
 - PR roadmap checklist: [PR_ROADMAP_CHECKLIST.md](./PR_ROADMAP_CHECKLIST.md)
+- Library consumption guide: [LIBRARY_CONSUMPTION_GUIDE.md](./LIBRARY_CONSUMPTION_GUIDE.md)
+- Library API contract v1: [LIBRARY_API_CONTRACT_V1.md](./LIBRARY_API_CONTRACT_V1.md)
 
 ## 1. Goal and product direction
 
