@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 
-import { SCENES } from "../../demo/content/scenes";
+import { DEFAULT_SCENE_ID, SCENES } from "../../demo/content/scenes";
 import {
+  GameViewport,
   createGameRuntime,
   getGameActions,
   getGameState,
   registerItem,
   registerRule,
   registerScene,
+  useGameActions,
+  useGameState,
   type GameItemConfig,
   type GameRuleConfig,
   type GameSceneConfig,
@@ -88,5 +93,47 @@ describe("publicApi", () => {
     actions.setScene(sceneIds[0]);
     const afterSetScene = getGameState();
     expect(afterSetScene.sceneId).toBe(sceneIds[0]);
+  });
+
+  it("useGameState aplica selector sobre estado publico", () => {
+    const expectedSceneId = DEFAULT_SCENE_ID;
+
+    let selectedSceneId = "";
+
+    function Probe() {
+      selectedSceneId = useGameState((state) => state.sceneId);
+      return null;
+    }
+
+    renderToString(createElement(Probe));
+    expect(selectedSceneId).toBe(expectedSceneId);
+  });
+
+  it("useGameActions expone acciones equivalentes al runtime", () => {
+    const runtimeActions = getGameActions();
+    let actionsFromHook: ReturnType<typeof useGameActions> | null = null;
+
+    function Probe() {
+      actionsFromHook = useGameActions();
+      return null;
+    }
+
+    renderToString(createElement(Probe));
+
+    expect(actionsFromHook).not.toBeNull();
+    expect(actionsFromHook?.setScene).toBe(runtimeActions.setScene);
+    expect(actionsFromHook?.setPlayerPosition).toBe(runtimeActions.setPlayerPosition);
+    expect(actionsFromHook?.requestRespawn).toBe(runtimeActions.requestRespawn);
+  });
+
+  it("GameViewport reenvia debug y onRuntimeEvent al componente base", () => {
+    const onRuntimeEvent = () => {};
+    const element = GameViewport({
+      debug: true,
+      onRuntimeEvent,
+    });
+
+    expect(element.props.debug).toBe(true);
+    expect(element.props.onRuntimeEvent).toBe(onRuntimeEvent);
   });
 });
