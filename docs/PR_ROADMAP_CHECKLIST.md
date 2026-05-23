@@ -1,6 +1,6 @@
-# PR Roadmap Pendiente
+# PR Roadmap Cerrado
 
-Este documento lista unicamente el trabajo pendiente para cerrar los hallazgos del review de arquitectura.
+Este documento conserva el historial de ejecucion y cierre de los hallazgos del review de arquitectura.
 
 Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 
@@ -10,6 +10,8 @@ Documentacion de consumo de libreria:
 - Contrato API v1: [LIBRARY_API_CONTRACT_V1.md](./LIBRARY_API_CONTRACT_V1.md)
 
 ## Estado actual
+
+- Estado del roadmap: cerrado.
 
 - Fase 1, 2 y 3: completadas.
 - Fase 4 (API publica + platform-web): completada.

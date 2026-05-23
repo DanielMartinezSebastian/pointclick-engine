@@ -1,7 +1,7 @@
 # Architecture Review: r3f Point-and-Click Library Direction
 
 Date: 2026-05-21
-Status: Draft for team review
+Status: Baseline accepted for current library-first milestone (2026-05-23)
 
 Execution tracking:
 

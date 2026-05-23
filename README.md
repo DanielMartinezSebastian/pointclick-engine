@@ -98,31 +98,38 @@ Con debug activo tienes:
   - Seleccionar muro
   - Editar posición, tamaño (`halfSize`) y rotación Y
   - Arrastrar wireframe/handles en viewport
-  - Copiar JSON para persistir en `app/scenes/scenes.ts`
+	- Copiar JSON para persistir en `app/demo/content/scenes.ts`
 - Editor de suelo:
   - Editar `minX`, `maxX`, `minZ`, `maxZ`, `y`
   - Ver ancho/fondo calculados
-  - Copiar JSON para persistir en `app/scenes/scenes.ts`
+	- Copiar JSON para persistir en `app/demo/content/scenes.ts`
 
 ## Estructura del proyecto
 
 ```text
 app/
-	page.tsx                     # entrada principal (renderiza GameTouchCanvas)
+	page.tsx                     # entrada principal (renderiza GameViewport via publicApi)
 	layout.tsx                   # layout global y fuentes
 	globals.css                  # estilos globales
+	lib/
+		engine/publicApi.ts        # frontera publica del engine (runtime/hooks/viewport)
+		platform-web.ts            # adapters web (storage/clipboard/routing/network/timer/env)
 	components/
-		GameTouchCanvas.tsx        # escena principal con físicas + debug/editor
+		GameTouchCanvas.tsx        # runtime/canvas interno consumido por GameViewport
 		GameCanvas.tsx             # canvas alternativo más simple (2D plano)
-		MouseCursor.tsx            # cursor pixel personalizado (desktop)
 		PixelSelect.tsx            # selector visual retro
 		sprite/
 			AnimatedSprite.tsx       # reproducción de atlas por frames
 			clips.ts                 # definición de clips y personajes
+	demo/content/
+		scenes.ts                  # definición fuente de escenas (spawn, suelo, muros)
+		items/index.ts             # definición fuente de ítems
+		dialogs/index.ts           # catálogo fuente de diálogos
 	scenes/
-		scenes.ts                  # definición de escenas (spawn, suelo, muros)
+		scenes.ts                  # compat re-export hacia demo/content
 	store/
-		sceneStore.ts              # estado global de escena con Zustand
+		sceneStore.ts              # estado runtime
+		sceneEditorStore.ts        # estado/editor debug
 
 public/
 	assets/
@@ -135,7 +142,7 @@ public/
 1. Arranca en debug (`/debug` con `NEXT_PUBLIC_ENABLE_DEBUG=true`).
 2. Ajusta muros y/o suelo visualmente.
 3. Usa `Copiar JSON` en el panel correspondiente.
-4. Pega el resultado en la escena de `app/scenes/scenes.ts`.
+4. Pega el resultado en la escena de `app/demo/content/scenes.ts`.
 5. Guarda y valida colisiones en runtime.
 
 ## Notas de implementación
