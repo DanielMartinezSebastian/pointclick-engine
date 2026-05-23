@@ -7,7 +7,7 @@ Referencia: [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md)
 ## Estado actual
 
 - Fase 1, 2 y 3: completadas.
-- Fase 4 (API publica + platform-web): implementada de forma base, pendiente de cierre total.
+- Fase 4 (API publica + platform-web): implementada con cierre funcional mayoritario, pendiente de cierre final.
 - Separacion runtime/editor store: completada.
 
 Estado de cierre real:
@@ -99,10 +99,15 @@ Marcar roadmap como cerrado solo cuando:
 
 Pendientes de cierre library-first (seguimiento activo):
 
-- [ ] Rewire del demo para consumir `app/lib/engine/publicApi.ts` como boundary principal.
-- [ ] Completar API publica con `useGameState(selector)` y `useGameActions()`.
-- [ ] Exponer `GameViewport` funcional (no solo `GameViewportProps`).
+- [x] Rewire del demo para consumir `app/lib/engine/publicApi.ts` como boundary principal.
+- [x] Completar API publica con `useGameState(selector)` y `useGameActions()`.
+- [x] Exponer `GameViewport` funcional (no solo `GameViewportProps`).
 - [ ] Generalizar el uso de `app/lib/platform-web.ts` donde aplique en runtime.
+
+Detalle del pendiente activo:
+
+- Clipboard y timers ya estan en `platform-web` para runtime/debug.
+- Aun quedan APIs web directas en areas de UI que deben evaluarse para decidir si pasan por puertos (p. ej. `matchMedia`, `requestAnimationFrame`, manipulacion de `document` en debug).
 
 ## Plan de ejecucion detallado (4 semanas)
 
@@ -208,3 +213,5 @@ Antes de cerrar cada semana:
 - 2026-05-22: Se implementan PR A, PR B y PR C. Modulos creados: `publicApi.ts`, `platform-web.ts`, `sceneEditorStore.ts`. `sceneStore` reducido a runtime-only. Todos los consumidores actualizados.
 - 2026-05-23: Se cierran validaciones globales (`lint`, `test`, `build`) y se marca roadmap en estado de cierre.
 - 2026-05-23: Se ajusta estado documental. PR A/B/C quedan como implementacion completada, pero el cierre final library-first permanece abierto hasta resolver pendientes de API publica y wiring demo.
+- 2026-05-23: Se completa wiring del demo a `GameViewport`, se incorporan `useGameState`/`useGameActions`, se agrega `GameViewport` funcional y se amplian tests de contrato de API publica.
+- 2026-05-23: Se introduce `TimerPort` en `platform-web` y se migra uso de timers en runtime/debug a `browserTimerAdapter`; validacion global (`lint`, `test`, `build`) en verde.

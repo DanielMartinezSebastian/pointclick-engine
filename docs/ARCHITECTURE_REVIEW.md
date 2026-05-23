@@ -193,10 +193,9 @@ Phase 4 (high)
 
 ## 9. Immediate next tasks
 
-1. Integrate the demo app through `app/lib/engine/publicApi.ts` as the primary boundary (instead of direct internal runtime wiring).
-2. Complete missing public API targets: `useGameState(selector)`, `useGameActions()`, and a concrete `GameViewport` export.
-3. Route runtime platform capabilities through `platform-web` ports wherever direct web API calls still exist.
-4. Add API-level tests for the public surface (registration, state selectors/actions, viewport integration contract).
+1. Continue platform-web convergence for remaining direct web APIs where it is architecturally justified (e.g. `matchMedia`, `requestAnimationFrame`, selected debug DOM hooks).
+2. Define explicit v1 scope for which web capabilities must be port-driven vs UI-local implementation details.
+3. Add a focused follow-up pass for store/public API ergonomics once the interoperability boundary is fully frozen.
 
 ## 10. Implementation status (2026-05-23)
 
@@ -209,14 +208,14 @@ Completed:
 - Deterministic pathfinding tests added.
 - Runtime/editor store split implemented (`sceneStore` + `sceneEditorStore`).
 - Platform-web module implemented with storage/routing/clipboard/network adapters.
-- Public API draft implemented (`createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `GameViewportProps`).
+- Public API implemented with `createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `useGameState`, `useGameActions`, and concrete `GameViewport`.
+- Demo app now wired through public boundary (`app/page.tsx` -> `GameViewport`).
+- API-level tests expanded for registration/state/actions/viewport contract.
+- TimerPort introduced in `platform-web`; runtime/debug timers routed through adapter.
 
 Pending to fully close the library-first direction:
 
-- Demo wiring still needs to consume the public API as first-class boundary.
-- `useGameState` and `useGameActions` are still missing from the public API.
-- `GameViewport` concrete integration export is still missing (only props contract exists).
-- Platform-web consumption should be generalized across runtime where applicable.
+- Platform-web consumption should still be reviewed for remaining direct web APIs that may deserve ports (scope decision pending).
 - This document sections 3-7 should be treated as design intent; section 2 and section 10 are the current source of truth.
 
 ## 11. Review questions
