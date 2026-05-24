@@ -79,17 +79,55 @@ export default function SpeechBubble({
   const [displayedText, setDisplayedText] = useState("");
   const dismissTimerRef = useRef<TimerHandle | null>(null);
 
+  // ── Layout estático: calculado UNA vez por diálogo (dep: normalizedText) ──
+  // wrappedText: el texto con \n explícitos en los saltos de línea.
+  //   - El efecto tipea sobre wrappedText → cada palabra aparece ya en su
+  //     línea final desde el primer carácter. Nunca salta de línea.
+  // bubbleWidth / textMaxWidth fijos desde el inicio → troika nunca
+  //   re-envuelve mientras se tipea, eliminando el baile de palabras.
+  // NOTA: los espacios entre palabras que se convierten en \n tienen la
+  //   misma longitud (1 char) → los índices del tipeo coinciden exactamente.
+  const { bubbleWidth, textMaxWidth, fullBubbleHeight, wrappedText } = useMemo(() => {
+    const fullText = normalizedText.length > 0 ? normalizedText : " ";
+    const totalChars = Math.max(1, fullText.length);
+    const targetCPL = clamp(Math.round(Math.sqrt(totalChars) * 2.4), 18, 36);
+    const paragraphs = fullText.split("\n");
+    const wrappedFull = paragraphs.flatMap((p) =>
+      p.trim().length === 0 ? [""] : wrapParagraphByWords(p, targetCPL),
+    );
+    const longestChars = Math.max(1, ...wrappedFull.map((l) => l.length));
+    const rawTextWidth = clamp(
+      longestChars * AVG_CHAR_WIDTH_WORLD,
+      MIN_BUBBLE_WIDTH - TEXT_PADDING_X * 2,
+      MAX_BUBBLE_WIDTH - TEXT_PADDING_X * 2,
+    );
+    const bw = clamp(rawTextWidth + TEXT_PADDING_X * 2, MIN_BUBBLE_WIDTH, MAX_BUBBLE_WIDTH);
+    const fullLineCount = Math.max(1, wrappedFull.length);
+    const fbh = clamp(
+      fullLineCount * FONT_SIZE * LINE_HEIGHT + TEXT_PADDING_Y * 2,
+      MIN_BUBBLE_HEIGHT,
+      MAX_BUBBLE_HEIGHT,
+    );
+    return {
+      bubbleWidth: bw,
+      textMaxWidth: bw - TEXT_PADDING_X * 2,
+      fullBubbleHeight: fbh,
+      wrappedText: wrappedFull.join("\n"),
+    };
+  }, [normalizedText]);
+
+  // ── Efecto de tipeo ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!visible || normalizedText.length === 0) return;
+    if (!visible || wrappedText.length === 0) return;
 
     let index = 0;
     const msPerChar = Math.max(14, Math.floor(1000 / Math.max(1, charsPerSecond)));
 
     const timer = browserTimerAdapter.setInterval(() => {
       index += 1;
-      setDisplayedText(normalizedText.slice(0, index));
+      setDisplayedText(wrappedText.slice(0, index));
 
-      if (index >= normalizedText.length) {
+      if (index >= wrappedText.length) {
         browserTimerAdapter.clearInterval(timer);
 
         if (onDismiss) {
@@ -107,7 +145,7 @@ export default function SpeechBubble({
         dismissTimerRef.current = null;
       }
     };
-  }, [charsPerSecond, normalizedText, onDismiss, trigger, visible]);
+  }, [charsPerSecond, wrappedText, normalizedText, onDismiss, trigger, visible]);
 
   const shouldShowLeft = useMemo(() => {
     const worldEdgePadding = 0.9;
@@ -124,35 +162,11 @@ export default function SpeechBubble({
     return lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
   }, [depthFactor]);
 
-  const bubbleLayout = useMemo(() => {
-    const layoutText = displayedText.length > 0 ? displayedText : " ";
-    const paragraphs = layoutText.split("\n");
-    const totalChars = Math.max(1, layoutText.length);
-    const targetCharsPerLine = clamp(Math.round(Math.sqrt(totalChars) * 2.4), 18, 36);
-
-    const wrappedLines = paragraphs.flatMap((paragraph) =>
-      paragraph.trim().length === 0 ? [""] : wrapParagraphByWords(paragraph, targetCharsPerLine),
-    );
-
-    const longestLineChars = Math.max(1, ...wrappedLines.map((line) => line.length));
-    const lineCount = Math.max(1, wrappedLines.length);
-
-    const textWidth = clamp(
-      longestLineChars * AVG_CHAR_WIDTH_WORLD,
-      MIN_BUBBLE_WIDTH - (TEXT_PADDING_X * 2),
-      MAX_BUBBLE_WIDTH - (TEXT_PADDING_X * 2),
-    );
-    const bubbleWidth = clamp(textWidth + (TEXT_PADDING_X * 2), MIN_BUBBLE_WIDTH, MAX_BUBBLE_WIDTH);
-
-    const lineHeightWorld = FONT_SIZE * LINE_HEIGHT;
-    const textHeight = lineCount * lineHeightWorld;
-    const bubbleHeight = clamp(textHeight + (TEXT_PADDING_Y * 2), MIN_BUBBLE_HEIGHT, MAX_BUBBLE_HEIGHT);
-
-    return {
-      bubbleWidth,
-      bubbleHeight,
-      textMaxWidth: bubbleWidth - (TEXT_PADDING_X * 2),
-    };
+  // ── Alto dinámico: displayedText ya tiene \n → solo contar líneas ─────────
+  const bubbleHeight = useMemo(() => {
+    const lineCount = Math.max(1, displayedText.split("\n").length);
+    const textHeight = lineCount * FONT_SIZE * LINE_HEIGHT;
+    return clamp(textHeight + TEXT_PADDING_Y * 2, MIN_BUBBLE_HEIGHT, MAX_BUBBLE_HEIGHT);
   }, [displayedText]);
 
   if (!visible || normalizedText.length === 0) {
@@ -162,19 +176,22 @@ export default function SpeechBubble({
   const spriteHalfWidthWorld = Math.max(SPRITE_HALF_WIDTH_WORLD, spriteScale * SPRITE_HALF_WIDTH_FACTOR);
   const sideOffset = spriteHalfWidthWorld + BUBBLE_GAP_WORLD;
   const offsetX = shouldShowLeft ? -sideOffset : sideOffset;
+  // offsetY = borde SUPERIOR del bocadillo. Crece hacia abajo desde aquí.
   const offsetY = (2 * spriteScale) + SPRITE_CENTER_Y_OFFSET + BUBBLE_HEADROOM;
   const bubbleCenterX = shouldShowLeft
-    ? offsetX - bubbleLayout.bubbleWidth / 2
-    : offsetX + bubbleLayout.bubbleWidth / 2;
+    ? offsetX - bubbleWidth / 2
+    : offsetX + bubbleWidth / 2;
   const arrowBaseX = shouldShowLeft ? offsetX + 0.07 : offsetX - 0.07;
   const arrowRotationZ = shouldShowLeft ? -Math.PI / 2 : Math.PI / 2;
 
   return (
+    // Grupo anclado al borde superior del bocadillo
     <group position={[0, offsetY, 0]}>
-      <group position={[bubbleCenterX, 0, 0.03]}>
+      {/* Bocadillo: centro en -bubbleHeight/2 → parte superior fija en Y=0 */}
+      <group position={[bubbleCenterX, -bubbleHeight / 2, 0.03]}>
         <RoundedBox
           args={[1, 1, 0.02]}
-          scale={[bubbleLayout.bubbleWidth + BORDER_PADDING, bubbleLayout.bubbleHeight + BORDER_PADDING, 1]}
+          scale={[bubbleWidth + BORDER_PADDING, bubbleHeight + BORDER_PADDING, 1]}
           radius={0.14}
           smoothness={4}
           position={[0, 0, -0.003]}
@@ -183,19 +200,21 @@ export default function SpeechBubble({
         </RoundedBox>
         <RoundedBox
           args={[1, 1, 0.018]}
-          scale={[bubbleLayout.bubbleWidth, bubbleLayout.bubbleHeight, 1]}
+          scale={[bubbleWidth, bubbleHeight, 1]}
           radius={0.12}
           smoothness={4}
           position={[0, 0, 0]}
         >
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </RoundedBox>
+        {/* maxWidth muy grande → troika nunca rompe líneas por su cuenta;
+            solo respeta nuestros \n explícitos en displayedText */}
         <Text
-          position={[-(bubbleLayout.bubbleWidth / 2) + TEXT_PADDING_X, 0, 0.012]}
+          position={[-(bubbleWidth / 2) + TEXT_PADDING_X, 0, 0.012]}
           color="#121212"
           anchorX="left"
           anchorY="middle"
-          maxWidth={bubbleLayout.textMaxWidth}
+          maxWidth={MAX_BUBBLE_WIDTH * 4}
           lineHeight={LINE_HEIGHT}
           fontSize={FONT_SIZE}
           textAlign="left"
@@ -206,11 +225,13 @@ export default function SpeechBubble({
         </Text>
       </group>
 
-      <mesh position={[arrowBaseX, 0, 0.027]} rotation={[0, 0, arrowRotationZ]}>
+      {/* Rabillo: 30% desde el borde superior del bocadillo completo —
+           fijo durante el tipeo, entre el borde superior y el centro */}
+      <mesh position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.027]} rotation={[0, 0, arrowRotationZ]}>
         <coneGeometry args={[0.16, 0.27, 3]} />
         <meshBasicMaterial color="#ffffff" toneMapped={false} />
       </mesh>
-      <mesh position={[arrowBaseX, 0, 0.028]} rotation={[0, 0, arrowRotationZ]}>
+      <mesh position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.028]} rotation={[0, 0, arrowRotationZ]}>
         <coneGeometry args={[0.13, 0.22, 3]} />
         <meshBasicMaterial color="#ffffff" toneMapped={false} />
       </mesh>
