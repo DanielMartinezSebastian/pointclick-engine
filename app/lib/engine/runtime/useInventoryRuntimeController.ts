@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
-import { browserTimerAdapter } from "../../platform-web";
+import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../demo/content/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 import {
@@ -377,14 +377,26 @@ export function useInventoryRuntimeController({
   useEffect(() => {
     if (sceneId !== "personalRoom") return;
 
-    const timeoutId = browserTimerAdapter.setTimeout(() => {
-      showSpeechBubble(getRandomPhrase("personalRoomWelcome"), {
-        dialogKey: "personalRoomWelcome",
+    // Double-rAF: el speech inicial dispara DESPUÉS de que R3F haya corrido
+    // al menos un useFrame. setTimeout(0) se ejecutaba antes del primer
+    // requestAnimationFrame, dejando el sprite en SPRITE_MIN_SCALE sin que
+    // useFrame hubiera corregido aún la escala por profundidad.
+    let outerHandle: number | null = null;
+    let innerHandle: number | null = null;
+
+    outerHandle = browserEnvironmentAdapter.requestAnimationFrame(() => {
+      outerHandle = null;
+      innerHandle = browserEnvironmentAdapter.requestAnimationFrame(() => {
+        innerHandle = null;
+        showSpeechBubble(getRandomPhrase("personalRoomWelcome"), {
+          dialogKey: "personalRoomWelcome",
+        });
       });
-    }, 0);
+    });
 
     return () => {
-      browserTimerAdapter.clearTimeout(timeoutId);
+      if (outerHandle !== null) browserEnvironmentAdapter.cancelAnimationFrame(outerHandle);
+      if (innerHandle !== null) browserEnvironmentAdapter.cancelAnimationFrame(innerHandle);
     };
   }, [sceneId, showSpeechBubble]);
 
