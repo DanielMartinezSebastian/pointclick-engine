@@ -40,16 +40,7 @@ export function PixelLoader({ ready }: PixelLoaderProps) {
       : "none";
 
   return (
-    <>
-      {/* Keyframes inyectados una sola vez junto al componente */}
-      <style>{`
-        @keyframes px-dot1 { 0%,74%,100% { opacity:1 } 75%,99% { opacity:0 } }
-        @keyframes px-dot2 { 0%,49%,100% { opacity:0 } 50%,74% { opacity:1 } }
-        @keyframes px-dot3 { 0%,24%,100% { opacity:0 } 25%,49% { opacity:1 } }
-        @keyframes px-glow { 0%,100% { opacity:0.4 } 50% { opacity:0.8 } }
-      `}</style>
-
-      <div
+    <div
         aria-label="Cargando…"
         style={{
           position: "fixed",
@@ -145,9 +136,9 @@ export function PixelLoader({ ready }: PixelLoaderProps) {
             {ready ? "LISTO" : (
               <>
                 CARGANDO
-                <span style={{ display: "inline-block", width: "1ch", animation: "px-dot1 1.2s infinite" }}>.</span>
-                <span style={{ display: "inline-block", width: "1ch", animation: "px-dot2 1.2s infinite" }}>.</span>
-                <span style={{ display: "inline-block", width: "1ch", animation: "px-dot3 1.2s infinite" }}>.</span>
+                <span className="px-dot1">.</span>
+                <span className="px-dot2">.</span>
+                <span className="px-dot3">.</span>
               </>
             )}
           </p>
@@ -162,15 +153,13 @@ export function PixelLoader({ ready }: PixelLoaderProps) {
         }} />
 
         {/* ── Glow ambiental animado ───────────────────────────────── */}
-        <div style={{
+        <div className="px-glow" style={{
           position: "absolute",
           inset: 0,
           background: "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(132,230,255,0.04) 0%, transparent 70%)",
-          animation: "px-glow 3s ease-in-out infinite",
           pointerEvents: "none",
         }} />
 
       </div>
-    </>
   );
 }
