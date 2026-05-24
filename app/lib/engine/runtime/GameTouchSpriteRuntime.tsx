@@ -344,7 +344,7 @@ export function GameTouchSpriteRuntime({
     [activeCharacter],
   );
   const characterAnimations = useMemo(
-    () => Object.values(characterClips),
+    () => [...Object.values(characterClips), DAVE_IDLE_SPEAKING],
     [characterClips],
   );
   const activeAnimation = useMemo(
