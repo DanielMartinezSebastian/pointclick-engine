@@ -8,6 +8,7 @@ import { MathUtils, Mesh, Vector2 } from "three";
 import SpeechBubble from "../render/SpeechBubble";
 import DavidSprite, { type DavidSpriteHandle } from "../render/sprite/DavidSprite";
 import {
+  DAVE_IDLE_SPEAKING,
   GAME_CHARACTER_SPRITES,
   type GameCharacterName,
   type GameDirection,
@@ -346,6 +347,10 @@ export function GameTouchSpriteRuntime({
     () => Object.values(characterClips),
     [characterClips],
   );
+  const activeAnimation = useMemo(
+    () => (speechVisible && action === "idle" ? DAVE_IDLE_SPEAKING : characterClips[action]),
+    [speechVisible, action, characterClips],
+  );
 
   useEffect(() => {
     const body = characterBodyRef.current;
@@ -635,7 +640,7 @@ export function GameTouchSpriteRuntime({
         <DavidSprite
           ref={spriteRef}
           meshRef={meshRef}
-          animation={characterClips[action]}
+          animation={activeAnimation}
           preloadAnimations={characterAnimations}
           scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
           isPaused={false}

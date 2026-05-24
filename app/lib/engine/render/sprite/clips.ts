@@ -55,6 +55,12 @@ const DAVE_CHARACTER_SPRITES: CharacterSprites = {
   },
 };
 
+export const DAVE_IDLE_SPEAKING: SpriteAnimation = {
+  frames: createFrameUrls("david_speaking", 8),
+  fps: 8,
+  loop: true,
+};
+
 export const GAME_CHARACTERS = [
   { name: "Dave", column: 0, row: 0 },
 ] as const satisfies ReadonlyArray<CharacterGridPosition>;
