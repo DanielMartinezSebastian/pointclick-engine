@@ -207,14 +207,16 @@ export default function SpeechBubble({
         >
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
         </RoundedBox>
-        {/* maxWidth muy grande → troika nunca rompe líneas por su cuenta;
-            solo respeta nuestros \n explícitos en displayedText */}
+        {/* maxWidth = textMaxWidth → padding simétrico izquierda/derecha.
+            Las líneas ya vienen pre-envueltas con \n explícitos, así que
+            troika no necesita re-envolver; el valor actúa solo como límite
+            de borde derecho para igualar el padding izquierdo. */}
         <Text
           position={[-(bubbleWidth / 2) + TEXT_PADDING_X, 0, 0.012]}
           color="#121212"
           anchorX="left"
           anchorY="middle"
-          maxWidth={MAX_BUBBLE_WIDTH * 4}
+          maxWidth={textMaxWidth}
           lineHeight={LINE_HEIGHT}
           fontSize={FONT_SIZE}
           textAlign="left"
