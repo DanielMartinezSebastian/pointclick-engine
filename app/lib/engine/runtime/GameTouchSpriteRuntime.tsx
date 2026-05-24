@@ -13,6 +13,7 @@ import {
   type GameCharacterName,
   type GameDirection,
 } from "../render/sprite/clips";
+import { buildSpeakingAnimation } from "../render/sprite/speakingAnimation";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "../../../store/sceneStore";
@@ -348,8 +349,11 @@ export function GameTouchSpriteRuntime({
     [characterClips],
   );
   const activeAnimation = useMemo(
-    () => (speechVisible && action === "idle" ? DAVE_IDLE_SPEAKING : characterClips[action]),
-    [speechVisible, action, characterClips],
+    () =>
+      speechVisible && action === "idle"
+        ? buildSpeakingAnimation(speechTrigger, speechCharsPerSecond)
+        : characterClips[action],
+    [speechVisible, action, characterClips, speechTrigger, speechCharsPerSecond],
   );
 
   useEffect(() => {
