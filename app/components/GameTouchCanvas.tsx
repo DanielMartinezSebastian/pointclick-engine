@@ -1,9 +1,11 @@
 "use client";
 
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
+
+import { PixelLoader } from "./PixelLoader";
 
 import {
   type GameCharacterName,
@@ -34,11 +36,25 @@ type GameTouchCanvasProps = {
   onRuntimeEvent?: (event: RuntimeEvent) => void;
 };
 
+/**
+ * Se monta dentro del Suspense del runtime — cuando este componente llega al
+ * DOM significa que useLoader ha resuelto todos los assets del personaje.
+ * Llama onReady una sola vez para señalizar al PixelLoader.
+ */
+function SceneReadyReporter({ onReady }: { onReady: () => void }) {
+  const onReadyRef = useRef(onReady);
+  useEffect(() => { onReadyRef.current(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
 export default function GameTouchCanvas({
   debug: debugOverride,
   onRuntimeEvent,
 }: GameTouchCanvasProps = {}) {
   const selectedCharacter: GameCharacterName = "Dave";
+  const [sceneReady, setSceneReady] = useState(false);
+  const handleSceneReady = useCallback(() => setSceneReady(true), []);
+
   const { isDebug } = useDebugModeEffects();
   const runtimeDebug = typeof debugOverride === "boolean" ? debugOverride : isDebug;
 
@@ -122,6 +138,8 @@ export default function GameTouchCanvas({
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
 
+      <PixelLoader ready={sceneReady} />
+
       <Canvas
         gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
         onPointerDownCapture={() => setIsInventoryOpen(false)}
@@ -165,6 +183,7 @@ export default function GameTouchCanvas({
               onSpeechDismiss={hideSpeechBubble}
               onRuntimeEvent={handleRuntimeEvent}
             />
+            <SceneReadyReporter onReady={handleSceneReady} />
           </Suspense>
           <SceneDropTargets
             targets={sceneInteractions}
