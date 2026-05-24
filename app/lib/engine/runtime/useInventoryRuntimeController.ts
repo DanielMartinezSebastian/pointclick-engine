@@ -6,6 +6,7 @@ import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../demo/content/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
+import { useProximityHintController } from "./useProximityHintController";
 import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
@@ -374,6 +375,36 @@ export function useInventoryRuntimeController({
     [inventorySlots],
   );
 
+  const handleInteractionInspect = useCallback(
+    (interaction: SceneInteraction) => {
+      if (!interaction.hintDialogKeys) return;
+
+      // Si hay un ítem colocado que puede recogerse, no disparamos el hint:
+      // el click será gestionado por el sistema de pickup, no por el de pistas.
+      const hasPickableItem = placedItems.some(
+        (item) => item.interactionId === interaction.id && item.canPickup,
+      );
+      if (hasPickableItem) return;
+
+      const isOccupied = placedItems.some(
+        (item) => item.interactionId === interaction.id,
+      );
+      const dialogKey = isOccupied
+        ? interaction.hintDialogKeys.occupied
+        : interaction.hintDialogKeys.empty;
+
+      showSpeechBubble(getRandomPhrase(dialogKey), { dialogKey });
+    },
+    [placedItems, showSpeechBubble],
+  );
+
+  useProximityHintController({
+    playerPosition,
+    interactions: sceneInteractions,
+    placedItems,
+    showSpeechBubble,
+  });
+
   useEffect(() => {
     if (sceneId !== "personalRoom") return;
 
@@ -412,6 +443,7 @@ export function useInventoryRuntimeController({
     handleBoundaryHit,
     showSpeechBubble,
     hideSpeechBubble,
+    handleInteractionInspect,
     handleInventoryDropHit,
     handleInventoryDropMiss,
     handleInventoryDropOnPlayer,

@@ -107,6 +107,7 @@ export default function GameTouchCanvas({
     handleBoundaryHit,
     showSpeechBubble,
     hideSpeechBubble,
+    handleInteractionInspect,
     handleInventoryDropHit,
     handleInventoryDropMiss,
     handleInventoryDropOnPlayer,
@@ -190,6 +191,7 @@ export default function GameTouchCanvas({
             draggedStack={draggedStack ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex } : null}
             onDropHit={handleInventoryDropHit}
             onDropMiss={handleInventoryDropMiss}
+            onInspect={handleInteractionInspect}
             playerDropTarget={{
               position: playerPosition,
               onDrop: handleInventoryDropOnPlayer,

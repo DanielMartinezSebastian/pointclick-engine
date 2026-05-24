@@ -17,6 +17,7 @@ type SceneDropTargetsProps = {
   draggedStack: DraggedInventoryPayload | null;
   onDropHit: (interaction: SceneInteraction, payload: DraggedInventoryPayload) => void;
   onDropMiss: (payload: DraggedInventoryPayload, interaction?: SceneInteraction) => void;
+  onInspect?: (interaction: SceneInteraction) => void;
   playerDropTarget?: {
     position: [number, number, number];
     onDrop: (payload: DraggedInventoryPayload) => void;
@@ -28,12 +29,14 @@ function SceneDropTarget({
   draggedStack,
   onDropHit,
   onDropMiss,
+  onInspect,
   markDropHandled,
 }: {
   interaction: SceneInteraction;
   draggedStack: DraggedInventoryPayload | null;
   onDropHit: (interaction: SceneInteraction, payload: DraggedInventoryPayload) => void;
   onDropMiss: (payload: DraggedInventoryPayload, interaction?: SceneInteraction) => void;
+  onInspect?: (interaction: SceneInteraction) => void;
   markDropHandled: () => void;
 }) {
   const acceptsDraggedItem =
@@ -51,7 +54,12 @@ function SceneDropTarget({
         position={[0, 0, 0]}
         onPointerUp={(event) => {
           event.stopPropagation();
-          if (!draggedStack) return;
+
+          if (!draggedStack) {
+            // Click sin arrastre: mostrar diálogo de inspección / pista
+            onInspect?.(interaction);
+            return;
+          }
 
           markDropHandled();
           if (!acceptsDraggedItem) {
@@ -84,6 +92,7 @@ export function SceneDropTargets({
   draggedStack,
   onDropHit,
   onDropMiss,
+  onInspect,
   playerDropTarget,
 }: SceneDropTargetsProps) {
   const dropHandledRef = useRef(false);
@@ -120,6 +129,7 @@ export function SceneDropTargets({
           draggedStack={draggedStack}
           onDropHit={onDropHit}
           onDropMiss={onDropMiss}
+          onInspect={onInspect}
           markDropHandled={() => {
             dropHandledRef.current = true;
           }}

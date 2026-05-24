@@ -13,6 +13,13 @@ export type SceneInteractionDialogKeys = {
   miss: DialogKey;
 };
 
+export type SceneInteractionHintDialogKeys = {
+  /** Dialog cuando el personaje se acerca o inspecciona el target vacío (sin ítem colocado). */
+  empty: DialogKey;
+  /** Dialog cuando el personaje se acerca o inspecciona el target con un ítem colocado. */
+  occupied: DialogKey;
+};
+
 export type SceneInteraction = {
   id: string;
   kind: "drop-target";
@@ -27,6 +34,12 @@ export type SceneInteraction = {
   /** Item ids accepted by this interaction. If omitted, any item can be accepted. */
   acceptsItemIds?: string[];
   dialogKeys: SceneInteractionDialogKeys;
+  /**
+   * Diálogos de pista por proximidad/inspección.
+   * Si está presente se muestran cuando el personaje se acerca mucho
+   * o hace click sobre el target sin arrastrar un ítem.
+   */
+  hintDialogKeys?: SceneInteractionHintDialogKeys;
   label: string;
 };
 
@@ -242,6 +255,10 @@ export const SCENES: Record<string, Scene> = {
         dialogKeys: {
           hit: "inventoryDropHit",
           miss: "inventoryDropMiss",
+        },
+        hintDialogKeys: {
+          empty: "interaction.gameboy-base.empty",
+          occupied: "interaction.gameboy-base.occupied",
         },
       },
     ],

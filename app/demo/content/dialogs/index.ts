@@ -77,6 +77,25 @@ export const dialogs: DialogLocales = {
         "Mi Gameboy: portátil, retro y perfecta para perder la tarde en pixel-art.",
       ],
     },
+    "interaction.gameboy-base.empty": {
+      phrases: [
+        "Aquí falta algo. Un hueco con forma de nostalgia.",
+        "Este soporte parece vacío... como mi agenda.",
+        "Hmm, aquí debería haber algo. Lo noto en los píxeles.",
+        "El soporte está solo. Igual que yo los domingos.",
+        "Hay algo que encajaría perfectamente aquí.",
+        "El soporte espera pacientemente. Tiene más paciencia que yo.",
+      ],
+    },
+    "interaction.gameboy-base.occupied": {
+      phrases: [
+        "La Gameboy descansa en su soporte. Como debe ser.",
+        "Ahí está, bien colocada. El orden tiene su magia.",
+        "La Gameboy en reposo. Lista para la próxima partida.",
+        "Perfectamente colocada. Casi da pena moverla.",
+        "Mira eso. Todo en su sitio. No suele pasar.",
+      ],
+    },
   },
   en: {
     boundaryHit: {
@@ -152,6 +171,25 @@ export const dialogs: DialogLocales = {
       phrases: [
         "A classic Gameboy. Monochrome screen, instant nostalgia, and batteries that fade faster than you remember.",
         "My Gameboy: portable, retro, and perfect for a pixel-art afternoon.",
+      ],
+    },
+    "interaction.gameboy-base.empty": {
+      phrases: [
+        "Something is missing here. A gap shaped like nostalgia.",
+        "This stand looks empty... like my schedule.",
+        "Hmm, something should go here. I can feel it in the pixels.",
+        "The stand is lonely. Just like me on Sundays.",
+        "There is something that would fit perfectly here.",
+        "The stand waits patiently. More patience than I have.",
+      ],
+    },
+    "interaction.gameboy-base.occupied": {
+      phrases: [
+        "The Gameboy rests on its stand. As it should.",
+        "There it is, neatly placed. Order has its magic.",
+        "The Gameboy at rest. Ready for the next session.",
+        "Perfectly placed. Almost a shame to move it.",
+        "Look at that. Everything in its place. Doesn't happen often.",
       ],
     },
   },
