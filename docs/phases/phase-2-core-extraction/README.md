@@ -2,9 +2,9 @@
 
 **Objetivo**: Extraer lógica agnóstica a `packages/engine-core/` independiente, sin React/R3F/Next.js.
 **Duración estimada**: 4 semanas
-**Estado**: `in-progress` (Week 2: Next = Task 03)
+**Estado**: ✅ **COMPLETADA**
 **Owner**: Daniel Martínez Sebastián
-**Progress**: ✅ 2/8 tasks completadas | Próximo: engine-core base
+**Progress**: ✅ 8/8 tasks completadas
 
 ## Por qué
 

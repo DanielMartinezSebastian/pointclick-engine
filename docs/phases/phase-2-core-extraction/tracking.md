@@ -2,7 +2,7 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 7/8 tareas ✅
+## Progreso: 8/8 tareas ✅ COMPLETADA
 
 ## Week 1 — Audit + Setup ✅ COMPLETADA
 
@@ -27,7 +27,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 ## Week 4 — Integración + validación
 
 - [x] [07-update-webdemo-imports](tasks/07-update-webdemo-imports.md) — apps/web-demo consume @pointclick/engine-core
-- [ ] [08-validation-gate](tasks/08-validation-gate.md) — checks finales antes de cerrar fase
+- [x] [08-validation-gate](tasks/08-validation-gate.md) — checks finales antes de cerrar fase
 
 ## Notas / Blockers
 
