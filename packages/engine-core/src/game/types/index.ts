@@ -20,6 +20,13 @@ export interface GameSceneWall {
   rotationY: number;
 }
 
+export interface GameSceneInteraction {
+  position: GameVec3;
+  halfSize: GameVec3;
+  rotationY?: number;
+  hasCollision?: boolean;
+}
+
 // Items
 export type PlacedSceneItem = {
   id: string;
