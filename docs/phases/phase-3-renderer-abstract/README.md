@@ -2,9 +2,9 @@
 
 **Objetivo**: Abstraer la implementación R3F detrás de interfaces agnósticas en `engine-core`, y mover el renderer R3F a su propio package `engine-renderer-r3f`.
 **Duración estimada**: 4-5 semanas
-**Estado**: `planning` (Week 1: Next = Task 01)
+**Estado**: `completed` (2026-05-27)
 **Owner**: Daniel Martínez Sebastián
-**Progress**: 0/8 tasks completadas
+**Progress**: 8/8 tasks completadas ✅
 
 ## Por qué
 
