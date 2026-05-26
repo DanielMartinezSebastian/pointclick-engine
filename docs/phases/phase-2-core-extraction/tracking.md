@@ -2,12 +2,17 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 0/8 tareas
+## Progreso: 2/8 tareas ✅
 
-## Week 1 — Audit + Setup
+## Week 1 — Audit + Setup ✅ COMPLETADA
 
-- [ ] [01-audit-core-agnosticism](tasks/01-audit-core-agnosticism.md) — verificar que core no importa React
-- [ ] [02-setup-monorepo](tasks/02-setup-monorepo.md) — workspaces + estructura packages/apps
+- [x] [01-audit-core-agnosticism](tasks/01-audit-core-agnosticism.md) — verificar que core no importa React
+  - ✅ 2 React violations documentadas en `audit-findings.md`
+- [x] [02-setup-monorepo](tasks/02-setup-monorepo.md) — workspaces + estructura packages/apps
+  - ✅ Monorepo operativo con npm workspaces
+  - ✅ Dev server: localhost:3000 (359ms startup)
+  - ✅ Build: Exitoso sin errores
+  - ✅ Última sincronización: origin/main integrada con phase-2
 
 ## Week 2 — Engine-core base
 
