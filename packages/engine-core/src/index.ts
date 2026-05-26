@@ -1,11 +1,4 @@
-// @pointclick/engine-core
-// Framework-agnostic core library for point-and-click games
-//
-// This module will contain:
-// - Game state management
-// - Rules engine
-// - Pathfinding
-// - Scene store
-// - Event system
+export * from "./game/types";
+export { EventBus } from "./events/EventBus";
 
-export const version = "0.1.0";
+export const VERSION = "0.1.0";

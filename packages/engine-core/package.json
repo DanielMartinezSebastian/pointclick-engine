@@ -1,7 +1,7 @@
 {
   "name": "@pointclick/engine-core",
   "version": "0.1.0",
-  "description": "Framework-agnostic core library for point-and-click 2D/2.5D games",
+  "description": "Framework-agnostic core for Point & Click Game Engine",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,7 +17,17 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "build": "tsc"
+    "test:watch": "vitest",
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "keywords": [
     "game",
@@ -26,10 +36,5 @@
     "engine"
   ],
   "author": "Daniel Martínez Sebastián",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/node": "^20",
-    "typescript": "^5",
-    "vitest": "^3.2.4"
-  }
+  "license": "MIT"
 }

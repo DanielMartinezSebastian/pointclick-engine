@@ -16,7 +16,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 ## Week 2 — Engine-core base
 
-- [ ] [03-create-engine-core-base](tasks/03-create-engine-core-base.md) — package.json, tsconfig, types base, EventBus
+- [x] [03-create-engine-core-base](tasks/03-create-engine-core-base.md) — package.json, tsconfig, types base, EventBus
 
 ## Week 3 — Extracción de módulos
 
