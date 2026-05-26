@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
-import { SCENES } from "../../../demo/content/scenes";
+import { SCENES, DEFAULT_SCENE_ID } from "../../../demo/content/scenes";
 import { useSceneStore, type GameScene } from "@pointclick/engine-core";
 
 export function useSceneRuntimeController() {
@@ -34,6 +34,18 @@ export function useSceneRuntimeController() {
     },
     [storeSetScene],
   );
+
+  // Load default scene on mount if the store is empty (engine-core store
+  // is agnostic and starts blank — the demo is responsible for seeding it).
+  useEffect(() => {
+    if (!useSceneStore.getState().sceneId) {
+      const defaultScene = SCENES[DEFAULT_SCENE_ID];
+      if (defaultScene) {
+        storeSetScene(DEFAULT_SCENE_ID, defaultScene as GameScene);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     sceneId,
