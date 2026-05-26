@@ -1,0 +1,52 @@
+{
+  "name": "@pointclick/engine-renderer-r3f",
+  "version": "0.1.0",
+  "description": "R3F (React Three Fiber) renderer for Point & Click Game Engine",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@pointclick/engine-core": "*",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/rapier": "^2.2.0",
+    "three": "^0.184.0",
+    "zustand": "^5.0.13"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.184.1",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "game",
+    "point-and-click",
+    "2d",
+    "engine",
+    "r3f",
+    "react-three-fiber"
+  ],
+  "author": "Daniel Martínez Sebastián",
+  "license": "MIT"
+}

@@ -38,6 +38,7 @@ Cada ADR es **~30 líneas**. Estructura:
 - [0002 — useFrame from R3F for game loop](0002-useframe-for-loop.md)
 - [0003 — Monorepo with demo inside](0003-monorepo-with-demo.md)
 - [0004 — Modular docs strategy (subagent-first)](0004-modular-docs-strategy.md)
+- [0005 — Renderer ports design (GameLoopPort, InputPort, ViewportPort)](0005-renderer-ports-design.md)
 
 ## Cómo añadir un ADR
 

@@ -1,0 +1,1 @@
+{"version":3,"file":"headlessGameLoop.d.ts","sourceRoot":"","sources":["../../src/ports/headlessGameLoop.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,gBAAgB,EAAE,YAAY,EAAE,WAAW,EAAE,MAAM,YAAY,CAAC;AAE9E;;;GAGG;AACH,qBAAa,gBAAiB,YAAW,YAAY;IACnD,OAAO,CAAC,SAAS,CAA+B;IAEhD,SAAS,CAAC,QAAQ,EAAE,gBAAgB,GAAG,WAAW;IAKlD,qEAAqE;IACrE,IAAI,CAAC,YAAY,EAAE,MAAM,GAAG,IAAI;CAGjC"}
