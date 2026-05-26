@@ -17,13 +17,16 @@ import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { GameTouchSpriteRuntime } from "../lib/engine/runtime/GameTouchSpriteRuntime";
+import { GameTouchSpriteRuntime } from "@pointclick/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
-import type { RuntimeEvent } from "../lib/engine/types/runtimeEvents";
+import type { RuntimeEvent } from "@pointclick/engine-core";
+import { useMobileInputStore } from "../store/mobileInputStore";
+import { useSceneEditorStore } from "../store/sceneEditorStore";
+import { getRandomPhrase } from "../demo/content/dialogs/getRandomPhrase";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.
@@ -134,6 +137,11 @@ export default function GameTouchCanvas({
     updateInteraction,
   });
 
+  // DI props for renderer-r3f's GameTouchSpriteRuntime
+  const addWallWithData = useSceneEditorStore((s) => s.addWallWithData);
+  const selectedWallIndex = useSceneEditorStore((s) => s.selectedWallIndex);
+  const onSelectWall = useSceneEditorStore((s) => s.selectWall);
+
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
   return (
@@ -183,6 +191,11 @@ export default function GameTouchCanvas({
               onBoundaryHit={handleBoundaryHit}
               onSpeechDismiss={hideSpeechBubble}
               onRuntimeEvent={handleRuntimeEvent}
+              getMobileInput={useMobileInputStore.getState}
+              addWallWithData={addWallWithData}
+              getPhrase={getRandomPhrase}
+              selectedWallIndex={selectedWallIndex}
+              onSelectWall={onSelectWall}
             />
             <SceneReadyReporter onReady={handleSceneReady} />
           </Suspense>

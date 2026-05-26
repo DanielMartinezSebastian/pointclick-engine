@@ -10,7 +10,7 @@ import { useProximityHintController } from "./useProximityHintController";
 import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
-} from "../types/runtimeEvents";
+} from "@pointclick/engine-core";
 import {
   addOneToInventory,
   inventoryRuleMessages,

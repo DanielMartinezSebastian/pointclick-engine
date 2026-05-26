@@ -21,7 +21,7 @@ import { useSceneEditorStore } from "../../../store/sceneEditorStore";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import { type WallToolMode } from "../types/gameRuntime";
-import { emitRuntimeEvent, type RuntimeEventHandler } from "../types/runtimeEvents";
+import { emitRuntimeEvent, type RuntimeEventHandler } from "@pointclick/engine-core";
 import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
 import { SceneGround } from "../render/scene/SceneGround";
 import { SceneWallPointPreview } from "../render/scene/SceneWallPointPreview";
