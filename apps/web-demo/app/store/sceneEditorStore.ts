@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
-import { useSceneStore } from "./sceneStore";
-import type { SceneWall, Scene } from "../demo/content/scenes";
+import { useSceneStore } from "@pointclick/engine-core";
+import type { GameSceneWall, GameScene } from "@pointclick/engine-core";
 
 /**
  * sceneEditorStore – estado y acciones exclusivos del editor/debug.
@@ -23,12 +23,12 @@ type SceneEditorStore = {
 
   // Mutaciones de muros (delegan a sceneStore)
   addWall: () => void;
-  addWallWithData: (wall: SceneWall) => void;
+  addWallWithData: (wall: GameSceneWall) => void;
   removeSelectedWall: () => void;
-  updateSelectedWall: (updater: (wall: SceneWall) => SceneWall) => void;
+  updateSelectedWall: (updater: (wall: GameSceneWall) => GameSceneWall) => void;
 
   // Mutaciones de suelo (delegan a sceneStore)
-  updateGround: (updater: (ground: Scene["ground"]) => Scene["ground"]) => void;
+  updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
 
   // Sincronización interna
   _syncWallSelection: (wallsLength: number) => void;
@@ -44,7 +44,7 @@ export const useSceneEditorStore = create<SceneEditorStore>()((set, get) => ({
       const groundY = sceneState.scene.ground.y;
       const playerPosition = sceneState.playerPosition;
 
-      const newWall: SceneWall = {
+      const newWall: GameSceneWall = {
         position: [playerPosition[0], groundY + 2, playerPosition[2]],
         halfSize: [2, 2, 0.25],
         rotationY: 0,

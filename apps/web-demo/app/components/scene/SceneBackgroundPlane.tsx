@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { DoubleSide, Mesh, TextureLoader, Vector3 } from "three";
 
-import { useSceneStore } from "../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 
 export function SceneBackgroundPlane({ url }: { url: string | null | undefined }) {
   const [texture, setTexture] = useState<import("three").Texture | null>(null);

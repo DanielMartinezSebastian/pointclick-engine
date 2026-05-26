@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import { useSceneStore } from "../../../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 
 const checkerVertexShader = /* glsl */`
   varying vec2 vUv;

@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { MathUtils, OrthographicCamera as ThreeOrthoCamera } from "three";
 
 import { browserEnvironmentAdapter } from "../../lib/platform-web";
-import { useSceneStore } from "../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 
 export function CameraController() {
   useFrame(({ camera, size }) => {

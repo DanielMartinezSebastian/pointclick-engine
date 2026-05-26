@@ -42,6 +42,43 @@ export type PlacedSceneItem = {
   pickupBlockedDialogKey?: string;
 };
 
+// Dialog key (simple string alias)
+export type DialogKey = string;
+
+// Scene interaction dialog keys
+export interface GameSceneInteractionDialogKeys {
+  hit: DialogKey;
+  miss: DialogKey;
+}
+
+// Scene interaction hint dialog keys
+export interface GameSceneInteractionHintDialogKeys {
+  empty: DialogKey;
+  occupied: DialogKey;
+}
+
+// Enhanced Scene Interaction (with editor fields)
+export interface GameSceneInteractionFull extends GameSceneInteraction {
+  id: string;
+  kind: "drop-target";
+  hasCollision?: boolean;
+  acceptsItemIds?: string[];
+  dialogKeys: GameSceneInteractionDialogKeys;
+  hintDialogKeys?: GameSceneInteractionHintDialogKeys;
+  label: string;
+}
+
+// Scene (full scene with all interactions)
+export interface GameScene {
+  id: string;
+  label: string;
+  background: string;
+  playerSpawn: GameVec3;
+  ground: GameSceneGround;
+  walls: GameSceneWall[];
+  interactions: GameSceneInteractionFull[];
+}
+
 // Editor/Debug modes
 export type WallToolMode = "manual" | "points";
 export type DebugEditorMode = "walls" | "ground" | "items" | "targets";

@@ -1,8 +1,7 @@
 import type {
   GameSceneInteraction,
+  DialogKey,
 } from "../../types";
-
-export type DialogKey = string;
 
 export type ItemDefinition = {
   id: string;

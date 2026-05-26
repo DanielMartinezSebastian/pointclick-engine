@@ -12,45 +12,25 @@ import { useShallow } from "zustand/react/shallow";
 import { createElement } from "react";
 import type { ComponentType } from "react";
 
+import {
+  useSceneStore,
+  type GameVec3,
+  type GameSceneGround,
+  type GameSceneWall,
+  type GameSceneInteractionDialogKeys,
+  type GameSceneInteractionFull,
+} from "@pointclick/engine-core";
 import GameTouchCanvas from "../../components/GameTouchCanvas";
-import { useSceneStore } from "../../store/sceneStore";
 
 // ---------------------------------------------------------------------------
-// Tipos públicos reutilizables
+// Tipos públicos reutilizables (importados o re-exportados de engine-core)
 // ---------------------------------------------------------------------------
 
-export type GameVec3 = [number, number, number];
+// Re-export key types from engine-core for API stability
+export type { GameVec3, GameSceneGround, GameSceneWall } from "@pointclick/engine-core";
 
-export type GameSceneGround = {
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
-  y: number;
-};
-
-export type GameSceneWall = {
-  position: GameVec3;
-  rotationY?: number;
-  halfSize: GameVec3;
-};
-
-export type GameSceneInteractionDialogKeys = {
-  hit: string;
-  miss: string;
-};
-
-export type GameSceneInteraction = {
-  id: string;
-  kind: "drop-target";
-  position: GameVec3;
-  rotationY?: number;
-  halfSize: GameVec3;
-  hasCollision?: boolean;
-  acceptsItemIds?: string[];
-  dialogKeys: GameSceneInteractionDialogKeys;
-  label: string;
-};
+// Alias for public API compatibility
+export type GameSceneInteraction = GameSceneInteractionFull;
 
 /** Configuración de escena registrable via API pública. */
 export type GameSceneConfig = {
@@ -233,7 +213,22 @@ export function getGameState(): GameState {
 export function getGameActions(): GameActions {
   const state = useSceneStore.getState();
   return {
-    setScene: state.setScene,
+    setScene: (id: string) => {
+      const sceneConfig = _sceneRegistry.get(id);
+      if (!sceneConfig) {
+        console.warn(`Scene not registered: ${id}`);
+        return;
+      }
+      state.setScene(id, {
+        id: sceneConfig.id,
+        label: sceneConfig.label,
+        background: sceneConfig.background,
+        playerSpawn: sceneConfig.playerSpawn,
+        ground: sceneConfig.ground,
+        walls: sceneConfig.walls,
+        interactions: sceneConfig.interactions,
+      });
+    },
     setPlayerPosition: state.setPlayerPosition,
     requestRespawn: state.requestRespawn,
   };
@@ -248,7 +243,22 @@ export function useGameState<T>(selector: (state: GameState) => T): T {
 export function useGameActions(): GameActions {
   return useSceneStore(
     useShallow((state) => ({
-      setScene: state.setScene,
+      setScene: (id: string) => {
+        const sceneConfig = _sceneRegistry.get(id);
+        if (!sceneConfig) {
+          console.warn(`Scene not registered: ${id}`);
+          return;
+        }
+        state.setScene(id, {
+          id: sceneConfig.id,
+          label: sceneConfig.label,
+          background: sceneConfig.background,
+          playerSpawn: sceneConfig.playerSpawn,
+          ground: sceneConfig.ground,
+          walls: sceneConfig.walls,
+          interactions: sceneConfig.interactions,
+        });
+      },
       setPlayerPosition: state.setPlayerPosition,
       requestRespawn: state.requestRespawn,
     })),

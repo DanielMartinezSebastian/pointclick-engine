@@ -6,7 +6,7 @@ import { MathUtils } from "three";
 import PixelSelect from "../PixelSelect";
 import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
 import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
-import { useSceneStore } from "../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
 

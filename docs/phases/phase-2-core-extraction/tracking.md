@@ -2,7 +2,7 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 2/8 tareas ✅
+## Progreso: 6/8 tareas ✅
 
 ## Week 1 — Audit + Setup ✅ COMPLETADA
 
@@ -22,7 +22,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 - [x] [04-extract-pathfinding](tasks/04-extract-pathfinding.md) — findPath → engine-core
 - [x] [05-extract-game-rules](tasks/05-extract-game-rules.md) — rules/* → engine-core
-- [ ] [06-extract-scene-store](tasks/06-extract-scene-store.md) — sceneStore → engine-core
+- [x] [06-extract-scene-store](tasks/06-extract-scene-store.md) — sceneStore → engine-core
 
 ## Week 4 — Integración + validación
 

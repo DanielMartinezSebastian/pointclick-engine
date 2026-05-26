@@ -16,7 +16,7 @@ import {
 import { buildSpeakingAnimation } from "../render/sprite/speakingAnimation";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
-import { useSceneStore } from "../../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 import { useSceneEditorStore } from "../../../store/sceneEditorStore";
 import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";

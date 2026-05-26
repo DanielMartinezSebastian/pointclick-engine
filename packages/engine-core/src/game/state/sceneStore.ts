@@ -1,11 +1,10 @@
 import { create } from "zustand";
-import {
-  SCENES,
-  DEFAULT_SCENE_ID,
-  type Scene,
-  type SceneInteraction,
-  type SceneWall,
-} from "../demo/content/scenes";
+import type {
+  GameScene,
+  GameSceneWall,
+  GameSceneInteractionFull,
+  GameVec3,
+} from "../types";
 
 const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
 
@@ -23,7 +22,7 @@ function logSceneStore(event: string, payload: Record<string, unknown>) {
   console.info(`[scene-store] ${event}`, payload);
 }
 
-function cloneWall(wall: SceneWall): SceneWall {
+function cloneWall(wall: GameSceneWall): GameSceneWall {
   return {
     position: [...wall.position] as [number, number, number],
     rotationY: wall.rotationY,
@@ -31,7 +30,9 @@ function cloneWall(wall: SceneWall): SceneWall {
   };
 }
 
-function cloneInteraction(interaction: SceneInteraction): SceneInteraction {
+function cloneInteraction(
+  interaction: GameSceneInteractionFull
+): GameSceneInteractionFull {
   return {
     ...interaction,
     position: [...interaction.position] as [number, number, number],
@@ -43,7 +44,7 @@ function cloneInteraction(interaction: SceneInteraction): SceneInteraction {
   };
 }
 
-function cloneScene(scene: Scene): Scene {
+function cloneScene(scene: GameScene): GameScene {
   return {
     ...scene,
     playerSpawn: [...scene.playerSpawn] as [number, number, number],
@@ -65,45 +66,51 @@ function cloneScene(scene: Scene): Scene {
 type SceneStore = {
   // Runtime state
   sceneId: string;
-  scene: Scene;
-  playerPosition: [number, number, number];
+  scene: GameScene;
+  playerPosition: GameVec3;
   respawnSignal: number;
 
   // Runtime actions
-  setScene: (id: string) => void;
+  setScene: (id: string, scene: GameScene) => void;
   updateInteraction: (
     id: string,
-    updater: (interaction: SceneInteraction) => SceneInteraction,
+    updater: (interaction: GameSceneInteractionFull) => GameSceneInteractionFull
   ) => void;
   resetInteractionsFromSceneConfig: () => void;
-  setPlayerPosition: (position: [number, number, number]) => void;
+  setPlayerPosition: (position: GameVec3) => void;
   requestRespawn: () => void;
 
   // Mutation helpers used by sceneEditorStore (no selection tracking)
-  updateGround: (updater: (ground: Scene["ground"]) => Scene["ground"]) => void;
-  appendWall: (wall: SceneWall) => void;
+  updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
+  appendWall: (wall: GameSceneWall) => void;
   removeWall: (index: number) => void;
-  updateWall: (index: number, updater: (wall: SceneWall) => SceneWall) => void;
+  updateWall: (index: number, updater: (wall: GameSceneWall) => GameSceneWall) => void;
 };
 
-export const useSceneStore = create<SceneStore>((set) => ({
-  sceneId: DEFAULT_SCENE_ID,
-  scene: cloneScene(SCENES[DEFAULT_SCENE_ID]),
-  playerPosition: cloneScene(SCENES[DEFAULT_SCENE_ID]).playerSpawn,
+export const useSceneStore = create<SceneStore>((set, get) => ({
+  sceneId: "",
+  scene: {
+    id: "",
+    label: "",
+    background: "",
+    playerSpawn: [0, 0, 0],
+    ground: { minX: 0, maxX: 0, minZ: 0, maxZ: 0, y: 0 },
+    walls: [],
+    interactions: [],
+  },
+  playerPosition: [0, 0, 0],
   respawnSignal: 0,
-  setScene: (id: string) => {
-    const scene = SCENES[id];
-    if (!scene) return;
+  setScene: (id: string, scene: GameScene) => {
     const clonedScene = cloneScene(scene);
     logSceneStore("set-scene", {
-      fromSceneId: useSceneStore.getState().sceneId,
+      fromSceneId: get().sceneId,
       toSceneId: id,
       spawn: clonedScene.playerSpawn,
     });
     set({
       sceneId: id,
       scene: clonedScene,
-      playerPosition: [...clonedScene.playerSpawn] as [number, number, number],
+      playerPosition: [...clonedScene.playerSpawn] as GameVec3,
     });
   },
   updateGround: (updater) =>
@@ -132,7 +139,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       scene: {
         ...state.scene,
         walls: state.scene.walls.map((wall, i) =>
-          i !== index ? wall : updater(cloneWall(wall)),
+          i !== index ? wall : updater(cloneWall(wall))
         ),
       },
     })),
@@ -148,16 +155,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
     })),
   resetInteractionsFromSceneConfig: () =>
     set((state) => {
-      const sceneFromConfig = SCENES[state.sceneId];
-      if (!sceneFromConfig) return state;
       logSceneStore("reset-interactions", {
         sceneId: state.sceneId,
-        interactionCount: sceneFromConfig.interactions.length,
+        interactionCount: state.scene.interactions.length,
       });
       return {
         scene: {
           ...state.scene,
-          interactions: sceneFromConfig.interactions.map(cloneInteraction),
+          interactions: state.scene.interactions.map(cloneInteraction),
         },
       };
     }),
@@ -174,3 +179,15 @@ export const useSceneStore = create<SceneStore>((set) => ({
       return { respawnSignal: nextRespawnSignal };
     }),
 }));
+
+/** Read state without React (for use from other renderers or tests) */
+export function getSceneState() {
+  return useSceneStore.getState();
+}
+
+/** Subscribe to state changes without React */
+export function subscribeSceneState(
+  listener: (state: ReturnType<typeof useSceneStore.getState>) => void
+) {
+  return useSceneStore.subscribe(listener);
+}

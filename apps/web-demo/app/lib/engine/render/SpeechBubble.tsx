@@ -4,7 +4,7 @@ import { RoundedBox, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { browserTimerAdapter, type TimerHandle } from "../../platform-web";
-import { useSceneStore } from "../../../store/sceneStore";
+import { useSceneStore } from "@pointclick/engine-core";
 
 type SpeechBubbleProps = {
   text: string;
