@@ -1,38 +1,21 @@
 {
   "name": "point-and-click-game-engine",
-  "author": "Daniel Martínez Sebastian",
-  "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "dev:debug": "cross-env NEXT_PUBLIC_ENABLE_DEBUG=true next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
-    "@react-three/rapier": "^2.2.0",
-    "@types/three": "^0.184.1",
-    "gsap": "^3.15.0",
-    "next": "16.2.6",
-    "nipplejs": "^1.0.2",
-    "pixelarticons": "^2.1.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "three": "^0.184.0",
-    "zustand": "^5.0.13"
+    "dev": "npm run dev -w apps/web-demo",
+    "dev:debug": "npm run dev:debug -w apps/web-demo",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "cross-env": "^7.0.3",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"
