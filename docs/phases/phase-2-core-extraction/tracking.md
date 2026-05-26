@@ -21,7 +21,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 ## Week 3 — Extracción de módulos
 
 - [x] [04-extract-pathfinding](tasks/04-extract-pathfinding.md) — findPath → engine-core
-- [ ] [05-extract-game-rules](tasks/05-extract-game-rules.md) — rules/* → engine-core
+- [x] [05-extract-game-rules](tasks/05-extract-game-rules.md) — rules/* → engine-core
 - [ ] [06-extract-scene-store](tasks/06-extract-scene-store.md) — sceneStore → engine-core
 
 ## Week 4 — Integración + validación
