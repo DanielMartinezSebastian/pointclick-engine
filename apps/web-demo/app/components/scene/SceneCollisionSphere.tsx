@@ -1,1 +1,1 @@
-export { SceneCollisionSphere } from "../../lib/engine/render/scene/SceneCollisionSphere";
+export { SceneCollisionSphere } from "@pointclick/engine-renderer-r3f";

@@ -1,1 +1,1 @@
-export { SceneGround } from "../../lib/engine/render/scene/SceneGround";
+export { SceneGround } from "@pointclick/engine-renderer-r3f";

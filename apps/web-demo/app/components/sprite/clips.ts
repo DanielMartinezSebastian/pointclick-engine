@@ -1,1 +1,1 @@
-export * from "../../lib/engine/render/sprite/clips";
+export * from "@pointclick/engine-renderer-r3f";

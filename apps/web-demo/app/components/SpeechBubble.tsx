@@ -1,1 +1,1 @@
-export { default } from "../lib/engine/render/SpeechBubble";
+export { SpeechBubble as default } from "@pointclick/engine-renderer-r3f";

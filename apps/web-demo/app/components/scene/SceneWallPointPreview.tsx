@@ -1,1 +1,1 @@
-export { SceneWallPointPreview } from "../../lib/engine/render/scene/SceneWallPointPreview";
+export { SceneWallPointPreview } from "@pointclick/engine-renderer-r3f";

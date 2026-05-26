@@ -1,5 +1,8 @@
 "use client";
 
+// Re-exports from renderer (stable public API)
+export { useR3FGameLoop, WebKeyboardInput } from "@pointclick/engine-renderer-r3f";
+
 /**
  * Public API mínima del motor de juego.
  *
