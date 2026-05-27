@@ -18,7 +18,7 @@ import { findPath, useClickToMoveController, useKeyboardMovementInput } from "..
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "@pointclick/engine-core";
 import { useSceneEditorStore } from "../../../store/sceneEditorStore";
-import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
+import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import { type WallToolMode } from "../types/gameRuntime";
 import { emitRuntimeEvent, type RuntimeEventHandler } from "@pointclick/engine-core";

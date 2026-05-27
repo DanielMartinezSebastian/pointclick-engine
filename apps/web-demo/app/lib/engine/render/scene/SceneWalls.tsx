@@ -2,7 +2,7 @@
 
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import { type SceneWall } from "../../../../demo/content/scenes";
+import { type SceneWall } from "../../../../../demo-content/scenes/scenes";
 import { useSceneStore } from "@pointclick/engine-core";
 import { useSceneEditorStore } from "../../../../store/sceneEditorStore";
 

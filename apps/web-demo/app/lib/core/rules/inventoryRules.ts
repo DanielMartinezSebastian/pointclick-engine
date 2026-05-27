@@ -1,6 +1,6 @@
-import { getItemDefinition, resolveItemRule } from "../../../items";
-import type { DialogKey } from "../../../dialogs/types";
-import type { SceneInteraction } from "../../../demo/content/scenes";
+import { getItemDefinition, resolveItemRule } from "../../../../demo-content/items";
+import type { DialogKey } from "../../../../demo-content/dialogs/types";
+import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 
 type InventoryStackState = {
   id: string;

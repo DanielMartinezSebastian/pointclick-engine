@@ -1,5 +1,5 @@
 import { dialogs } from "./index";
-import type { DialogKey, Locale } from "../../../dialogs/types";
+import type { DialogKey, Locale } from "./types";
 
 /**
  * Devuelve una frase aleatoria del diálogo indicado para el locale actual.
@@ -12,5 +12,5 @@ export function getRandomPhrase(key: DialogKey, locale: Locale = "es"): string {
     return key;
   }
   const { phrases } = entry;
-  return phrases[Math.floor(Math.random() * phrases.length)];
+  return phrases[Math.floor(Math.random() * phrases.length)]!;
 }

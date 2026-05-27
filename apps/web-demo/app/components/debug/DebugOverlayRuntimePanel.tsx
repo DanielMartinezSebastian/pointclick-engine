@@ -7,7 +7,7 @@ import { GroundEditorPanel } from "./GroundEditorPanel";
 import { InteractionTargetsEditorPanel } from "./InteractionTargetsEditorPanel";
 import { PlacedItemsEditorPanel } from "./PlacedItemsEditorPanel";
 import { WallEditorPanel } from "./WallEditorPanel";
-import { type SceneInteraction } from "../../scenes/scenes";
+import { type SceneInteraction } from "../../../demo-content/scenes/scenes";
 import {
   type DebugEditorMode,
   type PlacedSceneItem,

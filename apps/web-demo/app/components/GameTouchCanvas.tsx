@@ -29,7 +29,7 @@ import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useInventoryStore } from "../store/inventoryStore";
-import { getRandomPhrase } from "../demo/content/dialogs/getRandomPhrase";
+import { getRandomPhrase } from "../../demo-content/dialogs/getRandomPhrase";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
 // táctil se realiza dentro del propio componente con window garantizado.

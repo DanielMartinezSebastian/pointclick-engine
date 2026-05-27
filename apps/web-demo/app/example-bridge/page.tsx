@@ -6,7 +6,7 @@ import {
   createGameRuntime,
   type GameSceneConfig,
 } from "../lib/engine/publicApi";
-import { SCENES } from "../demo/content/scenes";
+import { SCENES } from "../../demo-content/scenes/scenes";
 import HtmlBridgePanel from "./HtmlBridgePanel";
 
 /**

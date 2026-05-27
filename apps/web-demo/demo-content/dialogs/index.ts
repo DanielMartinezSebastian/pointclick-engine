@@ -1,4 +1,4 @@
-import type { DialogLocales } from "../../../dialogs/types";
+import type { DialogLocales } from "./types";
 
 export const dialogs: DialogLocales = {
   es: {

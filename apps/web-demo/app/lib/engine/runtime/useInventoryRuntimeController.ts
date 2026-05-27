@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
+import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
-import type { SceneInteraction } from "../../../demo/content/scenes";
+import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 import { useProximityHintController } from "./useProximityHintController";
 import {

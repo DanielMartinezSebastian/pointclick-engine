@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 
-import { SCENES, DEFAULT_SCENE_ID } from "../../../demo/content/scenes";
+import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore, type GameScene } from "@pointclick/engine-core";
 
 export function useSceneRuntimeController() {

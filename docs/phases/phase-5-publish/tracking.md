@@ -2,13 +2,13 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 0/8 tareas
+## Progreso: 3/8 tareas
 
 ## Week 1 — Auditoría + completar API
 
 - [x] [01-pre-publish-audit](tasks/01-pre-publish-audit.md) — ADR-0007 release strategy + audit report
 - [x] [02-wire-pending-commands](tasks/02-wire-pending-commands.md) — cablear inventory:toggle, dialog:trigger, dialog:dismiss; player:stop/pickup/drop aplazados a v0.2.0
-- [ ] [03-separate-demo-content](tasks/03-separate-demo-content.md) — mover scenes/items/dialogs a `demo-content/`
+- [x] [03-separate-demo-content](tasks/03-separate-demo-content.md) — mover scenes/items/dialogs a `demo-content/`
 
 ## Week 2 — Empaquetado
 

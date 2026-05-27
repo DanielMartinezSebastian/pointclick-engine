@@ -1,4 +1,6 @@
-import type { ItemDefinition, ItemInteractionRule } from "../../../items/types";
+import type { ItemDefinition, ItemInteractionRule } from "./types";
+
+export type { ItemDefinition, ItemInteractionRule };
 
 export const ITEMS: Record<string, ItemDefinition> = {
   gameboy: {

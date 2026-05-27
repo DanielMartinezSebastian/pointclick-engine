@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import type { SceneInteraction } from "../../demo/content/scenes";
+import type { SceneInteraction } from "../../../demo-content/scenes/scenes";
 import { browserEnvironmentAdapter } from "../../lib/platform-web";
 import type { InventoryStack } from "../InventoryUI";
 

@@ -1,4 +1,4 @@
-import type { DialogKey } from "../../dialogs/types";
+import type { DialogKey } from "../dialogs/types";
 
 export type SceneWall = {
   position: [number, number, number];

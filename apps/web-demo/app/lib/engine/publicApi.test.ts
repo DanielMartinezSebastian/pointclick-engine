@@ -2,7 +2,7 @@ import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
-import { DEFAULT_SCENE_ID, SCENES } from "../../demo/content/scenes";
+import { DEFAULT_SCENE_ID, SCENES } from "../../../demo-content/scenes/scenes";
 import { useInventoryStore } from "../../store/inventoryStore";
 import { useDialogStore } from "../../store/dialogStore";
 import {

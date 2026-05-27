@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { getRandomPhrase } from "../../../demo/content/dialogs/getRandomPhrase";
-import type { SceneInteraction } from "../../../demo/content/scenes";
+import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
+import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "../types/gameRuntime";
 
 /**

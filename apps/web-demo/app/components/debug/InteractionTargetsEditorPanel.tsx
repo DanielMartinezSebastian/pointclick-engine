@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { MathUtils } from "three";
 
 import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
-import type { SceneInteraction } from "../../demo/content/scenes";
+import type { SceneInteraction } from "../../../demo-content/scenes/scenes";
 import PixelSelect from "../PixelSelect";
 import { DebugButton, DebugNumberInput } from "./controls";
 
