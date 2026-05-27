@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useLoader } from "@react-three/fiber";
 import { BallCollider, RigidBody } from "@react-three/rapier";
 import { TextureLoader } from "three";
 
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 
 export function SceneCollisionSphere() {
   const globeTexture = useLoader(TextureLoader, "/globe.svg");

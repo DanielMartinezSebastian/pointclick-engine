@@ -1,4 +1,4 @@
-import type { GameLoopPort } from "@pointclick/engine-core";
+﻿import type { GameLoopPort } from "@pointclick-engine/engine-core";
 /**
  * R3F adapter that exposes a GameLoopPort. Must be used inside a Canvas tree.
  *

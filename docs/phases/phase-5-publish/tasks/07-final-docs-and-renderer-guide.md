@@ -1,4 +1,4 @@
-# Task 07: Renderer implementation guide + consumption refresh
+﻿# Task 07: Renderer implementation guide + consumption refresh
 
 **Phase**: 5 | **Estimate**: 3h | **Owner**: —
 
@@ -35,7 +35,7 @@ A renderer must:
 4. Subscribe to `sceneStore` state and draw whatever is current.
 5. Emit `player:moved` / `player:collided` events to the runtime bus.
 
-No need to touch `engine-core` source — the package exposes everything needed via `@pointclick/engine-core/ports`.
+No need to touch `engine-core` source — the package exposes everything needed via `@pointclick-engine/engine-core/ports`.
 
 ## Ports overview
 
@@ -88,13 +88,13 @@ npm init -y
 
 \`\`\`json
 {
-  "name": "@pointclick/engine-renderer-canvas2d",
+  "name": "@pointclick-engine/engine-renderer-canvas2d",
   "version": "0.0.1",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@pointclick/engine-core": "^0.1.0"
+    "@pointclick-engine/engine-core": "^0.1.0"
   }
 }
 \`\`\`
@@ -103,7 +103,7 @@ npm init -y
 
 \`\`\`ts
 // src/CanvasGameLoop.ts
-import type { GameLoopPort } from "@pointclick/engine-core/ports";
+import type { GameLoopPort } from "@pointclick-engine/engine-core/ports";
 
 export class CanvasGameLoop implements GameLoopPort {
   private listeners = new Set<(dt: number) => void>();
@@ -142,7 +142,7 @@ Wrap DOM events on the canvas element. Same shape as `WebKeyboardInput` in rende
 
 \`\`\`ts
 // src/CanvasRenderer.ts
-import { useSceneStore } from "@pointclick/engine-core/state";
+import { useSceneStore } from "@pointclick-engine/engine-core/state";
 
 export function createCanvasRenderer(canvas: HTMLCanvasElement, loop: CanvasGameLoop) {
   const ctx = canvas.getContext("2d")!;
@@ -207,7 +207,7 @@ Reading these alongside this guide should be enough to implement a second render
 
 Leerlo primero (existe en `docs/`). Actualizar:
 
-- Imports: usar nombres de packages reales (`@pointclick/engine-core`)
+- Imports: usar nombres de packages reales (`@pointclick-engine/engine-core`)
 - Quickstart con la API actual (`createGameRuntime` + bidirectional)
 - Quitar referencias a la era pre-Phase 4 (`onRuntimeEvent`-only)
 - Añadir sección "Subpath exports"
@@ -229,8 +229,8 @@ Framework-agnostic engine for 2D / 2.5D point-and-click games. First renderer: R
 
 | Package | Description |
 |---------|-------------|
-| [`@pointclick/engine-core`](packages/engine-core) | Agnostic core: state, rules, ports |
-| [`@pointclick/engine-renderer-r3f`](packages/engine-renderer-r3f) | R3F renderer implementation |
+| [`@pointclick-engine/engine-core`](packages/engine-core) | Agnostic core: state, rules, ports |
+| [`@pointclick-engine/engine-renderer-r3f`](packages/engine-renderer-r3f) | R3F renderer implementation |
 | [`apps/web-demo`](apps/web-demo) | Next.js demo composing both |
 
 ## Quick start

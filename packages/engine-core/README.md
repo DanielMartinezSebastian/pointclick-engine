@@ -1,23 +1,23 @@
-# @pointclick/engine-core
+﻿# @pointclick-engine/engine-core
 
 Framework-agnostic core for the Point & Click Game Engine. State, rules, pathfinding, ports — zero React, zero Three.js, zero browser globals.
 
 ## Install
 
 ```bash
-npm install @pointclick/engine-core
+npm install @pointclick-engine/engine-core
 ```
 
 This package alone is **not** a runnable game. Pair it with a renderer:
 
-- [@pointclick/engine-renderer-r3f](https://www.npmjs.com/package/@pointclick/engine-renderer-r3f) — React Three Fiber
+- [@pointclick-engine/engine-renderer-r3f](https://www.npmjs.com/package/@pointclick-engine/engine-renderer-r3f) — React Three Fiber
 - Or write your own (see [renderer guide](https://github.com/danielmartinezsebastian/2d-game-test/blob/main/docs/architecture/06-renderer-implementation-guide.md))
 
 ## Quick example
 
 ```ts
-import { CommandHandler, EventBus } from "@pointclick/engine-core";
-import type { GameCommand, GameEvent } from "@pointclick/engine-core";
+import { CommandHandler, EventBus } from "@pointclick-engine/engine-core";
+import type { GameCommand, GameEvent } from "@pointclick-engine/engine-core";
 
 const bus = new EventBus();
 const commands = new CommandHandler();
@@ -38,11 +38,11 @@ unsub();
 Import only what you need:
 
 ```ts
-import type { GameCommand }    from "@pointclick/engine-core/commands";
-import type { GameEvent }      from "@pointclick/engine-core/events";
-import type { IGameLoopPort }  from "@pointclick/engine-core/ports";
-import type { GameVec3 }       from "@pointclick/engine-core/types";
-import { useSceneStore }       from "@pointclick/engine-core/state";
+import type { GameCommand }    from "@pointclick-engine/engine-core/commands";
+import type { GameEvent }      from "@pointclick-engine/engine-core/events";
+import type { IGameLoopPort }  from "@pointclick-engine/engine-core/ports";
+import type { GameVec3 }       from "@pointclick-engine/engine-core/types";
+import { useSceneStore }       from "@pointclick-engine/engine-core/state";
 ```
 
 ## What's inside

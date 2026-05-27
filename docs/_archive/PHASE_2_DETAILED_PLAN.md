@@ -1,4 +1,4 @@
-# Fase 2: Plan Granular - Extracción del Core
+﻿# Fase 2: Plan Granular - Extracción del Core
 **Versión**: 1.0  
 **Fecha**: 2026-05-23  
 **Duración estimada**: 4 semanas (Semanas 3-6 del roadmap)  
@@ -87,7 +87,7 @@ point-and-click-game/
 ├── apps/
 │   └── web-demo/             # RENAMED: actual proyecto
 │       ├── app/
-│       ├── package.json       # UPDATED: depende de @pointclick/engine-core
+│       ├── package.json       # UPDATED: depende de @pointclick-engine/engine-core
 │       └── ...
 │
 └── docs/                      # UPDATED: esta guía aquí
@@ -105,7 +105,7 @@ point-and-click-game/
 **Archivo package.json para engine-core**:
 ```json
 {
-  "name": "@pointclick/engine-core",
+  "name": "@pointclick-engine/engine-core",
   "version": "0.1.0",
   "description": "Point & Click game engine core - framework-agnostic",
   "main": "dist/index.js",
@@ -282,7 +282,7 @@ cp app/lib/engine/movement/findPath.ts packages/engine-core/src/game/logic/pathf
 import { findPath } from '@/app/lib/engine/movement/findPath';
 
 // DESPUÉS
-import { findPath } from '@pointclick/engine-core';
+import { findPath } from '@pointclick-engine/engine-core';
 ```
 
 ---
@@ -352,7 +352,7 @@ Las **implementaciones** específicas de navegador se quedan donde están:
 
 ```typescript
 // apps/web-demo/lib/platform-web.ts (ACTUALIZAR imports)
-import type { StoragePort, TimerPort } from '@pointclick/engine-core';
+import type { StoragePort, TimerPort } from '@pointclick-engine/engine-core';
 
 export const localStorageAdapter: StoragePort = {
   getItem: (k) => localStorage.getItem(k),
@@ -370,7 +370,7 @@ import { webPlatform } from '@/app/lib/platform-web';
 
 // DESPUÉS
 import { webPlatform } from './lib/platform-web';
-import type { StoragePort } from '@pointclick/engine-core';
+import type { StoragePort } from '@pointclick-engine/engine-core';
 ```
 
 ---
@@ -464,7 +464,7 @@ test('emits events when scene changes', () => {
 
 ### 4.1 Actualizar Imports (Semana 5, ~1 día)
 
-Todos los imports de core deben venir de `@pointclick/engine-core`:
+Todos los imports de core deben venir de `@pointclick-engine/engine-core`:
 
 ```bash
 # Script para validar transición
@@ -475,9 +475,9 @@ find apps/web-demo/app -name "*.ts" -o -name "*.tsx" | xargs grep "@/app/lib/cor
 
 | Viejo | Nuevo |
 |------|-------|
-| `@/app/lib/core/rules/` | `@pointclick/engine-core` |
-| `@/app/store/sceneStore` | `@pointclick/engine-core` |
-| `@/app/lib/engine/movement/findPath` | `@pointclick/engine-core` |
+| `@/app/lib/core/rules/` | `@pointclick-engine/engine-core` |
+| `@/app/store/sceneStore` | `@pointclick-engine/engine-core` |
+| `@/app/lib/engine/movement/findPath` | `@pointclick-engine/engine-core` |
 | `@/app/lib/platform-web` | `./lib/platform-web` (local) |
 | `@/app/lib/engine/runtime/*` | Quedan en web-demo (R3F) |
 | `@/app/components/*` | Quedan en web-demo |
@@ -497,7 +497,7 @@ find apps/web-demo/app -name "*.ts" -o -name "*.tsx" | xargs grep "@/app/lib/cor
 ```typescript
 // apps/web-demo/lib/engine/publicApi.ts
 // ANTES: exportaba todo de diferentes módulos
-// DESPUÉS: re-exporta desde @pointclick/engine-core + componentes R3F
+// DESPUÉS: re-exporta desde @pointclick-engine/engine-core + componentes R3F
 
 export {
   // Del core
@@ -510,7 +510,7 @@ export {
   type GameActions,
   type GameVec3,
   // ... etc
-} from '@pointclick/engine-core';
+} from '@pointclick-engine/engine-core';
 
 // Del renderer R3F (específico)
 export { GameViewport, type GameViewportProps } from './publicApi.renderer';
@@ -532,7 +532,7 @@ import { createGameEngine, useSceneStore, GameViewport } from '@/app/lib/engine/
 # En apps/web-demo/package.json
 {
   "dependencies": {
-    "@pointclick/engine-core": "workspace:*",
+    "@pointclick-engine/engine-core": "workspace:*",
     // ... resto
   },
   "devDependencies": {
@@ -593,7 +593,7 @@ cd apps/web-demo && npm run build
 
 # 5. Imports están actualizados
 grep -r "@/app/lib/core/\|@/app/lib/engine/movement/\|@/app/store/sceneStore" apps/web-demo/app/lib/engine
-# RESULTADO: nada (todo debe ser de @pointclick/engine-core)
+# RESULTADO: nada (todo debe ser de @pointclick-engine/engine-core)
 ```
 
 ### 5.2 Documentación Post-Fase 2
@@ -672,7 +672,7 @@ Antes de pasar a Fase 3 (Abstracción del Renderer):
 
 - [ ] `packages/engine-core/` existe y es publicable
 - [ ] Todos los tests pasan sin React/R3F
-- [ ] `apps/web-demo` depende de `@pointclick/engine-core`
+- [ ] `apps/web-demo` depende de `@pointclick-engine/engine-core`
 - [ ] `publicApi.ts` es estable (tests en verde)
 - [ ] No hay imports de core hacia renderer
 - [ ] `ARCHITECTURE.md` documentado

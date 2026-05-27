@@ -1,5 +1,5 @@
-{
-  "name": "@pointclick/engine-renderer-r3f",
+﻿{
+  "name": "@pointclick-engine/engine-renderer-r3f",
   "version": "0.1.0",
   "description": "R3F (React Three Fiber) renderer for Point & Click Game Engine",
   "type": "module",
@@ -33,7 +33,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@pointclick/engine-core": "^0.1.0"
+    "@pointclick-engine/engine-core": "^0.1.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

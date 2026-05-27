@@ -1,4 +1,4 @@
-# Phase 2 Session Status
+﻿# Phase 2 Session Status
 
 **Last Updated**: 2026-05-26  
 **Session Status**: ✅ READY FOR NEXT SESSION
@@ -92,7 +92,7 @@ Two React hooks need refactoring before moving core modules:
 ### Monorepo Configuration
 - ✅ turbopack.root configured correctly
 - ✅ npm workspaces operational
-- ✅ @pointclick/engine-core dependency via file:// reference
+- ✅ @pointclick-engine/engine-core dependency via file:// reference
 - ✅ All builds passing
 
 ---

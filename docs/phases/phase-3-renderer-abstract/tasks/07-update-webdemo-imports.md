@@ -1,4 +1,4 @@
-# Task 07: Update web-demo imports to consume engine-renderer-r3f
+﻿# Task 07: Update web-demo imports to consume engine-renderer-r3f
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 
@@ -19,8 +19,8 @@ Tras Task 06, los componentes R3F genéricos viven en `packages/engine-renderer-
 
 ```json
 "dependencies": {
-  "@pointclick/engine-core": "*",
-  "@pointclick/engine-renderer-r3f": "*"
+  "@pointclick-engine/engine-core": "*",
+  "@pointclick-engine/engine-renderer-r3f": "*"
 }
 ```
 
@@ -39,13 +39,13 @@ grep -rn "from \"\\.\\..*/engine/render\|from \"\\.\\..*/engine/runtime/GameTouc
 ```bash
 find apps/web-demo/app -name "*.ts" -o -name "*.tsx" | while read f; do
   # SpeechBubble
-  sed -i 's|from "[^"]*engine/render/SpeechBubble"|from "@pointclick/engine-renderer-r3f"|g' "$f"
+  sed -i 's|from "[^"]*engine/render/SpeechBubble"|from "@pointclick-engine/engine-renderer-r3f"|g' "$f"
   # Sprite
-  sed -i 's|from "[^"]*engine/render/sprite/\([^"]*\)"|from "@pointclick/engine-renderer-r3f"|g' "$f"
+  sed -i 's|from "[^"]*engine/render/sprite/\([^"]*\)"|from "@pointclick-engine/engine-renderer-r3f"|g' "$f"
   # Scene
-  sed -i 's|from "[^"]*engine/render/scene/\([^"]*\)"|from "@pointclick/engine-renderer-r3f"|g' "$f"
+  sed -i 's|from "[^"]*engine/render/scene/\([^"]*\)"|from "@pointclick-engine/engine-renderer-r3f"|g' "$f"
   # Runtime
-  sed -i 's|from "[^"]*engine/runtime/GameTouchSpriteRuntime"|from "@pointclick/engine-renderer-r3f"|g' "$f"
+  sed -i 's|from "[^"]*engine/runtime/GameTouchSpriteRuntime"|from "@pointclick-engine/engine-renderer-r3f"|g' "$f"
 done
 ```
 
@@ -57,10 +57,10 @@ Revisar diffs antes de commit.
 
 ```ts
 // Re-exports from renderer
-export { useR3FGameLoop, WebKeyboardInput } from "@pointclick/engine-renderer-r3f";
+export { useR3FGameLoop, WebKeyboardInput } from "@pointclick-engine/engine-renderer-r3f";
 
 // Core re-exports unchanged
-export { findPath, useSceneStore, /* ... */ } from "@pointclick/engine-core";
+export { findPath, useSceneStore, /* ... */ } from "@pointclick-engine/engine-core";
 
 // GameViewport ya re-exporta GameTouchCanvas (web-demo) que ahora usa
 // componentes de engine-renderer-r3f internamente
@@ -110,7 +110,7 @@ npm run lint
    refactor(demo): consume engine-renderer-r3f via workspace package
 
    Replaced all relative imports of R3F render components with imports
-   from @pointclick/engine-renderer-r3f. Demo functionality verified
+   from @pointclick-engine/engine-renderer-r3f. Demo functionality verified
    via dev server.
 
    - [x] Marked: 07-update-webdemo-imports

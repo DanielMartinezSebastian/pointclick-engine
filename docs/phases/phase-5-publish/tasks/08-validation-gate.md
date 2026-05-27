@@ -1,4 +1,4 @@
-# Task 08: Validation gate + tag v0.1.0
+﻿# Task 08: Validation gate + tag v0.1.0
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 
@@ -115,7 +115,7 @@ npm publish --workspace packages/engine-renderer-r3f --access public
 If a published version is broken:
 
 \`\`\`bash
-npm deprecate @pointclick/engine-core@0.1.0 "broken: use 0.1.1"
+npm deprecate @pointclick-engine/engine-core@0.1.0 "broken: use 0.1.1"
 \`\`\`
 
 Do **not** `npm unpublish` (npm deletes registry history after 72h; deprecation is preferred).
@@ -144,8 +144,8 @@ npm publish --workspace packages/engine-renderer-r3f --access public
 Verificar:
 
 ```bash
-npm view @pointclick/engine-core@0.1.0
-npm view @pointclick/engine-renderer-r3f@0.1.0
+npm view @pointclick-engine/engine-core@0.1.0
+npm view @pointclick-engine/engine-renderer-r3f@0.1.0
 ```
 
 **Esperado**: ambos packages aparecen con la metadata correcta.
@@ -199,7 +199,7 @@ Phase 5 COMPLETED. Engine publicable. v0.1.0 listo.
 - [ ] `README.md` de Phase 5 actualizado a `Estado: completed`
 - [ ] `docs/workflow/how-to-release.md` existe
 - [ ] Tag `v0.1.0` creado localmente
-- [ ] Si se publicó: `npm view @pointclick/engine-core@0.1.0` resuelve
+- [ ] Si se publicó: `npm view @pointclick-engine/engine-core@0.1.0` resuelve
 - [ ] Memoria de usuario actualizada (`phase5-progress.md`)
 
 ## On Complete

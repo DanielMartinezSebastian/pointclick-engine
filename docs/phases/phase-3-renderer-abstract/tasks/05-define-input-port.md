@@ -1,4 +1,4 @@
-# Task 05: Define InputPort + web adapters
+﻿# Task 05: Define InputPort + web adapters
 
 **Phase**: 3 | **Estimate**: 3h | **Owner**: —
 
@@ -135,7 +135,7 @@ describe("HeadlessInput", () => {
 `packages/engine-renderer-r3f/src/adapters/keyboardInput.ts`:
 
 ```ts
-import type { InputDirection, InputPort, DirectionListener, PointerListener, Unsubscribe, InputPointerEvent } from "@pointclick/engine-core";
+import type { InputDirection, InputPort, DirectionListener, PointerListener, Unsubscribe, InputPointerEvent } from "@pointclick-engine/engine-core";
 
 /**
  * Web keyboard adapter. Listens to WASD/arrow keys and produces InputDirection.

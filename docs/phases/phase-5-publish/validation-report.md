@@ -1,4 +1,4 @@
-# Phase 5 Validation Report
+﻿# Phase 5 Validation Report
 
 **Date**: 2026-05-27
 **Branch**: main
@@ -112,4 +112,4 @@ Aplazados documentados en `tasks/02-wire-pending-commands.md` sección "Aplazado
 
 ## Conclusión
 
-**Phase 5 COMPLETED**. Engine publishable as `@pointclick/engine-core@0.1.0` and `@pointclick/engine-renderer-r3f@0.1.0`. All gate criteria met. Ready for `npm publish` when the `@pointclick` npm organization is created by the owner.
+**Phase 5 COMPLETED**. Engine publishable as `@pointclick-engine/engine-core@0.1.0` and `@pointclick-engine/engine-renderer-r3f@0.1.0`. All gate criteria met. Ready for `npm publish` when the `@pointclick` npm organization is created by the owner.

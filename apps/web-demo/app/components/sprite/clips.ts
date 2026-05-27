@@ -1,1 +1,1 @@
-export * from "@pointclick/engine-renderer-r3f";
+﻿export * from "@pointclick-engine/engine-renderer-r3f";

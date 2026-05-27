@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -12,7 +12,7 @@ import { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls } from "./scene/SceneWalls";
-import { findPath, useSceneStore, emitRuntimeEvent } from "@pointclick/engine-core";
+import { findPath, useSceneStore, emitRuntimeEvent } from "@pointclick-engine/engine-core";
 const DEFAULT_CLICK_CONFIG = {
     arrivalThreshold: 0.15,
     stuckMovementEpsilon: 0.015,

@@ -1,11 +1,11 @@
-# @pointclick/engine-renderer-r3f
+﻿# @pointclick-engine/engine-renderer-r3f
 
-React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick/engine-core).
+React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick-engine/engine-core).
 
 ## Install
 
 ```bash
-npm install @pointclick/engine-renderer-r3f @pointclick/engine-core
+npm install @pointclick-engine/engine-renderer-r3f @pointclick-engine/engine-core
 ```
 
 Peer dependencies (install in your app):
@@ -18,7 +18,7 @@ npm install react react-dom three @react-three/fiber @react-three/drei @react-th
 
 ```tsx
 import { useEffect } from "react";
-import { createGameRuntime, GameViewport } from "@pointclick/engine-renderer-r3f";
+import { createGameRuntime, GameViewport } from "@pointclick-engine/engine-renderer-r3f";
 
 const myScenes = [
   {
@@ -63,8 +63,8 @@ See: [Bidirectional Communication guide](https://github.com/danielmartinezsebast
 ## Subpath exports
 
 ```ts
-import { useR3FGameLoop, WebKeyboardInput } from "@pointclick/engine-renderer-r3f/adapters";
-import { GameTouchSpriteRuntime, SpeechBubble } from "@pointclick/engine-renderer-r3f/components";
+import { useR3FGameLoop, WebKeyboardInput } from "@pointclick-engine/engine-renderer-r3f/adapters";
+import { GameTouchSpriteRuntime, SpeechBubble } from "@pointclick-engine/engine-renderer-r3f/components";
 ```
 
 ## What this package provides

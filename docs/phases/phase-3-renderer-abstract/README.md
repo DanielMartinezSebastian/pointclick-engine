@@ -1,4 +1,4 @@
-# Phase 3: Renderer Abstraction
+﻿# Phase 3: Renderer Abstraction
 
 **Objetivo**: Abstraer la implementación R3F detrás de interfaces agnósticas en `engine-core`, y mover el renderer R3F a su propio package `engine-renderer-r3f`.
 **Duración estimada**: 4-5 semanas
@@ -20,7 +20,7 @@ Tras Fase 2, `engine-core` es agnóstico, pero el renderer R3F sigue acoplado a 
 
 - ✅ `packages/engine-core/` define `RendererPort`, `GameLoopPort`, `InputPort`, `PhysicsPort` (interfaces puras)
 - ✅ `packages/engine-renderer-r3f/` existe, compila, implementa los ports usando R3F + Rapier
-- ✅ `apps/web-demo/` consume `@pointclick/engine-core` + `@pointclick/engine-renderer-r3f`
+- ✅ `apps/web-demo/` consume `@pointclick-engine/engine-core` + `@pointclick-engine/engine-renderer-r3f`
 - ✅ `grep -r "@react-three\|three" packages/engine-core/src/` devuelve nada
 - ✅ Demo R3F sigue funcionando idéntica visualmente
 - ✅ Tests de engine-core no requieren mocks de R3F

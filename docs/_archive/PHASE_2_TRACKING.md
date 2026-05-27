@@ -1,4 +1,4 @@
-# Fase 2: Tracking de Progreso
+﻿# Fase 2: Tracking de Progreso
 
 **Estado General**: Sem 2.5 - Preparación para comenzar  
 **Última actualización**: 2026-05-23  
@@ -90,7 +90,7 @@ Validar agnósticidad del core antes de mover nada.
 #### package.json base
 
 - [ ] Copiar/crear `packages/engine-core/package.json`
-  - [ ] name: `@pointclick/engine-core`
+  - [ ] name: `@pointclick-engine/engine-core`
   - [ ] main: `dist/index.js`
   - [ ] scripts: build, test, dev
   - [ ] dependencies: zustand ^5.0.13
@@ -298,7 +298,7 @@ Validar agnósticidad del core antes de mover nada.
   import { findPath } from "@/app/lib/engine/movement/findPath";
   
   // DESPUÉS
-  import { findPath } from "@pointclick/engine-core";
+  import { findPath } from "@pointclick-engine/engine-core";
   ```
 
 - [ ] Verificar que web-demo aún funciona:
@@ -438,7 +438,7 @@ Validar agnósticidad del core antes de mover nada.
 - [ ] Actualizar imports en web-demo:
   ```bash
   grep -r "from.*rules\|from.*sceneStore" apps/web-demo/app --include="*.ts" --include="*.tsx"
-  # Cambiar cada import a @pointclick/engine-core
+  # Cambiar cada import a @pointclick-engine/engine-core
   ```
 
 - [ ] Validar web-demo:
@@ -477,7 +477,7 @@ Validar agnósticidad del core antes de mover nada.
 
 - [ ] Actualizar `CLAUDE.md`:
   - [ ] Sección de estructura con nueva ubicación de files
-  - [ ] Ejemplos de import desde @pointclick/engine-core
+  - [ ] Ejemplos de import desde @pointclick-engine/engine-core
 
 - [ ] Actualizar `docs/ARCHITECTURE.md`:
   - [ ] Agregar sección: "Estructura post-Fase 2"
@@ -578,7 +578,7 @@ grep -r "@/app/lib/core/\|@/app/lib/engine/movement/\|@/app/store/sceneStore" ap
 # Resultado esperado: NADA
 ```
 
-- [ ] Imports de core: ninguno desde app/, todo de @pointclick/engine-core
+- [ ] Imports de core: ninguno desde app/, todo de @pointclick-engine/engine-core
   - [ ] Si hay resultados: actualizar imports
 
 **Resultado Esperado**: Importaciones correctas
@@ -608,7 +608,7 @@ grep -r "@/app/lib/core/\|@/app/lib/engine/movement/\|@/app/store/sceneStore" ap
   - [x] Tests: 100% pasando en engine-core
   - [x] Build: npm run build sin errores
   - [x] Funcionalidad: web-demo operacional
-  - [x] Imports: Todos actualizados (@pointclick/engine-core)
+  - [x] Imports: Todos actualizados (@pointclick-engine/engine-core)
   
   Archivos movidos:
   - app/lib/core/rules/* → packages/engine-core/src/game/logic/rules/

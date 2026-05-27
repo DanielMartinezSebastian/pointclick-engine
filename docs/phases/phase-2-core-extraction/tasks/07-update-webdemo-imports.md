@@ -1,4 +1,4 @@
-# Task 07: Update web-demo imports to consume engine-core
+﻿# Task 07: Update web-demo imports to consume engine-core
 
 **Phase**: 2 | **Estimate**: 2h | **Owner**: —
 
@@ -9,7 +9,7 @@ Tras tasks 04-06, `engine-core` tiene pathfinding, rules y sceneStore. Pero `app
 ## Prerequisites
 
 - [ ] Tasks 04, 05, 06 done
-- [ ] `apps/web-demo/package.json` ya tiene `"@pointclick/engine-core": "workspace:*"`
+- [ ] `apps/web-demo/package.json` ya tiene `"@pointclick-engine/engine-core": "workspace:*"`
 
 ## Action
 
@@ -33,7 +33,7 @@ import { resolveInventoryDrop } from '@/app/lib/core/rules/inventoryRules';
 import { useSceneStore } from '@/app/store/sceneStore';
 
 // Después
-import { findPath, resolveInventoryDrop, useSceneStore } from '@pointclick/engine-core';
+import { findPath, resolveInventoryDrop, useSceneStore } from '@pointclick-engine/engine-core';
 ```
 
 Tip: si el patrón es repetitivo, usar find-and-replace:
@@ -41,8 +41,8 @@ Tip: si el patrón es repetitivo, usar find-and-replace:
 ```bash
 # Ejemplo (usa con cuidado, revisar diffs antes de commit)
 find apps/web-demo/app -name "*.ts" -o -name "*.tsx" | xargs sed -i.bak \
-  -e "s|'@/app/store/sceneStore'|'@pointclick/engine-core'|g" \
-  -e "s|'@/app/lib/engine/movement/findPath'|'@pointclick/engine-core'|g"
+  -e "s|'@/app/store/sceneStore'|'@pointclick-engine/engine-core'|g" \
+  -e "s|'@/app/lib/engine/movement/findPath'|'@pointclick-engine/engine-core'|g"
 
 # Borrar backups si todo OK
 find apps/web-demo/app -name "*.bak" -delete
@@ -59,7 +59,7 @@ export {
   useSceneStore,
   getSceneState,
   // ... tipos y funciones públicas
-} from '@pointclick/engine-core';
+} from '@pointclick-engine/engine-core';
 
 // Específicos R3F siguen aquí
 export { GameViewport } from './GameViewport';
@@ -93,7 +93,7 @@ Abrir `http://localhost:3000`, probar golden path:
 - [ ] `grep -r "@/app/lib/core/rules\|@/app/lib/engine/movement/findPath\|@/app/store/sceneStore" apps/web-demo/app` devuelve nada
 - [ ] `npm run build -w apps/web-demo` pasa sin errores
 - [ ] `npm run dev` abre demo y funciona idéntico visualmente
-- [ ] `publicApi.ts` re-exporta desde `@pointclick/engine-core`
+- [ ] `publicApi.ts` re-exporta desde `@pointclick-engine/engine-core`
 - [ ] `npm run lint -w apps/web-demo` sin errores
 
 ## On Complete
@@ -104,7 +104,7 @@ Abrir `http://localhost:3000`, probar golden path:
    refactor(demo): consume engine-core via workspace package
 
    Replaced all @/app/lib/{core/rules,engine/movement/findPath} and
-   @/app/store/sceneStore imports with @pointclick/engine-core.
+   @/app/store/sceneStore imports with @pointclick-engine/engine-core.
    publicApi.ts now acts as facade re-exporting from core.
 
    - [x] Marked: 07-update-webdemo-imports

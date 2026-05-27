@@ -1,4 +1,4 @@
-# Commit Convention
+﻿# Commit Convention
 
 Conventional Commits + tracking-aware.
 
@@ -65,7 +65,7 @@ feat(phase-2): extract pathfinding to engine-core
 
 Moved findPath.ts from app/lib/engine/movement/ to
 packages/engine-core/src/game/logic/pathfinding/.
-Updated imports in web-demo to consume from @pointclick/engine-core.
+Updated imports in web-demo to consume from @pointclick-engine/engine-core.
 
 - [x] Marked: 04-extract-pathfinding
 

@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 export function SceneWalls({ debug, onStartWallMove, onStartWallResize, selectedWallIndex = null, onSelectWall, }) {
     const walls = useSceneStore((s) => s.scene.walls);
     return (_jsx(_Fragment, { children: walls.map((wall, i) => (_jsxs(RigidBody, { type: "fixed", position: wall.position, rotation: [0, wall.rotationY, 0], children: [_jsx(CuboidCollider, { args: wall.halfSize }), debug && (_jsxs(_Fragment, { children: [_jsxs("mesh", { onPointerDown: (e) => {

@@ -1,4 +1,4 @@
-# Task 03: Extract runtime events to engine-core
+﻿# Task 03: Extract runtime events to engine-core
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 
@@ -64,7 +64,7 @@ export * from "./events";
 
 ```bash
 grep -rln 'from ".*types/runtimeEvents"' apps/web-demo/app | while read f; do
-  sed -i 's|from "\.\./.*types/runtimeEvents"|from "@pointclick/engine-core"|g' "$f"
+  sed -i 's|from "\.\./.*types/runtimeEvents"|from "@pointclick-engine/engine-core"|g' "$f"
 done
 ```
 
@@ -87,7 +87,7 @@ npm test
 
 - [ ] `packages/engine-core/src/events/runtimeEvents.ts` existe
 - [ ] `apps/web-demo/app/lib/engine/types/runtimeEvents.ts` NO existe
-- [ ] `RuntimeEvent` importable desde `@pointclick/engine-core`
+- [ ] `RuntimeEvent` importable desde `@pointclick-engine/engine-core`
 - [ ] `npm run build` pasa para todo el workspace
 - [ ] `npm test` pasa (engine-core + web-demo)
 - [ ] `grep "engine/types/runtimeEvents" apps/web-demo` devuelve nada
@@ -100,7 +100,7 @@ npm test
    refactor(core): extract runtime events to engine-core
 
    Moved RuntimeEvent types from apps/web-demo to packages/engine-core.
-   Updated all consumers to import from @pointclick/engine-core.
+   Updated all consumers to import from @pointclick-engine/engine-core.
 
    - [x] Marked: 03-extract-runtime-events-to-core
 

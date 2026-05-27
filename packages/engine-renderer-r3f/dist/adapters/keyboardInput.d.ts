@@ -1,4 +1,4 @@
-import type { InputDirection, InputPort, DirectionListener, PointerListener, InputUnsubscribe, InputPointerEvent } from "@pointclick/engine-core";
+﻿import type { InputDirection, InputPort, DirectionListener, PointerListener, InputUnsubscribe, InputPointerEvent } from "@pointclick-engine/engine-core";
 /**
  * Web keyboard adapter. Listens to WASD/arrow keys and produces InputDirection.
  *

@@ -1,4 +1,4 @@
-# Task 03: Implement CommandHandler in engine-core
+﻿# Task 03: Implement CommandHandler in engine-core
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 
@@ -126,7 +126,7 @@ Crear `packages/engine-core/__tests__/commandHandler.test.ts`:
 - [ ] `npm run build -w packages/engine-core` pasa
 - [ ] `npm run test -w packages/engine-core -- commandHandler` pasa (≥5 tests)
 - [ ] `grep -rn "react\|three\|window\.\|document\." packages/engine-core/src/game/commands` devuelve nada
-- [ ] `import { CommandHandler, type GameCommand } from "@pointclick/engine-core"` funciona desde `apps/web-demo`
+- [ ] `import { CommandHandler, type GameCommand } from "@pointclick-engine/engine-core"` funciona desde `apps/web-demo`
 
 ## On Complete
 

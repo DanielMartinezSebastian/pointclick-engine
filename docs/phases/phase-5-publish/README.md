@@ -1,6 +1,6 @@
-# Phase 5: Publish to npm
+﻿# Phase 5: Publish to npm
 
-**Objetivo**: Dejar `@pointclick/engine-core` y `@pointclick/engine-renderer-r3f` listos para consumirse desde proyectos externos vía `npm install`, con metadatos completos, exports limpios, ejemplos de consumo y un proceso de release documentado.
+**Objetivo**: Dejar `@pointclick-engine/engine-core` y `@pointclick-engine/engine-renderer-r3f` listos para consumirse desde proyectos externos vía `npm install`, con metadatos completos, exports limpios, ejemplos de consumo y un proceso de release documentado.
 **Duración estimada**: 3-4 semanas
 **Estado**: `completed` (cerrado 2026-05-27)
 **Owner**: Daniel Martínez Sebastián
@@ -13,7 +13,7 @@ Phases 2-4 entregaron una librería técnicamente sólida (core agnóstico, rend
 - Los packages usan `file:../../packages/*` en lugar de versionado real.
 - `apps/web-demo/app/{scenes,items,dialogs}` mezcla **demo content** con el código de la app, dificultando que un consumer entienda qué pertenece al engine y qué a la demo.
 - No hay README por package, ni LICENSE, ni CHANGELOG.
-- El `exports` map es plano: no permite `import { GameCommand } from "@pointclick/engine-core/commands"`.
+- El `exports` map es plano: no permite `import { GameCommand } from "@pointclick-engine/engine-core/commands"`.
 - Phase 4 dejó comandos no cableados (`inventory:*`, `dialog:*`, `player:stop`) como no-op con warning — aceptable para una alpha interna, **no aceptable para publicar**.
 - No existe guía de "cómo implementar tu propio renderer" pese a que la abstracción de Phase 3 lo permite.
 
@@ -26,7 +26,7 @@ Phase 5 cierra estos huecos y publica las primeras versiones (`v0.1.0` reales, n
 - ✅ Demo content (`scenes`, `items`, `dialogs`) movido a `apps/web-demo/demo-content/` con su propio README
 - ✅ Todos los comandos definidos en `GameCommand` tienen executor real (cero warnings de "executor not wired")
 - ✅ Cada package tiene `README.md`, `LICENSE`, `CHANGELOG.md`
-- ✅ Subpath exports funcionan: `@pointclick/engine-core/commands`, `/events`, `/types`, `/ports`
+- ✅ Subpath exports funcionan: `@pointclick-engine/engine-core/commands`, `/events`, `/types`, `/ports`
 - ✅ `sideEffects: false` en engine-core (verificado: no hay side-effects al importar)
 - ✅ `docs/architecture/06-renderer-implementation-guide.md` explica cómo escribir un renderer alternativo
 - ✅ `docs/workflow/how-to-release.md` documenta el proceso de release (versionado, tag, publish)

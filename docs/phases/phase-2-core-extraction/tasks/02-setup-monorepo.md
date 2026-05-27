@@ -1,4 +1,4 @@
-# Task 02: Setup monorepo structure
+﻿# Task 02: Setup monorepo structure
 
 **Phase**: 2 | **Estimate**: 2h | **Owner**: —
 
@@ -40,7 +40,7 @@ Copia del actual `package.json`, quitando devDeps que serán del root:
 
 ```json
 {
-  "name": "@pointclick/web-demo",
+  "name": "@pointclick-engine/web-demo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -52,7 +52,7 @@ Copia del actual `package.json`, quitando devDeps que serán del root:
     "test": "vitest run"
   },
   "dependencies": {
-    "@pointclick/engine-core": "workspace:*",
+    "@pointclick-engine/engine-core": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@react-three/rapier": "^2.2.0",

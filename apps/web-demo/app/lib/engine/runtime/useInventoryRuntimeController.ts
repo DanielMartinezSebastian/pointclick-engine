@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -10,7 +10,7 @@ import { useProximityHintController } from "./useProximityHintController";
 import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
-} from "@pointclick/engine-core";
+} from "@pointclick-engine/engine-core";
 import { useDialogStore } from "../../../store/dialogStore";
 import { useInventoryStore } from "../../../store/inventoryStore";
 import {

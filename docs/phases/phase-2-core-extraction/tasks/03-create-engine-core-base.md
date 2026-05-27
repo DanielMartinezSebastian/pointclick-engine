@@ -1,4 +1,4 @@
-# Task 03: Create engine-core base
+﻿# Task 03: Create engine-core base
 
 **Phase**: 2 | **Estimate**: 3h | **Owner**: —
 
@@ -24,7 +24,7 @@ mkdir -p packages/engine-core/__tests__
 
 ```json
 {
-  "name": "@pointclick/engine-core",
+  "name": "@pointclick-engine/engine-core",
   "version": "0.1.0",
   "description": "Framework-agnostic core for Point & Click Game Engine",
   "main": "dist/index.js",

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -16,12 +16,12 @@ import {
 import { buildSpeakingAnimation } from "../render/sprite/speakingAnimation";
 import { findPath, useClickToMoveController, useKeyboardMovementInput } from "../movement";
 import { useMobileInputStore } from "../../../store/mobileInputStore";
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 import { useSceneEditorStore } from "../../../store/sceneEditorStore";
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import { type WallToolMode } from "../types/gameRuntime";
-import { emitRuntimeEvent, type RuntimeEventHandler } from "@pointclick/engine-core";
+import { emitRuntimeEvent, type RuntimeEventHandler } from "@pointclick-engine/engine-core";
 import { SceneCollisionSphere } from "../render/scene/SceneCollisionSphere";
 import { SceneGround } from "../render/scene/SceneGround";
 import { SceneWallPointPreview } from "../render/scene/SceneWallPointPreview";

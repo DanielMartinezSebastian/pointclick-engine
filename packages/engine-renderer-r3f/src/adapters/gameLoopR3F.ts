@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import type { GameLoopCallback, GameLoopPort, Unsubscribe } from "@pointclick/engine-core";
+import type { GameLoopCallback, GameLoopPort, Unsubscribe } from "@pointclick-engine/engine-core";
 
 /**
  * R3F adapter that exposes a GameLoopPort. Must be used inside a Canvas tree.

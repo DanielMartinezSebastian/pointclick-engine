@@ -1,7 +1,7 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 
-import { useSceneStore } from "@pointclick/engine-core";
-import type { GameSceneWall, GameScene } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
+import type { GameSceneWall, GameScene } from "@pointclick-engine/engine-core";
 
 /**
  * sceneEditorStore – estado y acciones exclusivos del editor/debug.

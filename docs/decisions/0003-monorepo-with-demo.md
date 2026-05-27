@@ -1,4 +1,4 @@
-# 0003 — Monorepo with demo inside
+﻿# 0003 — Monorepo with demo inside
 
 **Status**: accepted
 **Date**: 2026-05-23
@@ -38,7 +38,7 @@ Conforme la librería madure (v1.0), considerar mover demo a repo separado como 
 ## Notes
 
 Tras v1.0:
-- Crear repo separado `pointclick-demo-r3f` 100% desacoplado, consumiendo `@pointclick/engine-core` desde npm.
+- Crear repo separado `pointclick-demo-r3f` 100% desacoplado, consumiendo `@pointclick-engine/engine-core` desde npm.
 - Mantener `apps/web-demo/` en el monorepo para desarrollo del engine (evaluación rápida).
 
 La doble demo (interna para dev, externa para usuarios) no es duplicación: cumplen roles distintos.

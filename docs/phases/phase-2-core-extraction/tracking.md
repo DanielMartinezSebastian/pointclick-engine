@@ -1,4 +1,4 @@
-# Phase 2: Tracking
+﻿# Phase 2: Tracking
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
@@ -26,7 +26,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 ## Week 4 — Integración + validación
 
-- [x] [07-update-webdemo-imports](tasks/07-update-webdemo-imports.md) — apps/web-demo consume @pointclick/engine-core
+- [x] [07-update-webdemo-imports](tasks/07-update-webdemo-imports.md) — apps/web-demo consume @pointclick-engine/engine-core
 - [x] [08-validation-gate](tasks/08-validation-gate.md) — checks finales antes de cerrar fase
 
 ## Notas / Blockers

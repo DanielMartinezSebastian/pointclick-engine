@@ -1,4 +1,4 @@
-# Phase 2: Core Extraction
+﻿# Phase 2: Core Extraction
 
 **Objetivo**: Extraer lógica agnóstica a `packages/engine-core/` independiente, sin React/R3F/Next.js.
 **Duración estimada**: 4 semanas
@@ -13,7 +13,7 @@ La librería `engine-core` debe ser publicable en npm sin arrastrar Next.js/Reac
 ## Resultado esperado
 
 - ✅ `packages/engine-core/` existe, compila, tests pasan sin mocks de React
-- ✅ `apps/web-demo/` consume `@pointclick/engine-core` en lugar de paths relativos
+- ✅ `apps/web-demo/` consume `@pointclick-engine/engine-core` en lugar de paths relativos
 - ✅ `grep -r "import.*react" packages/engine-core/src/` devuelve nada
 - ✅ Demo R3F sigue funcionando idéntica visualmente
 - ✅ Monorepo con npm workspaces operativo

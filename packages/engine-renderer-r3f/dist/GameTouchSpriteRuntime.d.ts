@@ -1,5 +1,5 @@
-import { type GameCharacterName } from "./sprite/clips";
-import { type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick/engine-core";
+﻿import { type GameCharacterName } from "./sprite/clips";
+import { type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
 export declare function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, getMobileInput, addWallWithData, getPhrase, selectedWallIndex, onSelectWall, }: {
     activeCharacter: GameCharacterName;
     debug: boolean;

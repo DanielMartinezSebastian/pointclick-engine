@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 
 const checkerVertexShader = /* glsl */`
   varying vec2 vUv;

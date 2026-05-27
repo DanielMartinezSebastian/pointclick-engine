@@ -1,4 +1,4 @@
-# Task 02: Create engine-renderer-r3f package scaffold
+﻿# Task 02: Create engine-renderer-r3f package scaffold
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 
@@ -24,7 +24,7 @@ mkdir -p packages/engine-renderer-r3f/__tests__
 
 ```json
 {
-  "name": "@pointclick/engine-renderer-r3f",
+  "name": "@pointclick-engine/engine-renderer-r3f",
   "version": "0.1.0",
   "description": "R3F (React Three Fiber) renderer for Point & Click Game Engine",
   "type": "module",
@@ -43,7 +43,7 @@ mkdir -p packages/engine-renderer-r3f/__tests__
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@pointclick/engine-core": "*",
+    "@pointclick-engine/engine-core": "*",
     "@react-three/fiber": "^8.0.0",
     "@react-three/drei": "^9.0.0",
     "@react-three/rapier": "^1.0.0",
@@ -100,7 +100,7 @@ npm run build -w packages/engine-renderer-r3f
 - [ ] `packages/engine-renderer-r3f/` existe con package.json, tsconfig, src/index.ts
 - [ ] `npm install` sin errores
 - [ ] `npm run build -w packages/engine-renderer-r3f` pasa (genera `dist/`)
-- [ ] `node -e "console.log(require('@pointclick/engine-renderer-r3f').RENDERER_VERSION)"` imprime `0.1.0`
+- [ ] `node -e "console.log(require('@pointclick-engine/engine-renderer-r3f').RENDERER_VERSION)"` imprime `0.1.0`
 
 ## On Complete
 

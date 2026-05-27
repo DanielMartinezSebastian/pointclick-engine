@@ -1,4 +1,4 @@
-# Task 07: Bidirectional communication docs
+﻿# Task 07: Bidirectional communication docs
 
 **Phase**: 4 | **Estimate**: 2h | **Owner**: —
 
@@ -34,7 +34,7 @@ Ambos son sincrónicos, fire-and-forget, y no requieren React.
 ## Quickstart
 
 \`\`\`ts
-import { createGameRuntime } from "@pointclick/engine-renderer-r3f"; // facade re-export
+import { createGameRuntime } from "@pointclick-engine/engine-renderer-r3f"; // facade re-export
 
 const runtime = createGameRuntime({ scenes, items, rules });
 

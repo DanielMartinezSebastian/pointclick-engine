@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useLoader } from "@react-three/fiber";
 import { BallCollider, RigidBody } from "@react-three/rapier";
 import { TextureLoader } from "three";
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 export function SceneCollisionSphere() {
     const globeTexture = useLoader(TextureLoader, "/globe.svg");
     const groundY = useSceneStore((s) => s.scene.ground.y);

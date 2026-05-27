@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { RoundedBox, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
 const BUBBLE_GAP_WORLD = 0.22;
 const DEPTH_FAR_Z = -16;

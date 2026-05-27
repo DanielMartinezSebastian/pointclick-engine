@@ -1,4 +1,4 @@
-# Task 05: Expose bidirectional API in `createGameRuntime`
+﻿# Task 05: Expose bidirectional API in `createGameRuntime`
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 
@@ -29,7 +29,7 @@ import {
   type GameEventType,
   type GameEventHandler,
   useSceneStore,
-} from "@pointclick/engine-core";
+} from "@pointclick-engine/engine-core";
 
 export type GameRuntime = {
   // Existentes

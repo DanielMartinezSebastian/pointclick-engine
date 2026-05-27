@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { RoundedBox, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 
 type SpeechBubbleProps = {
   text: string;

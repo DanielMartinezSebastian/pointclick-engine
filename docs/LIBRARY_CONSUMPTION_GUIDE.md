@@ -1,4 +1,4 @@
-# Library Consumption Guide
+﻿# Library Consumption Guide
 
 Guía para integrar el Point & Click Game Engine en una aplicación host.
 
@@ -9,14 +9,14 @@ Guía para integrar el Point & Click Game Engine en una aplicación host.
 ## 1. Packages disponibles
 
 ```bash
-npm install @pointclick/engine-core
-npm install @pointclick/engine-renderer-r3f  # + peer deps (ver README del package)
+npm install @pointclick-engine/engine-core
+npm install @pointclick-engine/engine-renderer-r3f  # + peer deps (ver README del package)
 ```
 
 | Package | Responsabilidad |
 |---------|----------------|
-| `@pointclick/engine-core` | Estado, reglas, pathfinding, ports. Cero React, cero browser globals. |
-| `@pointclick/engine-renderer-r3f` | Renderer React Three Fiber. `GameViewport`, `createGameRuntime`, sprites, scene primitives. |
+| `@pointclick-engine/engine-core` | Estado, reglas, pathfinding, ports. Cero React, cero browser globals. |
+| `@pointclick-engine/engine-renderer-r3f` | Renderer React Three Fiber. `GameViewport`, `createGameRuntime`, sprites, scene primitives. |
 
 ---
 
@@ -27,7 +27,7 @@ npm install @pointclick/engine-renderer-r3f  # + peer deps (ver README del packa
 ```tsx
 "use client";
 import { useEffect } from "react";
-import { createGameRuntime, GameViewport } from "@pointclick/engine-renderer-r3f";
+import { createGameRuntime, GameViewport } from "@pointclick-engine/engine-renderer-r3f";
 
 const myScenes = [
   {
@@ -58,7 +58,7 @@ export default function GamePage() {
 Desde cualquier componente HTML (fuera del Canvas), envía comandos al runtime:
 
 ```ts
-import { getGameRuntime } from "@pointclick/engine-renderer-r3f";
+import { getGameRuntime } from "@pointclick-engine/engine-renderer-r3f";
 
 const runtime = getGameRuntime();
 
@@ -88,7 +88,7 @@ unsub?.();
 ### Paso 4: Leer estado React desde la UI
 
 ```tsx
-import { useGameState, useGameActions } from "@pointclick/engine-renderer-r3f";
+import { useGameState, useGameActions } from "@pointclick-engine/engine-renderer-r3f";
 
 export function SceneSwitcher() {
   const sceneId = useGameState((s) => s.sceneId);
@@ -111,11 +111,11 @@ export function SceneSwitcher() {
 Para trees-haking granular, importa solo el módulo que necesitas:
 
 ```ts
-import type { GameCommand }   from "@pointclick/engine-core/commands";
-import type { GameEvent }     from "@pointclick/engine-core/events";
-import type { IGameLoopPort } from "@pointclick/engine-core/ports";
-import type { GameVec3 }      from "@pointclick/engine-core/types";
-import { useSceneStore }      from "@pointclick/engine-core/state";
+import type { GameCommand }   from "@pointclick-engine/engine-core/commands";
+import type { GameEvent }     from "@pointclick-engine/engine-core/events";
+import type { IGameLoopPort } from "@pointclick-engine/engine-core/ports";
+import type { GameVec3 }      from "@pointclick-engine/engine-core/types";
+import { useSceneStore }      from "@pointclick-engine/engine-core/state";
 ```
 
 ---
@@ -123,7 +123,7 @@ import { useSceneStore }      from "@pointclick/engine-core/state";
 ## 4. Registrar diálogos personalizados
 
 ```ts
-import { registerRule } from "@pointclick/engine-renderer-r3f";
+import { registerRule } from "@pointclick-engine/engine-renderer-r3f";
 
 registerRule({ key: "welcomeMessage", phrases: ["¡Bienvenido al pueblo!", "¿Primera vez por aquí?"] });
 registerRule({ key: "boundaryHit", phrases: ["¡Hay una pared ahí!"] });
@@ -143,7 +143,7 @@ registerRule({ key: "boundaryHit", phrases: ["¡Hay una pared ahí!"] });
 
 | ❌ Hacer | ✅ En su lugar |
 |----------|--------------|
-| Importar módulos internos de `app/lib/engine/runtime/` directamente | Importar desde `@pointclick/engine-renderer-r3f` |
+| Importar módulos internos de `app/lib/engine/runtime/` directamente | Importar desde `@pointclick-engine/engine-renderer-r3f` |
 | Usar `window.document` en lógica de juego | Pasar por ports / platform adapters |
 | Mutar `useSceneStore` directamente desde la UI | Usar `useGameActions()` o `executeCommand()` |
 | Crear el runtime varias veces | Un solo `createGameRuntime()` por instancia de juego |

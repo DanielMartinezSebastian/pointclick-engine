@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useRef } from "react";
 import { Vector2 } from "three";
-import type { MovementPoint } from "@pointclick/engine-core";
+import type { MovementPoint } from "@pointclick-engine/engine-core";
 
 type ClickProgressState = {
   x: number;

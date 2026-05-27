@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
@@ -17,13 +17,13 @@ import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { GameTouchSpriteRuntime } from "@pointclick/engine-renderer-r3f";
+import { GameTouchSpriteRuntime } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
-import { legacyRuntimeEventToGameEvent, type RuntimeEvent } from "@pointclick/engine-core";
+import { legacyRuntimeEventToGameEvent, type RuntimeEvent } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";

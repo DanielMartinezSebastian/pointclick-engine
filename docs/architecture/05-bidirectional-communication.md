@@ -1,4 +1,4 @@
-# Bidirectional Communication
+﻿# Bidirectional Communication
 
 **Estado**: estable v0.4 | **Última revisión**: 2026-05-27
 
@@ -14,7 +14,7 @@ Ambos son sincrónicos, fire-and-forget, y **no requieren React**.
 ## Quickstart
 
 ```ts
-import { createGameRuntime } from "@pointclick/engine-renderer-r3f"; // facade re-export
+import { createGameRuntime } from "@pointclick-engine/engine-renderer-r3f"; // facade re-export
 
 const runtime = createGameRuntime({ scenes, items, rules });
 
@@ -110,7 +110,7 @@ window.addEventListener("message", (msg) => {
 Si no tienes referencia directa al handle (ej. dentro de un componente que no lo creó):
 
 ```ts
-import { getGameRuntime } from "@pointclick/engine-renderer-r3f";
+import { getGameRuntime } from "@pointclick-engine/engine-renderer-r3f";
 const rt = getGameRuntime(); // null si no se ha llamado createGameRuntime todavía
 rt?.executeCommand({ type: "scene:respawn" });
 ```

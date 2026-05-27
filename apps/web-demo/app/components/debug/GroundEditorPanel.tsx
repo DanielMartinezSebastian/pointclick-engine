@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState } from "react";
 
 import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
-import { useSceneStore } from "@pointclick/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
 

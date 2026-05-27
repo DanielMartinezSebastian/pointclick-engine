@@ -1,10 +1,10 @@
-# Task 05: READMEs, LICENSE, CHANGELOG per package
+﻿# Task 05: READMEs, LICENSE, CHANGELOG per package
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 
 ## Context
 
-`npm install @pointclick/engine-core` mostrará la página del package en npmjs.com con su README. Hoy no hay README por package, ni LICENSE, ni CHANGELOG. Sin esto la página queda vacía y los consumers no entienden qué están instalando.
+`npm install @pointclick-engine/engine-core` mostrará la página del package en npmjs.com con su README. Hoy no hay README por package, ni LICENSE, ni CHANGELOG. Sin esto la página queda vacía y los consumers no entienden qué están instalando.
 
 ## Prerequisites
 
@@ -16,25 +16,25 @@
 ### 1. Crear `packages/engine-core/README.md`
 
 ```markdown
-# @pointclick/engine-core
+# @pointclick-engine/engine-core
 
 Framework-agnostic core for the Point & Click Game Engine. State, rules, pathfinding, ports — zero React, zero Three.js, zero browser globals.
 
 ## Install
 
 \`\`\`bash
-npm install @pointclick/engine-core
+npm install @pointclick-engine/engine-core
 \`\`\`
 
 This package alone is **not** a runnable game. Pair it with a renderer:
 
-- [@pointclick/engine-renderer-r3f](https://www.npmjs.com/package/@pointclick/engine-renderer-r3f) — React Three Fiber
+- [@pointclick-engine/engine-renderer-r3f](https://www.npmjs.com/package/@pointclick-engine/engine-renderer-r3f) — React Three Fiber
 - Or write your own (see [renderer guide](https://github.com/.../docs/architecture/06-renderer-implementation-guide.md))
 
 ## Quick example
 
 \`\`\`ts
-import { CommandHandler, EventBus, type GameCommand, type GameEvent } from "@pointclick/engine-core";
+import { CommandHandler, EventBus, type GameCommand, type GameEvent } from "@pointclick-engine/engine-core";
 
 const bus = new EventBus();
 const commands = new CommandHandler();
@@ -51,10 +51,10 @@ commands.execute({ type: "scene:set", sceneId: "town" });
 ## Subpath exports
 
 \`\`\`ts
-import { type GameCommand } from "@pointclick/engine-core/commands";
-import { type GameEvent } from "@pointclick/engine-core/events";
-import { type GameLoopPort, type InputPort } from "@pointclick/engine-core/ports";
-import { type GameVec3 } from "@pointclick/engine-core/types";
+import { type GameCommand } from "@pointclick-engine/engine-core/commands";
+import { type GameEvent } from "@pointclick-engine/engine-core/events";
+import { type GameLoopPort, type InputPort } from "@pointclick-engine/engine-core/ports";
+import { type GameVec3 } from "@pointclick-engine/engine-core/types";
 \`\`\`
 
 ## What's inside
@@ -78,14 +78,14 @@ Full architecture: [docs/architecture/](https://github.com/.../docs/architecture
 ### 2. Crear `packages/engine-renderer-r3f/README.md`
 
 ```markdown
-# @pointclick/engine-renderer-r3f
+# @pointclick-engine/engine-renderer-r3f
 
-React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick/engine-core).
+React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick-engine/engine-core).
 
 ## Install
 
 \`\`\`bash
-npm install @pointclick/engine-renderer-r3f @pointclick/engine-core
+npm install @pointclick-engine/engine-renderer-r3f @pointclick-engine/engine-core
 \`\`\`
 
 Peer dependencies (install in your app):
@@ -97,7 +97,7 @@ npm install react react-dom three @react-three/fiber @react-three/drei @react-th
 ## Quick start
 
 \`\`\`tsx
-import { createGameRuntime, GameViewport } from "@pointclick/engine-renderer-r3f"; // facade
+import { createGameRuntime, GameViewport } from "@pointclick-engine/engine-renderer-r3f"; // facade
 import { mySceneConfigs, myItemConfigs, myDialogRules } from "./my-content";
 
 function App() {

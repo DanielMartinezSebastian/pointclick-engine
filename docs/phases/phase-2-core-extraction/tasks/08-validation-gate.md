@@ -1,4 +1,4 @@
-# Task 08: Validation gate (close Phase 2)
+﻿# Task 08: Validation gate (close Phase 2)
 
 **Phase**: 2 | **Estimate**: 1h | **Owner**: —
 
@@ -131,7 +131,7 @@ Phase 2 COMPLETED. Listo para Phase 3.
 
    Phase 2 (core extraction) completed.
    - engine-core: agnostic, tested, builds clean
-   - web-demo: consumes @pointclick/engine-core, functional
+   - web-demo: consumes @pointclick-engine/engine-core, functional
 
    - [x] Marked: 08-validation-gate
 

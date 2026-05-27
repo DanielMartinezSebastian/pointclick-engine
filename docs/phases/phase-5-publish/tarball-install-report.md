@@ -1,4 +1,4 @@
-# Tarball Install Report
+﻿# Tarball Install Report
 
 **Date**: 2026-05-27
 **Phase**: 5, Task 06
@@ -43,7 +43,7 @@ Error [ERR_UNSUPPORTED_DIR_IMPORT]: Directory import
 
 El sandbox de Next.js aislado fue sustituido por la integración existente en `apps/web-demo`, que verifica los mismos packages compilados:
 
-- `apps/web-demo` importa `@pointclick/engine-core` y `@pointclick/engine-renderer-r3f` desde workspace symlinks que apuntan a los mismos `dist/` incluidos en los tarballs.
+- `apps/web-demo` importa `@pointclick-engine/engine-core` y `@pointclick-engine/engine-renderer-r3f` desde workspace symlinks que apuntan a los mismos `dist/` incluidos en los tarballs.
 - `npm run build -w apps/web-demo` produce 4 rutas estáticas sin errores.
 - 35 tests pasan, incluyendo subpath imports validados via TypeScript `moduleResolution: "bundler"`.
 

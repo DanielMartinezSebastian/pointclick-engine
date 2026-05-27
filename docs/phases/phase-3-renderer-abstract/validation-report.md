@@ -1,4 +1,4 @@
-# Phase 3 Validation Report
+﻿# Phase 3 Validation Report
 
 Date: 2026-05-27
 
@@ -27,7 +27,7 @@ Date: 2026-05-27
 
 - `emitRuntimeEvent` movida a engine-core: ✅
 - `apps/web-demo/.../types/runtimeEvents.ts` eliminada: ✅
-- Todos los consumidores apuntan a `@pointclick/engine-core`: ✅
+- Todos los consumidores apuntan a `@pointclick-engine/engine-core`: ✅
 
 ## Migración de componentes renderer
 
@@ -35,7 +35,7 @@ Date: 2026-05-27
 - `packages/engine-renderer-r3f/src/scene/`: ✅ SceneGround, SceneWalls, SceneCollisionSphere, SceneWallPointPreview
 - `packages/engine-renderer-r3f/src/SpeechBubble.tsx`: ✅
 - `packages/engine-renderer-r3f/src/GameTouchSpriteRuntime.tsx`: ✅ (DI para mobileInputStore, sceneEditorStore, getRandomPhrase)
-- Re-exportaciones en `apps/web-demo/app/components/`: ✅ apuntan a @pointclick/engine-renderer-r3f
+- Re-exportaciones en `apps/web-demo/app/components/`: ✅ apuntan a @pointclick-engine/engine-renderer-r3f
 
 ## Arquitectura de capas respetada
 

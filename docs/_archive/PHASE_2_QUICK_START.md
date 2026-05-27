@@ -1,4 +1,4 @@
-# Fase 2: Quick Start - Comenzar Ahora
+﻿# Fase 2: Quick Start - Comenzar Ahora
 
 **Tiempo total**: ~4 semanas  
 **Semana 1 (Ahora - Semana 3)**: Setup + Auditoría  
@@ -134,7 +134,7 @@ packages/
 
 ```json
 {
-  "name": "@pointclick/engine-core",
+  "name": "@pointclick-engine/engine-core",
   "version": "0.1.0",
   "description": "Point & Click game engine - framework agnostic core",
   "main": "dist/index.js",
@@ -382,7 +382,7 @@ Cambiar todos los imports:
 import { findPath } from '@/app/lib/engine/movement/findPath';
 
 // DESPUÉS
-import { findPath } from '@pointclick/engine-core';
+import { findPath } from '@pointclick-engine/engine-core';
 ```
 
 ---
@@ -429,7 +429,7 @@ npm run dev:demo
 
 # 5. Imports actualizados
 grep -r "@/app/lib/core/\|@/app/lib/engine/movement\|@/app/store/sceneStore" apps/web-demo/app
-# Resultado: NADA (todo de @pointclick/engine-core)
+# Resultado: NADA (todo de @pointclick-engine/engine-core)
 ```
 
 ---
@@ -506,7 +506,7 @@ du -sh packages/engine-core/dist/
 
 ## Si Algo Falla
 
-### "Module not found: @pointclick/engine-core"
+### "Module not found: @pointclick-engine/engine-core"
 
 ```bash
 # Solución: Reinstalar dependencias

@@ -1,6 +1,6 @@
-# How to Release
+﻿# How to Release
 
-Guide for publishing `@pointclick/engine-core` and `@pointclick/engine-renderer-r3f` to npm.
+Guide for publishing `@pointclick-engine/engine-core` and `@pointclick-engine/engine-renderer-r3f` to npm.
 
 **Versioning strategy**: lockstep (both packages share the same version number during v0.x).
 
@@ -45,8 +45,8 @@ npm publish --workspace packages/engine-core --access public
 npm publish --workspace packages/engine-renderer-r3f --access public
 
 # 6. Verify publication
-npm view @pointclick/engine-core@0.1.0
-npm view @pointclick/engine-renderer-r3f@0.1.0
+npm view @pointclick-engine/engine-core@0.1.0
+npm view @pointclick-engine/engine-renderer-r3f@0.1.0
 ```
 
 ---
@@ -55,8 +55,8 @@ npm view @pointclick/engine-renderer-r3f@0.1.0
 
 ```bash
 # Deprecate (preferred over unpublish — npm deletes history after 72h)
-npm deprecate @pointclick/engine-core@0.1.0 "broken: use 0.1.1 instead"
-npm deprecate @pointclick/engine-renderer-r3f@0.1.0 "broken: use 0.1.1 instead"
+npm deprecate @pointclick-engine/engine-core@0.1.0 "broken: use 0.1.1 instead"
+npm deprecate @pointclick-engine/engine-renderer-r3f@0.1.0 "broken: use 0.1.1 instead"
 
 # Then publish a fix as 0.1.1
 ```

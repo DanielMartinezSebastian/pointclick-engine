@@ -1,4 +1,4 @@
-# Renderer Implementation Guide
+﻿# Renderer Implementation Guide
 
 **Audience**: developers building an alternative renderer (PixiJS, Canvas 2D, native).
 **Estado**: estable v0.1 | **Última revisión**: 2026-05-27
@@ -14,7 +14,7 @@ A renderer must:
 3. Subscribe to `sceneStore` state and draw whatever is current.
 4. Call `createGameRuntime` (or wire commands directly) to integrate with the bidirectional API.
 
-No need to touch `engine-core` source — the package exposes everything via `@pointclick/engine-core/ports`.
+No need to touch `engine-core` source — the package exposes everything via `@pointclick-engine/engine-core/ports`.
 
 ---
 
@@ -23,7 +23,7 @@ No need to touch `engine-core` source — the package exposes everything via `@p
 ### `IGameLoopPort`
 
 ```ts
-// @pointclick/engine-core/ports
+// @pointclick-engine/engine-core/ports
 interface IGameLoopPort {
   subscribe(callback: (deltaMs: number) => void): () => void;
 }
@@ -68,13 +68,13 @@ mkdir -p packages/engine-renderer-canvas2d/src
 
 ```json
 {
-  "name": "@pointclick/engine-renderer-canvas2d",
+  "name": "@pointclick-engine/engine-renderer-canvas2d",
   "version": "0.0.1",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@pointclick/engine-core": "^0.1.0"
+    "@pointclick-engine/engine-core": "^0.1.0"
   }
 }
 ```
@@ -83,7 +83,7 @@ mkdir -p packages/engine-renderer-canvas2d/src
 
 ```ts
 // src/adapters/CanvasGameLoop.ts
-import type { IGameLoopPort } from "@pointclick/engine-core/ports";
+import type { IGameLoopPort } from "@pointclick-engine/engine-core/ports";
 
 export class CanvasGameLoop implements IGameLoopPort {
   private listeners = new Set<(dt: number) => void>();
@@ -121,7 +121,7 @@ export class CanvasGameLoop implements IGameLoopPort {
 
 ```ts
 // src/adapters/CanvasKeyboardInput.ts
-import type { IInputPort } from "@pointclick/engine-core/ports";
+import type { IInputPort } from "@pointclick-engine/engine-core/ports";
 
 export class CanvasKeyboardInput implements IInputPort {
   onKeyDown(handler: (key: string) => void): () => void {
@@ -142,7 +142,7 @@ export class CanvasKeyboardInput implements IInputPort {
 
 ```ts
 // src/CanvasRenderer.ts
-import { useSceneStore } from "@pointclick/engine-core/state";
+import { useSceneStore } from "@pointclick-engine/engine-core/state";
 import type { CanvasGameLoop } from "./adapters/CanvasGameLoop";
 
 export function createCanvasRenderer(
@@ -182,8 +182,8 @@ export function createCanvasRenderer(
 
 ```ts
 // src/index.ts
-import { useSceneStore } from "@pointclick/engine-core/state";
-import type { GameScene } from "@pointclick/engine-core/types";
+import { useSceneStore } from "@pointclick-engine/engine-core/state";
+import type { GameScene } from "@pointclick-engine/engine-core/types";
 import { CanvasGameLoop } from "./adapters/CanvasGameLoop";
 import { CanvasKeyboardInput } from "./adapters/CanvasKeyboardInput";
 import { createCanvasRenderer } from "./CanvasRenderer";
@@ -257,7 +257,7 @@ See [`architecture/03-rules-core-vs-render.md`](03-rules-core-vs-render.md) for 
 - **`useSceneStore` outside React**: works via `useSceneStore.getState()` and `useSceneStore.subscribe()`. No React hook needed.
 - **Don't mutate `sceneStore` directly** from drawing code. Mutations go through `store.setPlayerPosition()` or dispatch commands via `CommandHandler`.
 - **`player:moved` is high-frequency.** The R3F renderer emits it every frame. Throttle if your event consumers are expensive.
-- **`peerDependencies`**: don't add `@pointclick/engine-core` to `dependencies` — it must resolve from the consumer's installation.
+- **`peerDependencies`**: don't add `@pointclick-engine/engine-core` to `dependencies` — it must resolve from the consumer's installation.
 
 ---
 

@@ -1,4 +1,4 @@
-# Task 04: Package exports + metadata
+﻿# Task 04: Package exports + metadata
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 
@@ -83,7 +83,7 @@ Hoy `three`, `@react-three/fiber`, `@react-three/drei`, `@react-three/rapier`, `
 ```json
 {
   "dependencies": {
-    "@pointclick/engine-core": "*"
+    "@pointclick-engine/engine-core": "*"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
@@ -109,13 +109,13 @@ Hoy `three`, `@react-three/fiber`, `@react-three/drei`, `@react-three/rapier`, `
 
 **Cuidado**: mover de `dependencies` a `peerDependencies` puede romper la instalación de `apps/web-demo` si no instala explícitamente esas deps. Verificar que `apps/web-demo/package.json` ya las tiene (lo tiene, según el package.json revisado).
 
-### 4. Reemplazar `@pointclick/engine-core: "*"` en renderer-r3f
+### 4. Reemplazar `@pointclick-engine/engine-core: "*"` en renderer-r3f
 
 Cambiar de `"*"` a `"workspace:*"` (npm workspaces lo resuelve) o al rango target una vez publicado:
 
 ```json
 "dependencies": {
-  "@pointclick/engine-core": "^0.1.0"
+  "@pointclick-engine/engine-core": "^0.1.0"
 }
 ```
 
@@ -161,9 +161,9 @@ Si TypeScript no emite los subpaths como espera el `exports`, ajustar `tsconfig.
 En `apps/web-demo` (o un test temporal):
 
 ```ts
-import { GameCommand } from "@pointclick/engine-core/commands";
-import { GameEvent } from "@pointclick/engine-core/events";
-import { GameLoopPort } from "@pointclick/engine-core/ports";
+import { GameCommand } from "@pointclick-engine/engine-core/commands";
+import { GameEvent } from "@pointclick-engine/engine-core/events";
+import { GameLoopPort } from "@pointclick-engine/engine-core/ports";
 ```
 
 Compilar con `npm run build -w apps/web-demo`. Si TypeScript no resuelve, falta `moduleResolution: "Bundler"` o `"NodeNext"` en el tsconfig del demo.
@@ -176,7 +176,7 @@ Compilar con `npm run build -w apps/web-demo`. Si TypeScript no resuelve, falta 
 - [ ] `three`, `@react-three/*`, `react`, `zustand` movidos a `peerDependencies` en renderer-r3f
 - [ ] Cada package tiene `repository`, `bugs`, `homepage`, `engines`, `publishConfig.access: public`
 - [ ] `npm run build` pasa workspace completo
-- [ ] Smoke test: `import { GameCommand } from "@pointclick/engine-core/commands"` compila desde `apps/web-demo`
+- [ ] Smoke test: `import { GameCommand } from "@pointclick-engine/engine-core/commands"` compila desde `apps/web-demo`
 - [ ] Demo `/` y `/example-bridge` siguen verdes
 
 ## On Complete
@@ -199,7 +199,7 @@ Compilar con `npm run build -w apps/web-demo`. Si TypeScript no resuelve, falta 
 
 ## Notes
 
-**Trampa**: si TypeScript se queja con `Cannot find module '@pointclick/engine-core/commands'`, suele ser `moduleResolution`. Asegurar:
+**Trampa**: si TypeScript se queja con `Cannot find module '@pointclick-engine/engine-core/commands'`, suele ser `moduleResolution`. Asegurar:
 
 ```json
 "compilerOptions": {

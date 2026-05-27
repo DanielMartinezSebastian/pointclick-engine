@@ -1,4 +1,4 @@
-# Task 04: Define GameLoopPort + R3F adapter
+﻿# Task 04: Define GameLoopPort + R3F adapter
 
 **Phase**: 3 | **Estimate**: 3h | **Owner**: —
 
@@ -102,7 +102,7 @@ describe("HeadlessGameLoop", () => {
 ```ts
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
-import type { GameLoopCallback, GameLoopPort, Unsubscribe } from "@pointclick/engine-core";
+import type { GameLoopCallback, GameLoopPort, Unsubscribe } from "@pointclick-engine/engine-core";
 
 /**
  * R3F adapter that exposes a GameLoopPort. Must be used inside a Canvas tree.
@@ -152,7 +152,7 @@ npm test -w packages/engine-core
 - [ ] `packages/engine-core/src/ports/gameLoop.ts` define `GameLoopPort` interface
 - [ ] `HeadlessGameLoop` class testeable sin React
 - [ ] `packages/engine-renderer-r3f/src/adapters/gameLoopR3F.ts` implementa adapter R3F
-- [ ] `useR3FGameLoop()` exportado desde `@pointclick/engine-renderer-r3f`
+- [ ] `useR3FGameLoop()` exportado desde `@pointclick-engine/engine-renderer-r3f`
 - [ ] Tests de `HeadlessGameLoop` pasan
 - [ ] `npm run build` clean en ambos packages
 - [ ] `grep "react\|three" packages/engine-core/src/ports/gameLoop.ts` devuelve nada

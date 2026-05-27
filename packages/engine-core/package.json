@@ -1,5 +1,5 @@
-{
-  "name": "@pointclick/engine-core",
+﻿{
+  "name": "@pointclick-engine/engine-core",
   "version": "0.1.0",
   "description": "Framework-agnostic core for Point & Click Game Engine",
   "type": "module",

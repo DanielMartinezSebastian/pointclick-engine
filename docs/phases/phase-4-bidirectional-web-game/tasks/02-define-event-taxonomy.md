@@ -1,4 +1,4 @@
-# Task 02: Define event taxonomy in engine-core
+﻿# Task 02: Define event taxonomy in engine-core
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 
@@ -117,7 +117,7 @@ Crear `packages/engine-core/__tests__/gameEvents.test.ts` cubriendo:
 - [ ] `npm run build -w packages/engine-core` pasa
 - [ ] `npm run test -w packages/engine-core -- gameEvents` pasa (≥4 tests)
 - [ ] `grep -rn "react\|three\|@react-three" packages/engine-core/src/game/events` devuelve nada
-- [ ] `import { GameEvent } from "@pointclick/engine-core"` funciona desde `apps/web-demo`
+- [ ] `import { GameEvent } from "@pointclick-engine/engine-core"` funciona desde `apps/web-demo`
 
 ## On Complete
 

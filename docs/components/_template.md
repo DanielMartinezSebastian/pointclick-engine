@@ -1,4 +1,4 @@
-# <ComponentName>
+﻿# <ComponentName>
 
 **Type**: `<UI | Renderer | Sprite | Editor>` | **Layer**: `<UI | Renderer>` | **File**: `apps/web-demo/app/components/<path>.tsx`
 
@@ -16,7 +16,7 @@
 ## Dependencies
 
 - `@react-three/fiber` (si Renderer)
-- `@pointclick/engine-core` (state, types)
+- `@pointclick-engine/engine-core` (state, types)
 - Otros componentes internos: `<ComponentX>`, `<ComponentY>`
 
 ## Events / Callbacks

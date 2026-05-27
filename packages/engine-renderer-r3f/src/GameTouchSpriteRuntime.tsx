@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -19,7 +19,7 @@ import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 
-import { findPath, useSceneStore, emitRuntimeEvent, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick/engine-core";
+import { findPath, useSceneStore, emitRuntimeEvent, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
 
 type MovementPoint = { x: number; z: number };
 

@@ -1,4 +1,4 @@
-# Task 01: Pre-publish audit + release strategy ADR
+﻿# Task 01: Pre-publish audit + release strategy ADR
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 
@@ -39,7 +39,7 @@ Manual: completar el reporte con:
 - **Comandos no cableados** (heredados de Phase 4: lista de `executor not yet wired`)
 - **Imports `file:`** en `apps/web-demo/package.json`
 - **Subpath exports actuales** (hoy solo `.` — se ampliará en Task 04)
-- **Disponibilidad de scope npm**: `npm view @pointclick/engine-core` → 404 esperado
+- **Disponibilidad de scope npm**: `npm view @pointclick-engine/engine-core` → 404 esperado
 
 ### 2. Decidir release strategy (ADR-0007)
 
@@ -59,7 +59,7 @@ Estamos listos para publicar `engine-core` y `engine-renderer-r3f`. Decidir:
 ## Decisions
 
 ### Scope
-`@pointclick/*` si disponible. Fallback: `@dms-pointclick/*`. Verificado en Task 01 audit.
+`@pointclick-engine/*` si disponible. Fallback: `@dms-pointclick/*`. Verificado en Task 01 audit.
 
 ### Versionado
 Lockstep en v0.x: ambos packages comparten versión para evitar matriz de compatibilidad temprana. Cambio a independiente al llegar a v1.0 si tiene sentido.
@@ -102,7 +102,7 @@ Listado en `audit-report.md`:
 
 - [ ] `docs/phases/phase-5-publish/audit-report.md` existe con secciones: workspaces, deps actuales, gaps a resolver, scope npm verificado
 - [ ] `docs/decisions/0007-release-strategy.md` existe con decisiones justificadas
-- [ ] `npm view @pointclick/engine-core` confirmado (404 = libre, o existing = decidir alternativa)
+- [ ] `npm view @pointclick-engine/engine-core` confirmado (404 = libre, o existing = decidir alternativa)
 - [ ] ADR linkado desde `docs/decisions/README.md`
 - [ ] Cada gap del audit referencia la task que lo resuelve
 

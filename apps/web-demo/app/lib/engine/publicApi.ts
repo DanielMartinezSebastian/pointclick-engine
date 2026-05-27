@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // Re-exports from renderer (stable public API)
-export { useR3FGameLoop, WebKeyboardInput } from "@pointclick/engine-renderer-r3f";
+export { useR3FGameLoop, WebKeyboardInput } from "@pointclick-engine/engine-renderer-r3f";
 
 /**
  * Public API mínima del motor de juego.
@@ -28,7 +28,7 @@ import {
   type GameEventType,
   type GameEventHandler,
   type GameCommand,
-} from "@pointclick/engine-core";
+} from "@pointclick-engine/engine-core";
 import GameTouchCanvas from "../../components/GameTouchCanvas";
 import { useInventoryStore } from "../../store/inventoryStore";
 import { useDialogStore } from "../../store/dialogStore";
@@ -38,14 +38,14 @@ import { useDialogStore } from "../../store/dialogStore";
 // ---------------------------------------------------------------------------
 
 // Re-export key types from engine-core for API stability
-export type { GameVec3, GameSceneGround, GameSceneWall } from "@pointclick/engine-core";
+export type { GameVec3, GameSceneGround, GameSceneWall } from "@pointclick-engine/engine-core";
 // Re-export bidirectional API types
 export type {
   GameEvent,
   GameEventType,
   GameEventHandler,
   GameCommand,
-} from "@pointclick/engine-core";
+} from "@pointclick-engine/engine-core";
 
 // Alias for public API compatibility
 export type GameSceneInteraction = GameSceneInteractionFull;

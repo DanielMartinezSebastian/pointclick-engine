@@ -1,4 +1,4 @@
-# ADR-0007: Release Strategy
+﻿# ADR-0007: Release Strategy
 
 **Status**: accepted
 **Date**: 2026-05-27
@@ -13,7 +13,7 @@ ejecutar ningún `npm publish`.
 
 ### Scope
 
-`@pointclick/*` — verificado como libre en npm (Task 01 audit). Fallback documentado:
+`@pointclick-engine/*` — verificado como libre en npm (Task 01 audit). Fallback documentado:
 `@dms-pointclick/*` si por cualquier razón el scope fuera ocupado antes del publish.
 
 ### Versionado

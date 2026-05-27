@@ -1,4 +1,4 @@
-# Phase 2 Validation Report
+﻿# Phase 2 Validation Report
 
 **Date**: 2026-05-26
 **Status**: ✅ PHASE 2 COMPLETED
@@ -40,7 +40,7 @@ confirmed functional via dev server startup.
 - No `@/app/lib/engine/movement/findPath` imports
 - No `@/app/store/sceneStore` imports
 
-All imports updated to use `@pointclick/engine-core`.
+All imports updated to use `@pointclick-engine/engine-core`.
 
 ---
 
@@ -50,10 +50,10 @@ All imports updated to use `@pointclick/engine-core`.
 - ✅ Completely agnostic (no React, R3F, Next.js, or browser globals)
 - ✅ Exports: types, pathfinding (findPath), rules (inventory), state (sceneStore)
 - ✅ Tested: 19 tests passing
-- ✅ Published as workspace package `@pointclick/engine-core`
+- ✅ Published as workspace package `@pointclick-engine/engine-core`
 
 ### apps/web-demo/
-- ✅ Consumes `@pointclick/engine-core` via npm workspace
+- ✅ Consumes `@pointclick-engine/engine-core` via npm workspace
 - ✅ publicApi.ts acts as facade for API stability
 - ✅ Removed duplicate files (findPath.ts, findPath.test.ts)
 - ✅ Updated all imports to use engine-core exports
@@ -85,7 +85,7 @@ All imports updated to use `@pointclick/engine-core`.
 **Phase 2 (Core Extraction) is COMPLETE and VALIDATED.**
 
 The game engine core is now:
-- **Publishable** as `@pointclick/engine-core` on npm
+- **Publishable** as `@pointclick-engine/engine-core` on npm
 - **Framework-agnostic** (testable, reusable in any renderer)
 - **Stable** (API contracts maintained, backward compatible)
 - **Functional** (demo continues to work identically)

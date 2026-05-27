@@ -1,4 +1,4 @@
-# Point & Click Game Engine
+﻿# Point & Click Game Engine
 
 Framework-agnostic engine for 2D / 2.5D point-and-click games. First renderer: React Three Fiber.
 
@@ -6,8 +6,8 @@ Framework-agnostic engine for 2D / 2.5D point-and-click games. First renderer: R
 
 | Package | Description |
 |---------|-------------|
-| [`@pointclick/engine-core`](packages/engine-core) | Agnostic core: state, rules, pathfinding, ports, commands & events |
-| [`@pointclick/engine-renderer-r3f`](packages/engine-renderer-r3f) | React Three Fiber renderer implementation |
+| [`@pointclick-engine/engine-core`](packages/engine-core) | Agnostic core: state, rules, pathfinding, ports, commands & events |
+| [`@pointclick-engine/engine-renderer-r3f`](packages/engine-renderer-r3f) | React Three Fiber renderer implementation |
 | [`apps/web-demo`](apps/web-demo) | Next.js demo composing both packages |
 
 ## Quick start

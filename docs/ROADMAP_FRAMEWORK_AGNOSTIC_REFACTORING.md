@@ -1,4 +1,4 @@
-# Roadmap: Refactorización a Librería Agnóstica al Framework
+﻿# Roadmap: Refactorización a Librería Agnóstica al Framework
 
 **Versión**: 1.0  
 **Fecha**: 2026-05-23  
@@ -236,8 +236,8 @@ point-and-click-game/
    </div>
 
    <script>
-     import { createGameEngine } from '@pointclick/engine-core';
-     import { createR3FRenderer } from '@pointclick/engine-renderer-r3f';
+     import { createGameEngine } from '@pointclick-engine/engine-core';
+     import { createR3FRenderer } from '@pointclick-engine/engine-renderer-r3f';
 
      const engine = createGameEngine({ ... });
      const renderer = createR3FRenderer(container);
@@ -266,7 +266,7 @@ point-and-click-game/
    ```json
    // packages/engine-core/package.json
    {
-     "name": "@pointclick/engine-core",
+     "name": "@pointclick-engine/engine-core",
      "version": "0.1.0",
      "exports": {
        ".": "./dist/index.js",
@@ -277,10 +277,10 @@ point-and-click-game/
 
    // packages/engine-renderer-r3f/package.json
    {
-     "name": "@pointclick/engine-renderer-r3f",
+     "name": "@pointclick-engine/engine-renderer-r3f",
      "version": "0.1.0",
      "peerDependencies": {
-       "@pointclick/engine-core": "^0.1.0",
+       "@pointclick-engine/engine-core": "^0.1.0",
        "react": "^19.0.0",
        "@react-three/fiber": "^9.0.0"
      }

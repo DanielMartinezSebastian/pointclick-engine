@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import { type GameSceneWall, useSceneStore } from "@pointclick/engine-core";
+import { type GameSceneWall, useSceneStore } from "@pointclick-engine/engine-core";
 
 export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 

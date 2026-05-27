@@ -1,4 +1,4 @@
-# Task 06: Publish dry-run via tarball
+﻿# Task 06: Publish dry-run via tarball
 
 **Phase**: 5 | **Estimate**: 3h | **Owner**: —
 
@@ -39,13 +39,13 @@ npm install /<path>/pointclick-engine-core-0.1.0.tgz
 Validar:
 
 ```bash
-node -e "const c = require('@pointclick/engine-core'); console.log(Object.keys(c))"
+node -e "const c = require('@pointclick-engine/engine-core'); console.log(Object.keys(c))"
 ```
 
 **Esperado**: lista de exports (EventBus, CommandHandler, GameVec3, useSceneStore, etc.). Si falla con `ERR_REQUIRE_ESM`, usar:
 
 ```bash
-node --input-type=module -e "import * as c from '@pointclick/engine-core'; console.log(Object.keys(c))"
+node --input-type=module -e "import * as c from '@pointclick-engine/engine-core'; console.log(Object.keys(c))"
 ```
 
 ### 3. Probar subpath imports
@@ -53,9 +53,9 @@ node --input-type=module -e "import * as c from '@pointclick/engine-core'; conso
 Crear `/tmp/pointclick-sandbox/test.mjs`:
 
 ```js
-import { CommandHandler, type GameCommand } from "@pointclick/engine-core/commands";
-import { EventBus, type GameEvent } from "@pointclick/engine-core/events";
-import { type GameLoopPort } from "@pointclick/engine-core/ports";
+import { CommandHandler, type GameCommand } from "@pointclick-engine/engine-core/commands";
+import { EventBus, type GameEvent } from "@pointclick-engine/engine-core/events";
+import { type GameLoopPort } from "@pointclick-engine/engine-core/ports";
 
 const cmd = new CommandHandler();
 cmd.register("scene:set", (c) => console.log("got:", c));
@@ -93,7 +93,7 @@ Editar `app/page.tsx`:
 ```tsx
 "use client";
 import { useEffect } from "react";
-import { createGameRuntime, GameViewport } from "@pointclick/engine-renderer-r3f";
+import { createGameRuntime, GameViewport } from "@pointclick-engine/engine-renderer-r3f";
 
 const minimalScene = {
   id: "test",
