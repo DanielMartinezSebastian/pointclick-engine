@@ -7,10 +7,40 @@ export interface GameSceneGround {
     maxZ: number;
     y: number;
 }
+/**
+ * An opening (door/window) in a wall.
+ * Position and halfSize are relative to the wall's local coordinate space
+ * (wall center = origin, axes aligned with wall before rotation).
+ */
+export interface GameSceneWallOpening {
+    /** Unique identifier for this opening. */
+    id: string;
+    /** Center of the opening relative to the wall's local center. */
+    position: GameVec3;
+    /** Half-dimensions of the opening (width/2, height/2, depth/2). */
+    halfSize: GameVec3;
+}
 export interface GameSceneWall {
     position: GameVec3;
     halfSize: GameVec3;
     rotationY: number;
+    /**
+     * Array of openings (doors/windows) in this wall.
+     * Empty array or undefined = solid wall (backward compatible).
+     */
+    openings?: GameSceneWallOpening[];
+    /**
+     * URL to the wall's texture image.
+     * Should point to /public/assets/wall-textures/* or similar.
+     * Undefined = no texture (backward compatible).
+     */
+    textureUrl?: string;
+    /**
+     * World-space offset applied to the texture plane position.
+     * Used for fine-grained alignment with the background image.
+     * Defaults to [0, 0, 0].
+     */
+    texturePosition?: GameVec3;
 }
 export interface GameSceneInteraction {
     position: GameVec3;

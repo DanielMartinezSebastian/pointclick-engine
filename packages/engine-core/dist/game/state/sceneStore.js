@@ -30,6 +30,17 @@ function cloneWall(wall) {
         position: [...wall.position],
         rotationY: wall.rotationY,
         halfSize: [...wall.halfSize],
+        openings: wall.openings
+            ? wall.openings.map((opening) => ({
+                id: opening.id,
+                position: [...opening.position],
+                halfSize: [...opening.halfSize],
+            }))
+            : undefined,
+        textureUrl: wall.textureUrl,
+        texturePosition: wall.texturePosition
+            ? [...wall.texturePosition]
+            : undefined,
     };
 }
 function cloneInteraction(interaction) {

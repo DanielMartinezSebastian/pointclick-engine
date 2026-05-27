@@ -2,6 +2,7 @@ import type {
   GameSceneGround,
   GameSceneInteraction,
   GameSceneWall,
+  GameSceneWallOpening,
 } from "../../types";
 
 export type MovementPoint = {
@@ -14,12 +15,24 @@ type MovementBounds = Pick<
   "minX" | "maxX" | "minZ" | "maxZ"
 >;
 
+/** A 2D opening hole within an obstacle (wall-local space). */
+type ObstacleOpening = {
+  /** Center of opening in wall local X axis. */
+  centerX: number;
+  /** Center of opening in wall local Z axis. */
+  centerZ: number;
+  halfX: number;
+  halfZ: number;
+};
+
 type MovementObstacle = {
   x: number;
   z: number;
   halfX: number;
   halfZ: number;
   rotationY: number;
+  /** Openings (doors/windows) that allow traversal through this obstacle. */
+  openings?: ObstacleOpening[];
 };
 
 type FindPathOptions = {
@@ -68,6 +81,7 @@ export function findPath({
         wall.halfSize[0],
         wall.halfSize[2],
         wall.rotationY,
+        wall.openings,
       ),
     ),
     ...interactions
@@ -229,6 +243,7 @@ function toObstacle(
   halfX: number,
   halfZ: number,
   rotationY: number | undefined,
+  openings?: GameSceneWallOpening[],
 ): MovementObstacle {
   return {
     x,
@@ -236,6 +251,12 @@ function toObstacle(
     halfX,
     halfZ,
     rotationY: rotationY ?? 0,
+    openings: openings?.map((o) => ({
+      centerX: o.position[0],
+      centerZ: o.position[2],
+      halfX: o.halfSize[0],
+      halfZ: o.halfSize[2],
+    })),
   };
 }
 
@@ -442,10 +463,33 @@ function isPointInsideObstacle(
   const rotatedX = localX * cos - localZ * sin;
   const rotatedZ = localX * sin + localZ * cos;
 
-  return (
+  // Check if the point is inside the obstacle's solid area (with padding)
+  const insideWall =
     Math.abs(rotatedX) <= obstacle.halfX + obstaclePadding &&
-    Math.abs(rotatedZ) <= obstacle.halfZ + obstaclePadding
-  );
+    Math.abs(rotatedZ) <= obstacle.halfZ + obstaclePadding;
+
+  if (!insideWall) return false;
+
+  // If the point is inside the wall, check if it is also inside an opening.
+  // Openings are holes that allow traversal — reduce their effective size by
+  // obstaclePadding so the agent fits through with clearance.
+  if (obstacle.openings && obstacle.openings.length > 0) {
+    for (const opening of obstacle.openings) {
+      const openHalfX = opening.halfX - obstaclePadding;
+      const openHalfZ = opening.halfZ - obstaclePadding;
+      if (
+        openHalfX > 0 &&
+        openHalfZ > 0 &&
+        Math.abs(rotatedX - opening.centerX) <= openHalfX &&
+        Math.abs(rotatedZ - opening.centerZ) <= openHalfZ
+      ) {
+        // Point is inside an opening → not blocked
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function clamp(value: number, min: number, max: number) {

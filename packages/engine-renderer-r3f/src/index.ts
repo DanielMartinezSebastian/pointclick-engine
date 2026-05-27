@@ -14,6 +14,7 @@ export { buildSpeakingAnimation } from "./sprite/speakingAnimation";
 export { SceneGround } from "./scene/SceneGround";
 export { SceneWalls } from "./scene/SceneWalls";
 export type { WallResizeHandle } from "./scene/SceneWalls";
+export { SceneWallPlane } from "./scene/SceneWallPlane";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 

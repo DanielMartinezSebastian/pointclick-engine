@@ -1,7 +1,11 @@
 import { create } from "zustand";
 
 import { useSceneStore } from "@pointclick-engine/engine-core";
-import type { GameSceneWall, GameScene } from "@pointclick-engine/engine-core";
+import type {
+  GameSceneWall,
+  GameSceneWallOpening,
+  GameScene,
+} from "@pointclick-engine/engine-core";
 
 /**
  * sceneEditorStore – estado y acciones exclusivos del editor/debug.
@@ -26,6 +30,21 @@ type SceneEditorStore = {
   addWallWithData: (wall: GameSceneWall) => void;
   removeSelectedWall: () => void;
   updateSelectedWall: (updater: (wall: GameSceneWall) => GameSceneWall) => void;
+
+  // Opening CRUD for selected wall (Phase 6)
+  addOpeningToSelectedWall: () => void;
+  removeOpeningFromSelectedWall: (openingId: string) => void;
+  updateOpeningInSelectedWall: (
+    openingId: string,
+    updater: (opening: GameSceneWallOpening) => GameSceneWallOpening,
+  ) => void;
+
+  // Texture helpers for selected wall (Phase 6)
+  updateSelectedWallTextureUrl: (textureUrl: string | undefined) => void;
+  updateSelectedWallTexturePosition: (
+    axis: 0 | 1 | 2,
+    value: number,
+  ) => void;
 
   // Mutaciones de suelo (delegan a sceneStore)
   updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
@@ -79,6 +98,71 @@ export const useSceneEditorStore = create<SceneEditorStore>()((set, get) => ({
       const { selectedWallIndex } = get();
       if (selectedWallIndex == null) return;
       useSceneStore.getState().updateWall(selectedWallIndex, updater);
+    },
+
+    // ── Opening CRUD (Phase 6) ────────────────────────────────────────────────
+
+    addOpeningToSelectedWall: () => {
+      const { selectedWallIndex } = get();
+      if (selectedWallIndex == null) return;
+
+      const newOpening: GameSceneWallOpening = {
+        id: `opening-${Date.now()}`,
+        position: [0, 0, 0],
+        halfSize: [0.5, 1, 0.1],
+      };
+
+      useSceneStore.getState().updateWall(selectedWallIndex, (wall) => ({
+        ...wall,
+        openings: [...(wall.openings ?? []), newOpening],
+      }));
+    },
+
+    removeOpeningFromSelectedWall: (openingId) => {
+      const { selectedWallIndex } = get();
+      if (selectedWallIndex == null) return;
+
+      useSceneStore.getState().updateWall(selectedWallIndex, (wall) => ({
+        ...wall,
+        openings: wall.openings?.filter((o) => o.id !== openingId),
+      }));
+    },
+
+    updateOpeningInSelectedWall: (openingId, updater) => {
+      const { selectedWallIndex } = get();
+      if (selectedWallIndex == null) return;
+
+      useSceneStore.getState().updateWall(selectedWallIndex, (wall) => ({
+        ...wall,
+        openings: wall.openings?.map((o) =>
+          o.id === openingId ? updater(o) : o,
+        ),
+      }));
+    },
+
+    // ── Texture helpers (Phase 6) ─────────────────────────────────────────────
+
+    updateSelectedWallTextureUrl: (textureUrl) => {
+      const { selectedWallIndex } = get();
+      if (selectedWallIndex == null) return;
+
+      useSceneStore.getState().updateWall(selectedWallIndex, (wall) => ({
+        ...wall,
+        textureUrl: textureUrl || undefined,
+      }));
+    },
+
+    updateSelectedWallTexturePosition: (axis, value) => {
+      const { selectedWallIndex } = get();
+      if (selectedWallIndex == null) return;
+
+      useSceneStore.getState().updateWall(selectedWallIndex, (wall) => {
+        const texturePosition = [
+          ...(wall.texturePosition ?? [0, 0, 0]),
+        ] as [number, number, number];
+        texturePosition[axis] = value;
+        return { ...wall, texturePosition };
+      });
     },
 
     updateGround: (updater) => {

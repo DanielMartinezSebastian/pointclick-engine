@@ -48,6 +48,17 @@ function cloneWall(wall: GameSceneWall): GameSceneWall {
     position: [...wall.position] as [number, number, number],
     rotationY: wall.rotationY,
     halfSize: [...wall.halfSize] as [number, number, number],
+    openings: wall.openings
+      ? wall.openings.map((opening) => ({
+          id: opening.id,
+          position: [...opening.position] as [number, number, number],
+          halfSize: [...opening.halfSize] as [number, number, number],
+        }))
+      : undefined,
+    textureUrl: wall.textureUrl,
+    texturePosition: wall.texturePosition
+      ? ([...wall.texturePosition] as [number, number, number])
+      : undefined,
   };
 }
 

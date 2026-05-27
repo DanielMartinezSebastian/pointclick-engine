@@ -9,6 +9,7 @@ import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
 import { DebugButton, DebugNumberInput } from "./controls";
+import { WallOpeningEditor } from "./WallOpeningEditor";
 
 export function WallEditorPanel({
   wallToolMode,
@@ -29,6 +30,12 @@ export function WallEditorPanel({
   const removeSelectedWall = useSceneEditorStore((s) => s.removeSelectedWall);
   const updateSelectedWall = useSceneEditorStore((s) => s.updateSelectedWall);
   const [copyLabel, setCopyLabel] = useState("Copiar JSON");
+
+  const addOpeningToSelectedWall = useSceneEditorStore((s) => s.addOpeningToSelectedWall);
+  const removeOpeningFromSelectedWall = useSceneEditorStore((s) => s.removeOpeningFromSelectedWall);
+  const updateOpeningInSelectedWall = useSceneEditorStore((s) => s.updateOpeningInSelectedWall);
+  const updateSelectedWallTextureUrl = useSceneEditorStore((s) => s.updateSelectedWallTextureUrl);
+  const updateSelectedWallTexturePosition = useSceneEditorStore((s) => s.updateSelectedWallTexturePosition);
 
   const selectedWall = selectedWallIndex == null ? null : walls[selectedWallIndex] ?? null;
   const wallOptions = useMemo(
@@ -146,6 +153,73 @@ export function WallEditorPanel({
               <DebugButton label="Mover al jugador" onClick={moveWallToPlayer} />
             </div>
           </div>
+
+          {/* ── Texture (Phase 6) ───────────────────────────────────────── */}
+          <div style={{ borderTop: "1px solid rgb(0 255 65 / 20%)", paddingTop: "6px" }}>
+            <strong style={{ fontSize: "11px" }}>Textura del muro</strong>
+          </div>
+          <div>
+            <label style={{ fontSize: "10px", opacity: 0.85, display: "block", marginBottom: "4px" }}>
+              URL textura
+            </label>
+            <input
+              type="text"
+              value={selectedWall.textureUrl ?? ""}
+              placeholder="/assets/wall-textures/my-wall.png"
+              onChange={(e) => updateSelectedWallTextureUrl(e.target.value || undefined)}
+              style={{
+                width: "100%",
+                background: "rgb(8 12 32 / 90%)",
+                border: "2px solid #00ff41",
+                color: "#00ff41",
+                padding: "4px 6px",
+                fontSize: "10px",
+                fontFamily: "var(--font-pixel), monospace",
+                borderRadius: "2px",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {selectedWall.textureUrl && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+              <DebugNumberInput
+                label="Tex X"
+                value={selectedWall.texturePosition?.[0] ?? 0}
+                onChange={(v) => updateSelectedWallTexturePosition(0, v)}
+              />
+              <DebugNumberInput
+                label="Tex Y"
+                value={selectedWall.texturePosition?.[1] ?? 0}
+                onChange={(v) => updateSelectedWallTexturePosition(1, v)}
+              />
+              <DebugNumberInput
+                label="Tex Z"
+                value={selectedWall.texturePosition?.[2] ?? 0}
+                onChange={(v) => updateSelectedWallTexturePosition(2, v)}
+              />
+            </div>
+          )}
+
+          {/* ── Openings (Phase 6) ──────────────────────────────────────── */}
+          <div style={{ borderTop: "1px solid rgb(0 255 65 / 20%)", paddingTop: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong style={{ fontSize: "11px" }}>
+                Openings ({selectedWall.openings?.length ?? 0})
+              </strong>
+              <DebugButton label="+ Agregar opening" onClick={addOpeningToSelectedWall} />
+            </div>
+          </div>
+
+          {(selectedWall.openings ?? []).map((opening, oi) => (
+            <WallOpeningEditor
+              key={opening.id}
+              opening={opening}
+              index={oi}
+              onUpdate={(updater) => updateOpeningInSelectedWall(opening.id, updater)}
+              onRemove={() => removeOpeningFromSelectedWall(opening.id)}
+            />
+          ))}
         </>
       )}
 

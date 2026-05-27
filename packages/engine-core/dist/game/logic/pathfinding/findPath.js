@@ -14,7 +14,7 @@ const NEIGHBOR_OFFSETS = [
 ];
 export function findPath({ start, goal, bounds, walls, interactions, cellSize = DEFAULT_CELL_SIZE, obstaclePadding = DEFAULT_OBSTACLE_PADDING, segmentSampleStep = DEFAULT_SEGMENT_SAMPLE_STEP, maxIterations = DEFAULT_MAX_ITERATIONS, }) {
     const obstacles = [
-        ...walls.map((wall) => toObstacle(wall.position[0], wall.position[2], wall.halfSize[0], wall.halfSize[2], wall.rotationY)),
+        ...walls.map((wall) => toObstacle(wall.position[0], wall.position[2], wall.halfSize[0], wall.halfSize[2], wall.rotationY, wall.openings)),
         ...interactions
             .filter((interaction) => interaction.hasCollision)
             .map((interaction) => toObstacle(interaction.position[0], interaction.position[2], interaction.halfSize[0], interaction.halfSize[2], interaction.rotationY ?? 0)),
@@ -92,13 +92,19 @@ export function findPath({ start, goal, bounds, walls, interactions, cellSize = 
     }
     return null;
 }
-function toObstacle(x, z, halfX, halfZ, rotationY) {
+function toObstacle(x, z, halfX, halfZ, rotationY, openings) {
     return {
         x,
         z,
         halfX,
         halfZ,
         rotationY: rotationY ?? 0,
+        openings: openings?.map((o) => ({
+            centerX: o.position[0],
+            centerZ: o.position[2],
+            halfX: o.halfSize[0],
+            halfZ: o.halfSize[2],
+        })),
     };
 }
 function pointToGrid(point, bounds, cellSize) {
@@ -223,8 +229,28 @@ function isPointInsideObstacle(point, obstacle, obstaclePadding) {
     const sin = Math.sin(-obstacle.rotationY);
     const rotatedX = localX * cos - localZ * sin;
     const rotatedZ = localX * sin + localZ * cos;
-    return (Math.abs(rotatedX) <= obstacle.halfX + obstaclePadding &&
-        Math.abs(rotatedZ) <= obstacle.halfZ + obstaclePadding);
+    // Check if the point is inside the obstacle's solid area (with padding)
+    const insideWall = Math.abs(rotatedX) <= obstacle.halfX + obstaclePadding &&
+        Math.abs(rotatedZ) <= obstacle.halfZ + obstaclePadding;
+    if (!insideWall)
+        return false;
+    // If the point is inside the wall, check if it is also inside an opening.
+    // Openings are holes that allow traversal — reduce their effective size by
+    // obstaclePadding so the agent fits through with clearance.
+    if (obstacle.openings && obstacle.openings.length > 0) {
+        for (const opening of obstacle.openings) {
+            const openHalfX = opening.halfX - obstaclePadding;
+            const openHalfZ = opening.halfZ - obstaclePadding;
+            if (openHalfX > 0 &&
+                openHalfZ > 0 &&
+                Math.abs(rotatedX - opening.centerX) <= openHalfX &&
+                Math.abs(rotatedZ - opening.centerZ) <= openHalfZ) {
+                // Point is inside an opening → not blocked
+                return false;
+            }
+        }
+    }
+    return true;
 }
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);

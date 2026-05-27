@@ -3,6 +3,7 @@
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
 import { type GameSceneWall, useSceneStore } from "@pointclick-engine/engine-core";
+import { SceneWallPlane } from "./SceneWallPlane";
 
 export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 
@@ -89,6 +90,13 @@ export function SceneWalls({
           )}
         </RigidBody>
       ))}
+
+      {/* Wall texture planes — rendered outside RigidBody, camera-facing */}
+      {walls.map((wall: GameSceneWall, i: number) =>
+        wall.textureUrl ? (
+          <SceneWallPlane key={`wall-plane-${i}`} wall={wall} renderOrder={i} />
+        ) : null,
+      )}
     </>
   );
 }
