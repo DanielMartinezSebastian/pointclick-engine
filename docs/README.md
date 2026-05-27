@@ -36,7 +36,7 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-2-core-extraction/`](phases/phase-2-core-extraction/) — ✅ Completed: Extracción de core a `packages/engine-core/`
 - [`phases/phase-3-renderer-abstract/`](phases/phase-3-renderer-abstract/) — ✅ Completed: Abstracción del renderer
 - [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — ✅ Completed: Comunicación web ↔ juego
-- [`phases/phase-5-publish/`](phases/phase-5-publish/) — **ACTIVA**: Publicación en npm
+- [`phases/phase-5-publish/`](phases/phase-5-publish/) — ✅ Completed: Publicación en npm (v0.1.0 publishable)
 
 ---
 

@@ -2,9 +2,9 @@
 
 **Objetivo**: Dejar `@pointclick/engine-core` y `@pointclick/engine-renderer-r3f` listos para consumirse desde proyectos externos vía `npm install`, con metadatos completos, exports limpios, ejemplos de consumo y un proceso de release documentado.
 **Duración estimada**: 3-4 semanas
-**Estado**: `planning` (creado 2026-05-27)
+**Estado**: `completed` (cerrado 2026-05-27)
 **Owner**: Daniel Martínez Sebastián
-**Progress**: 0/8 tareas
+**Progress**: 8/8 tareas
 
 ## Por qué
 

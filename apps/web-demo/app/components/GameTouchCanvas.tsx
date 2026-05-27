@@ -49,7 +49,7 @@ type GameTouchCanvasProps = {
  */
 function SceneReadyReporter({ onReady }: { onReady: () => void }) {
   const onReadyRef = useRef(onReady);
-  useEffect(() => { onReadyRef.current(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { onReadyRef.current(); }, []); // intentional: run once on mount
   return null;
 }
 

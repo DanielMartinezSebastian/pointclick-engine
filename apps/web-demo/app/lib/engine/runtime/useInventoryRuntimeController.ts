@@ -71,7 +71,6 @@ export function useInventoryRuntimeController({
 
   // Inventory visibility now lives in inventoryStore (wirable via inventory:toggle command)
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
-  const setIsInventoryOpen = useInventoryStore((s) => s.close);
 
   const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() =>
     createInitialInventorySlots(),

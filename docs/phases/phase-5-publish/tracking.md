@@ -2,7 +2,7 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 7/8 tareas
+## Progreso: 8/8 tareas
 
 ## Week 1 — Auditoría + completar API
 
@@ -22,7 +22,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 ## Week 4 — Release
 
-- [ ] [08-validation-gate](tasks/08-validation-gate.md) — gate final + tag v0.1.0 + (opcional) publish
+- [x] [08-validation-gate](tasks/08-validation-gate.md) — gate final + tag v0.1.0 + (opcional) publish
 
 ## Notas / Blockers
 
