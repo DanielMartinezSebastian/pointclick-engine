@@ -1,2 +1,2 @@
-export { useSceneStore, getSceneState, subscribeSceneState, } from "./sceneStore";
+export { useSceneStore, getSceneState, subscribeSceneState, setSceneStoreEmitter, } from "./sceneStore";
 //# sourceMappingURL=index.d.ts.map

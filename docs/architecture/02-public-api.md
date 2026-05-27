@@ -54,7 +54,21 @@ GameViewport(props: GameViewportProps): ReactNode
 3. Documenta en `LIBRARY_API_CONTRACT_V1.md`
 4. Bump semver mayor si es breaking
 
+## Commands & Events (Phase 4)
+
+`createGameRuntime()` ahora devuelve también `executeCommand`, `on`, `emit`, `dispose`:
+
+```ts
+const runtime = createGameRuntime({ scenes });
+runtime.on("scene:changed", handler);      // suscribirse a eventos
+runtime.executeCommand({ type: "scene:set", sceneId: "town" }); // enviar comandos
+const rt = getGameRuntime();               // acceso al singleton desde cualquier sitio
+```
+
+Ver catálogo completo en [`05-bidirectional-communication.md`](05-bidirectional-communication.md).
+
 ## Ver también
 
 - `../LIBRARY_API_CONTRACT_V1.md` — Contrato formal
 - `../LIBRARY_CONSUMPTION_GUIDE.md` — Cómo se consume
+- [`05-bidirectional-communication.md`](05-bidirectional-communication.md) — Commands & Events API (web ↔ juego)

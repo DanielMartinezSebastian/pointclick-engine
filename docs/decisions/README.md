@@ -39,6 +39,7 @@ Cada ADR es **~30 líneas**. Estructura:
 - [0003 — Monorepo with demo inside](0003-monorepo-with-demo.md)
 - [0004 — Modular docs strategy (subagent-first)](0004-modular-docs-strategy.md)
 - [0005 — Renderer ports design (GameLoopPort, InputPort, ViewportPort)](0005-renderer-ports-design.md)
+- [0006 — Command/Event architecture (bidirectional web ↔ game)](0006-command-event-architecture.md)
 
 ## Cómo añadir un ADR
 

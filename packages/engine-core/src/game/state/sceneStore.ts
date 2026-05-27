@@ -5,6 +5,27 @@ import type {
   GameSceneInteractionFull,
   GameVec3,
 } from "../types";
+import type { GameEvent } from "../events/types";
+
+// ---------------------------------------------------------------------------
+// Event emitter hook (injected by createGameRuntime — zero-event mode by default)
+// ---------------------------------------------------------------------------
+
+type StoreEmitter = (event: GameEvent) => void;
+
+let _emitter: StoreEmitter | null = null;
+
+/**
+ * Inyecta el emisor de eventos del runtime. Llamado por `createGameRuntime`
+ * al inicializar el bus. Si no se llama, el store funciona en zero-event mode.
+ */
+export function setSceneStoreEmitter(emitter: StoreEmitter | null): void {
+  _emitter = emitter;
+}
+
+function emit(event: GameEvent): void {
+  if (_emitter) _emitter(event);
+}
 
 const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
 
@@ -112,6 +133,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       scene: clonedScene,
       playerPosition: [...clonedScene.playerSpawn] as GameVec3,
     });
+    emit({ type: "scene:changed", sceneId: id, scene: clonedScene });
   },
   updateGround: (updater) =>
     set((state) => ({
@@ -167,17 +189,18 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       };
     }),
   setPlayerPosition: (position) => set({ playerPosition: position }),
-  requestRespawn: () =>
-    set((state) => {
-      const nextRespawnSignal = state.respawnSignal + 1;
-      logSceneStore("request-respawn", {
-        sceneId: state.sceneId,
-        previousRespawnSignal: state.respawnSignal,
-        nextRespawnSignal,
-        currentPlayerPosition: state.playerPosition,
-      });
-      return { respawnSignal: nextRespawnSignal };
-    }),
+  requestRespawn: () => {
+    const state = get();
+    const nextRespawnSignal = state.respawnSignal + 1;
+    logSceneStore("request-respawn", {
+      sceneId: state.sceneId,
+      previousRespawnSignal: state.respawnSignal,
+      nextRespawnSignal,
+      currentPlayerPosition: state.playerPosition,
+    });
+    set({ respawnSignal: nextRespawnSignal });
+    emit({ type: "scene:respawnRequested", sceneId: state.sceneId });
+  },
 }));
 
 /** Read state without React (for use from other renderers or tests) */

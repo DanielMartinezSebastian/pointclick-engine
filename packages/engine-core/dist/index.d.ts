@@ -1,6 +1,8 @@
 export * from "./game/types";
 export * from "./game/logic";
 export * from "./game/state";
+export * from "./game/commands";
+export * from "./game/events";
 export * from "./events";
 export * from "./ports";
 export declare const VERSION = "0.1.0";

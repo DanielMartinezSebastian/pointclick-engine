@@ -1,4 +1,11 @@
 import type { GameScene, GameSceneWall, GameSceneInteractionFull, GameVec3 } from "../types";
+import type { GameEvent } from "../events/types";
+type StoreEmitter = (event: GameEvent) => void;
+/**
+ * Inyecta el emisor de eventos del runtime. Llamado por `createGameRuntime`
+ * al inicializar el bus. Si no se llama, el store funciona en zero-event mode.
+ */
+export declare function setSceneStoreEmitter(emitter: StoreEmitter | null): void;
 /**
  * sceneStore – estado runtime de la escena activa.
  *

@@ -2,9 +2,9 @@
 
 **Objetivo**: Permitir comunicación bidireccional entre cualquier UI web y el motor de juego mediante un sistema de comandos (web → juego) y eventos (juego → web), expuestos en `createGameRuntime`.
 **Duración estimada**: 3-4 semanas
-**Estado**: `planning` (creado 2026-05-27)
+**Estado**: `completed` (2026-05-27)
 **Owner**: Daniel Martínez Sebastián
-**Progress**: 0/8 tareas
+**Progress**: 8/8 tareas ✅
 
 ## Por qué
 

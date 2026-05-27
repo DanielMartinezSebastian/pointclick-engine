@@ -17,11 +17,17 @@ import type { ComponentType } from "react";
 
 import {
   useSceneStore,
+  setSceneStoreEmitter,
+  EventBus,
+  CommandHandler,
   type GameVec3,
   type GameSceneGround,
   type GameSceneWall,
-  type GameSceneInteractionDialogKeys,
   type GameSceneInteractionFull,
+  type GameEvent,
+  type GameEventType,
+  type GameEventHandler,
+  type GameCommand,
 } from "@pointclick/engine-core";
 import GameTouchCanvas from "../../components/GameTouchCanvas";
 
@@ -31,6 +37,13 @@ import GameTouchCanvas from "../../components/GameTouchCanvas";
 
 // Re-export key types from engine-core for API stability
 export type { GameVec3, GameSceneGround, GameSceneWall } from "@pointclick/engine-core";
+// Re-export bidirectional API types
+export type {
+  GameEvent,
+  GameEventType,
+  GameEventHandler,
+  GameCommand,
+} from "@pointclick/engine-core";
 
 // Alias for public API compatibility
 export type GameSceneInteraction = GameSceneInteractionFull;
@@ -82,7 +95,7 @@ export type GameViewportProps = {
 };
 
 // ---------------------------------------------------------------------------
-// Eventos de runtime
+// Eventos de runtime (legacy — mantenidos por backwards compat)
 // ---------------------------------------------------------------------------
 
 export type GameRuntimeEvent =
@@ -98,13 +111,36 @@ export type GameRuntimeEvent =
 export type GameRuntimeEventHandler = (event: GameRuntimeEvent) => void;
 
 // ---------------------------------------------------------------------------
-// Handle de runtime devuelto por createGameRuntime
+// Handle de runtime devuelto por createGameRuntime (Phase 4)
 // ---------------------------------------------------------------------------
 
 export type GameRuntime = {
+  // Registro (existentes)
   getScenes: () => Record<string, GameSceneConfig>;
   getItems: () => Record<string, GameItemConfig>;
   getRules: () => Record<string, GameRuleConfig>;
+  // Bidirectional API (Phase 4)
+  /**
+   * Envía un comando al motor. Sync, fire-and-forget.
+   * Comandos sin executor registrado loguean warn y no hacen nada.
+   * Ver ADR-0006 y docs/architecture/05-bidirectional-communication.md.
+   */
+  executeCommand: (cmd: GameCommand) => void;
+  /**
+   * Suscribe a un tipo de evento del motor.
+   * @returns unsubscribe — llámalo para cancelar la suscripción (ej. en useEffect cleanup).
+   */
+  on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) => () => void;
+  /**
+   * Emite un evento al bus del runtime.
+   * Útil para que el renderer envíe eventos sin conocer el store.
+   */
+  emit: (event: GameEvent) => void;
+  /**
+   * Libera el bus y desactiva las emisiones del store.
+   * Llamar al desmontar la app / en tests cleanup.
+   */
+  dispose: () => void;
 };
 
 type SceneStoreSnapshot = ReturnType<typeof useSceneStore.getState>;
@@ -139,12 +175,15 @@ export type GameRuntimeConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Registros internos (singleton)
+// Registros internos (singleton de módulo)
 // ---------------------------------------------------------------------------
 
 const _sceneRegistry = new Map<string, GameSceneConfig>();
 const _itemRegistry = new Map<string, GameItemConfig>();
 const _ruleRegistry = new Map<string, GameRuleConfig>();
+
+/** Singleton del runtime activo. Accesible vía getGameRuntime(). */
+let _runtimeHandle: GameRuntime | null = null;
 
 /**
  * Registra una escena en el motor.
@@ -177,19 +216,21 @@ export function registerRule(config: GameRuleConfig): void {
 /**
  * Inicializa el runtime con las escenas, ítems y reglas proporcionadas.
  *
- * Registra cada config en el registry global y devuelve un handle con
- * acceso de sólo lectura al estado del registry.
+ * Registra cada config en el registry global, crea el EventBus y el
+ * CommandHandler, y devuelve un handle con acceso completo a la API
+ * bidireccional (`executeCommand`, `on`, `emit`, `dispose`).
+ *
+ * El handle se almacena como singleton accesible vía `getGameRuntime()`.
  *
  * @example
  * ```ts
- * const runtime = createGameRuntime({
- *   scenes: [myScene],
- *   items: [myItem],
- *   rules: [{ key: "boundaryHit", phrases: ["¡Cuidado!"] }],
- * });
+ * const runtime = createGameRuntime({ scenes: [myScene], items: [myItem] });
+ * runtime.on("scene:changed", (e) => console.log("now in:", e.sceneId));
+ * runtime.executeCommand({ type: "scene:set", sceneId: myScene.id });
  * ```
  */
 export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
+  // Register content
   for (const scene of config.scenes ?? []) {
     registerScene(scene);
   }
@@ -200,11 +241,85 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     registerRule(rule);
   }
 
-  return {
+  // Create bus and command handler
+  const bus = new EventBus();
+  const commands = new CommandHandler();
+
+  // Wire store → bus
+  setSceneStoreEmitter((event) => bus.emit(event.type, event));
+
+  // Register executors: scene commands
+  commands.register("scene:set", (cmd) => {
+    const sceneConfig = _sceneRegistry.get(cmd.sceneId);
+    if (!sceneConfig) {
+      console.warn(`[runtime] scene:set — scene not registered: ${cmd.sceneId}`);
+      return;
+    }
+    useSceneStore.getState().setScene(sceneConfig.id, {
+      id: sceneConfig.id,
+      label: sceneConfig.label,
+      background: sceneConfig.background,
+      playerSpawn: sceneConfig.playerSpawn,
+      ground: sceneConfig.ground,
+      walls: sceneConfig.walls,
+      interactions: sceneConfig.interactions,
+    });
+  });
+
+  commands.register("scene:respawn", () => {
+    useSceneStore.getState().requestRespawn();
+  });
+
+  commands.register("player:move", (cmd) => {
+    useSceneStore.getState().setPlayerPosition(cmd.position);
+  });
+
+  // Placeholder executors for commands not yet fully wired (Phase 4)
+  // These will be connected in Phase 5
+  const notYetWired = [
+    "player:stop",
+    "inventory:toggle",
+    "inventory:pickup",
+    "inventory:drop",
+    "dialog:trigger",
+    "dialog:dismiss",
+  ] as const;
+
+  for (const t of notYetWired) {
+    commands.register(t, (cmd) =>
+      console.warn(`[runtime] executor not yet wired: ${cmd.type}`),
+    );
+  }
+
+  const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(_sceneRegistry),
     getItems: () => Object.fromEntries(_itemRegistry),
     getRules: () => Object.fromEntries(_ruleRegistry),
+    executeCommand: (cmd) => commands.execute(cmd),
+    on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) =>
+      bus.on(type, handler as (data: unknown) => void),
+    emit: (event: GameEvent) => bus.emit(event.type, event),
+    dispose: () => {
+      bus.clear();
+      commands.clear();
+      setSceneStoreEmitter(null);
+      if (_runtimeHandle === runtime) _runtimeHandle = null;
+    },
   };
+
+  _runtimeHandle = runtime;
+  return runtime;
+}
+
+/**
+ * Devuelve el handle del runtime activo (creado por `createGameRuntime`).
+ * Retorna `null` si no se ha inicializado o tras llamar a `dispose()`.
+ *
+ * Útil para acceder al runtime desde componentes o callbacks que no
+ * tienen acceso directo al handle (ej. GameTouchCanvas).
+ */
+export function getGameRuntime(): GameRuntime | null {
+  return _runtimeHandle;
 }
 
 /** Lee snapshot del estado público del runtime sin usar hooks React. */

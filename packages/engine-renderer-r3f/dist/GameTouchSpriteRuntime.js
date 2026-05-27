@@ -515,6 +515,9 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         if (stuck) {
             const vel = body.linvel();
             body.setLinvel({ x: 0, y: vel.y, z: 0 }, true);
+            // Cancel the route so the character doesn't keep trying to reach an
+            // unreachable destination (e.g. blocked by a wall with no valid path).
+            cancelTarget();
             const now = performance.now();
             if (now - lastStuckHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
                 lastStuckHitRef.current = now;

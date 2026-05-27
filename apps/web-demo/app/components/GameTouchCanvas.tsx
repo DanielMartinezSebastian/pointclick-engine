@@ -23,7 +23,8 @@ import { useInteractionEditorController } from "../lib/engine/runtime/useInterac
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
-import type { RuntimeEvent } from "@pointclick/engine-core";
+import { legacyRuntimeEventToGameEvent, type RuntimeEvent } from "@pointclick/engine-core";
+import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
 import { getRandomPhrase } from "../demo/content/dialogs/getRandomPhrase";
@@ -62,7 +63,11 @@ export default function GameTouchCanvas({
   const runtimeDebug = typeof debugOverride === "boolean" ? debugOverride : isDebug;
 
   const handleRuntimeEvent = useCallback((event: RuntimeEvent) => {
+    // Legacy callback (backwards compat)
     onRuntimeEvent?.(event);
+    // Also emit to the bidirectional event bus (Phase 4)
+    const gameEvent = legacyRuntimeEventToGameEvent(event);
+    getGameRuntime()?.emit(gameEvent);
     if (!runtimeDebug) return;
     console.debug("[runtime-event]", event);
   }, [onRuntimeEvent, runtimeDebug]);

@@ -59,7 +59,9 @@ Dos objetivos concurrentes que NO deben sabotearse mutuamente:
 
 Frontera pública en `apps/web-demo/app/lib/engine/publicApi.ts`. **No romper sin issue + migración**.
 
-Exporta: `createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `getGameState`, `getGameActions`, `useGameState`, `useGameActions`, `GameViewport`.
+Exporta: `createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `getGameState`, `getGameActions`, `getGameRuntime`, `useGameState`, `useGameActions`, `GameViewport`.
+
+**Phase 4 añade** (via handle devuelto por `createGameRuntime`): `executeCommand`, `on`, `emit`, `dispose`.
 
 **Detalles**: `docs/architecture/02-public-api.md`
 
@@ -145,12 +147,13 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 |---------|-----|
 | Entender capas | `docs/architecture/01-layers.md` |
 | Saber dónde va el código | `docs/architecture/03-rules-core-vs-render.md` |
+| Comunicar web ↔ juego | `docs/architecture/05-bidirectional-communication.md` |
 | Crear plan nuevo | `docs/workflow/how-to-create-plan.md` |
 | Trackear tarea | `docs/workflow/how-to-track-tasks.md` |
 | Delegar subagentes | `docs/workflow/how-to-spawn-subagent.md` |
 | Hacer commit | `docs/workflow/commit-convention.md` |
 | Decisiones tomadas | `docs/decisions/` (ADRs) |
-| Fase activa | `docs/phases/phase-2-core-extraction/` |
+| Fase activa | `docs/phases/phase-4-bidirectional-web-game/` |
 
 ---
 

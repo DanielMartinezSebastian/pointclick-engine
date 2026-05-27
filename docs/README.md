@@ -12,6 +12,7 @@ Diseño del sistema. Lee antes de tocar arquitectura.
 - [`architecture/02-public-api.md`](architecture/02-public-api.md) — Contrato de `publicApi.ts` (estable v1)
 - [`architecture/03-rules-core-vs-render.md`](architecture/03-rules-core-vs-render.md) — Decisión: ¿este código va en core o renderer?
 - [`architecture/04-platform-ports.md`](architecture/04-platform-ports.md) — Adapters web (storage, clipboard, timer)
+- [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Commands & Events API (web ↔ juego)
 
 ---
 
@@ -33,7 +34,7 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 
 - [`phases/phase-2-core-extraction/`](phases/phase-2-core-extraction/) — ✅ Completed: Extracción de core a `packages/engine-core/`
 - [`phases/phase-3-renderer-abstract/`](phases/phase-3-renderer-abstract/) — ✅ Completed: Abstracción del renderer
-- [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — **ACTIVA**: Comunicación web ↔ juego
+- [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — ✅ Completed: Comunicación web ↔ juego
 - `phases/phase-5-publish/` — FUTURA: Publicación en npm
 
 ---

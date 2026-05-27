@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
@@ -7,12 +7,12 @@ import {
   GameViewport,
   createGameRuntime,
   getGameActions,
+  getGameRuntime,
   getGameState,
   registerItem,
   registerRule,
   registerScene,
   useGameActions,
-  useGameState,
   type GameItemConfig,
   type GameRuleConfig,
   type GameSceneConfig,
@@ -131,7 +131,6 @@ describe("publicApi", () => {
     expect(typeof actionsFromHook?.requestRespawn).toBe("function");
 
     // Test that setScene actually works
-    const initialState = getGameState();
     actionsFromHook?.setScene(sceneIds[0]);
     const afterSetScene = getGameState();
     expect(afterSetScene.sceneId).toBe(sceneIds[0]);
@@ -146,5 +145,89 @@ describe("publicApi", () => {
 
     expect(element.props.debug).toBe(true);
     expect(element.props.onRuntimeEvent).toBe(onRuntimeEvent);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4: Bidirectional API
+// ---------------------------------------------------------------------------
+
+describe("publicApi — bidirectional API (Phase 4)", () => {
+  afterEach(() => {
+    // Clean up runtime after each test to avoid cross-test contamination
+    getGameRuntime()?.dispose();
+  });
+
+  it("createGameRuntime() returns handle with executeCommand, on, emit, dispose", () => {
+    const runtime = createGameRuntime();
+    expect(typeof runtime.executeCommand).toBe("function");
+    expect(typeof runtime.on).toBe("function");
+    expect(typeof runtime.emit).toBe("function");
+    expect(typeof runtime.dispose).toBe("function");
+  });
+
+  it("getGameRuntime() returns the last created runtime", () => {
+    const runtime = createGameRuntime();
+    expect(getGameRuntime()).toBe(runtime);
+  });
+
+  it("getGameRuntime() returns null after dispose()", () => {
+    const runtime = createGameRuntime();
+    runtime.dispose();
+    expect(getGameRuntime()).toBeNull();
+  });
+
+  it("executeCommand scene:set mutates the store", () => {
+    const scene = makeScene("bridge-scene-cmd");
+    const runtime = createGameRuntime({ scenes: [scene] });
+
+    runtime.executeCommand({ type: "scene:set", sceneId: "bridge-scene-cmd" });
+    expect(getGameState().sceneId).toBe("bridge-scene-cmd");
+  });
+
+  it("on('scene:changed') receives event after executeCommand scene:set", () => {
+    const scene = makeScene("bridge-scene-event");
+    const runtime = createGameRuntime({ scenes: [scene] });
+    const spy = vi.fn();
+
+    runtime.on("scene:changed", spy);
+    runtime.executeCommand({ type: "scene:set", sceneId: "bridge-scene-event" });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0][0]).toMatchObject({
+      type: "scene:changed",
+      sceneId: "bridge-scene-event",
+    });
+  });
+
+  it("on() unsubscribe stops receiving events", () => {
+    const scene = makeScene("bridge-scene-unsub");
+    const runtime = createGameRuntime({ scenes: [scene] });
+    const spy = vi.fn();
+
+    const unsub = runtime.on("scene:changed", spy);
+    unsub();
+    runtime.executeCommand({ type: "scene:set", sceneId: "bridge-scene-unsub" });
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("dispose() clears runtime singleton and stops command execution", () => {
+    const scene = makeScene("bridge-scene-dispose");
+    const runtime = createGameRuntime({ scenes: [scene] });
+    const spy = vi.fn();
+
+    runtime.on("scene:changed", spy);
+    runtime.dispose();
+
+    // After dispose, getGameRuntime() is null
+    expect(getGameRuntime()).toBeNull();
+
+    // Commands after dispose should warn but not dispatch
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(() =>
+      runtime.executeCommand({ type: "scene:set", sceneId: "bridge-scene-dispose" }),
+    ).not.toThrow();
+    warnSpy.mockRestore();
   });
 });

@@ -1,4 +1,16 @@
 import { create } from "zustand";
+let _emitter = null;
+/**
+ * Inyecta el emisor de eventos del runtime. Llamado por `createGameRuntime`
+ * al inicializar el bus. Si no se llama, el store funciona en zero-event mode.
+ */
+export function setSceneStoreEmitter(emitter) {
+    _emitter = emitter;
+}
+function emit(event) {
+    if (_emitter)
+        _emitter(event);
+}
 const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
 function logSceneStore(event, payload) {
     if (!SHOULD_LOG_STATE_TRANSITIONS)
@@ -65,6 +77,7 @@ export const useSceneStore = create((set, get) => ({
             scene: clonedScene,
             playerPosition: [...clonedScene.playerSpawn],
         });
+        emit({ type: "scene:changed", sceneId: id, scene: clonedScene });
     },
     updateGround: (updater) => set((state) => ({
         scene: {
@@ -113,7 +126,8 @@ export const useSceneStore = create((set, get) => ({
         };
     }),
     setPlayerPosition: (position) => set({ playerPosition: position }),
-    requestRespawn: () => set((state) => {
+    requestRespawn: () => {
+        const state = get();
         const nextRespawnSignal = state.respawnSignal + 1;
         logSceneStore("request-respawn", {
             sceneId: state.sceneId,
@@ -121,8 +135,9 @@ export const useSceneStore = create((set, get) => ({
             nextRespawnSignal,
             currentPlayerPosition: state.playerPosition,
         });
-        return { respawnSignal: nextRespawnSignal };
-    }),
+        set({ respawnSignal: nextRespawnSignal });
+        emit({ type: "scene:respawnRequested", sceneId: state.sceneId });
+    },
 }));
 /** Read state without React (for use from other renderers or tests) */
 export function getSceneState() {
