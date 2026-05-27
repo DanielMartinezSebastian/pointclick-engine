@@ -42,6 +42,34 @@ export function SceneWalls({
                 <meshBasicMaterial color={selectedWallIndex === i ? "#ffff00" : "#ff4400"} wireframe />
               </mesh>
 
+              {/* Opening cuts — always visible in debug mode (cyan wireframe + solid fill) */}
+              {wall.openings?.map((opening, oi) => (
+                <group key={`opening-${oi}`} position={opening.position}>
+                  {/* Solid fill so the cut reads as a "hole" at a glance */}
+                  <mesh>
+                    <boxGeometry
+                      args={[
+                        opening.halfSize[0] * 2,
+                        opening.halfSize[1] * 2,
+                        opening.halfSize[2] * 2,
+                      ]}
+                    />
+                    <meshBasicMaterial color="#001a1a" transparent opacity={0.85} />
+                  </mesh>
+                  {/* Wireframe outline to show exact boundaries */}
+                  <mesh>
+                    <boxGeometry
+                      args={[
+                        opening.halfSize[0] * 2,
+                        opening.halfSize[1] * 2,
+                        opening.halfSize[2] * 2,
+                      ]}
+                    />
+                    <meshBasicMaterial color="#00ffcc" wireframe />
+                  </mesh>
+                </group>
+              ))}
+
               {selectedWallIndex === i && (
                 <>
                   <mesh

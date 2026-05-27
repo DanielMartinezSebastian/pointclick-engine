@@ -106,10 +106,22 @@ export const useSceneEditorStore = create<SceneEditorStore>()((set, get) => ({
       const { selectedWallIndex } = get();
       if (selectedWallIndex == null) return;
 
+      const wall = useSceneStore.getState().scene.walls[selectedWallIndex];
+
+      // Default: door centered on wall (X=0), bottom flush with wall's bottom edge.
+      // halfSize[1] of wall is in wall-local Y — door occupies bottom portion.
+      const openingHalfY = Math.min(1.0, wall.halfSize[1]);
+      // Center X=0, bottom = -wall.halfSize[1], so center = -wall.halfSize[1] + openingHalfY
+      const openingCenterY = -wall.halfSize[1] + openingHalfY;
+      // Width: reasonable door width (~1.2m), capped at wall width
+      const openingHalfX = Math.min(0.6, wall.halfSize[0] * 0.5);
+      // Depth: span full wall depth + small margin so pathfinding clearance is clean
+      const openingHalfZ = wall.halfSize[2] + 0.05;
+
       const newOpening: GameSceneWallOpening = {
         id: `opening-${Date.now()}`,
-        position: [0, 0, 0],
-        halfSize: [0.5, 1, 0.1],
+        position: [0, openingCenterY, 0],
+        halfSize: [openingHalfX, openingHalfY, openingHalfZ],
       };
 
       useSceneStore.getState().updateWall(selectedWallIndex, (wall) => ({

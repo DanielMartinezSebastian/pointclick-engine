@@ -9,7 +9,15 @@ export function SceneWalls({ debug, onStartWallMove, onStartWallResize, selected
                                     e.stopPropagation();
                                     onSelectWall?.(i);
                                     onStartWallMove(i, e.point.x, e.point.z);
-                                }, children: [_jsx("boxGeometry", { args: [wall.halfSize[0] * 2, wall.halfSize[1] * 2, wall.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: selectedWallIndex === i ? "#ffff00" : "#ff4400", wireframe: true })] }), selectedWallIndex === i && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
+                                }, children: [_jsx("boxGeometry", { args: [wall.halfSize[0] * 2, wall.halfSize[1] * 2, wall.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: selectedWallIndex === i ? "#ffff00" : "#ff4400", wireframe: true })] }), wall.openings?.map((opening, oi) => (_jsxs("group", { position: opening.position, children: [_jsxs("mesh", { children: [_jsx("boxGeometry", { args: [
+                                                    opening.halfSize[0] * 2,
+                                                    opening.halfSize[1] * 2,
+                                                    opening.halfSize[2] * 2,
+                                                ] }), _jsx("meshBasicMaterial", { color: "#001a1a", transparent: true, opacity: 0.85 })] }), _jsxs("mesh", { children: [_jsx("boxGeometry", { args: [
+                                                    opening.halfSize[0] * 2,
+                                                    opening.halfSize[1] * 2,
+                                                    opening.halfSize[2] * 2,
+                                                ] }), _jsx("meshBasicMaterial", { color: "#00ffcc", wireframe: true })] })] }, `opening-${oi}`))), selectedWallIndex === i && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
                                             e.stopPropagation();
                                             onStartWallResize(i, "x+");
                                         }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [-wall.halfSize[0], 0, 0], onPointerDown: (e) => {
