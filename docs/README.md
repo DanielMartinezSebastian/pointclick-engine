@@ -13,6 +13,7 @@ Diseño del sistema. Lee antes de tocar arquitectura.
 - [`architecture/03-rules-core-vs-render.md`](architecture/03-rules-core-vs-render.md) — Decisión: ¿este código va en core o renderer?
 - [`architecture/04-platform-ports.md`](architecture/04-platform-ports.md) — Adapters web (storage, clipboard, timer)
 - [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Commands & Events API (web ↔ juego)
+- [`architecture/06-renderer-implementation-guide.md`](architecture/06-renderer-implementation-guide.md) — Cómo escribir un renderer alternativo
 
 ---
 

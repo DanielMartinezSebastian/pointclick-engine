@@ -1,83 +1,94 @@
 # Library Consumption Guide
 
-Esta guía documenta la forma recomendada de consumir la librería del engine desde una app host.
+Guía para integrar el Point & Click Game Engine en una aplicación host.
 
-Estado del documento: v1
-Alcance: integración en Next.js/React con la API pública actual.
+**Estado**: v2 (post Phase 4 + Phase 5) | **Última revisión**: 2026-05-27
 
-## 1. Principio base
+---
 
-Consumir siempre desde la frontera pública:
+## 1. Packages disponibles
 
-- `app/lib/engine/publicApi.ts`
-- `app/lib/platform-web.ts`
-
-Evitar acoplarse a módulos internos de runtime/render/input salvo mantenimiento interno del engine.
-
-## 2. Superficie pública recomendada
-
-Módulo `publicApi`:
-
-- `createGameRuntime(config)`
-- `registerScene(scene)`
-- `registerItem(item)`
-- `registerRule(rule)`
-- `getGameState()`
-- `getGameActions()`
-- `useGameState(selector)`
-- `useGameActions()`
-- `GameViewport`
-
-Módulo `platform-web`:
-
-- `webPlatform.storage`
-- `webPlatform.clipboard`
-- `webPlatform.routing`
-- `webPlatform.network`
-- `webPlatform.timer`
-- `webPlatform.env`
-
-## 3. Flujo canónico de integración
-
-### Paso 1: Registrar contenido
-
-Registrar escenas, ítems y reglas con el contrato público.
-
-```ts
-import {
-  createGameRuntime,
-  registerItem,
-  registerRule,
-  registerScene,
-} from "@/app/lib/engine/publicApi";
-
-registerScene(myScene);
-registerItem(myItem);
-registerRule({ key: "boundaryHit", phrases: ["Cuidado"] });
-
-createGameRuntime({
-  scenes: [myScene],
-  items: [myItem],
-  rules: [{ key: "boundaryHit", phrases: ["Cuidado"] }],
-});
+```bash
+npm install @pointclick/engine-core
+npm install @pointclick/engine-renderer-r3f  # + peer deps (ver README del package)
 ```
 
-### Paso 2: Montar viewport
+| Package | Responsabilidad |
+|---------|----------------|
+| `@pointclick/engine-core` | Estado, reglas, pathfinding, ports. Cero React, cero browser globals. |
+| `@pointclick/engine-renderer-r3f` | Renderer React Three Fiber. `GameViewport`, `createGameRuntime`, sprites, scene primitives. |
 
-Usar `GameViewport` como punto de entrada visual del runtime.
+---
+
+## 2. Flujo canónico
+
+### Paso 1: Crear el runtime
 
 ```tsx
-import { GameViewport } from "@/app/lib/engine/publicApi";
+"use client";
+import { useEffect } from "react";
+import { createGameRuntime, GameViewport } from "@pointclick/engine-renderer-r3f";
 
-export default function Home() {
-  return <GameViewport debug={false} />;
+const myScenes = [
+  {
+    id: "town",
+    label: "Town",
+    background: "/assets/bg/town.jpg",
+    playerSpawn: [0, 0, 10],
+    ground: { minX: -15, maxX: 15, minZ: -10, maxZ: 30, y: -3 },
+    walls: [],
+    interactions: [],
+  },
+];
+
+export default function GamePage() {
+  useEffect(() => {
+    const runtime = createGameRuntime({
+      scenes: myScenes,
+    });
+    return () => runtime.dispose();
+  }, []);
+
+  return <GameViewport />;
 }
 ```
 
-### Paso 3: Leer estado/acciones desde API pública
+### Paso 2: Comunicación bidireccional (host → juego)
+
+Desde cualquier componente HTML (fuera del Canvas), envía comandos al runtime:
+
+```ts
+import { getGameRuntime } from "@pointclick/engine-renderer-r3f";
+
+const runtime = getGameRuntime();
+
+// Cambiar escena
+runtime?.executeCommand({ type: "scene:set", sceneId: "dungeon" });
+
+// Mostrar diálogo
+runtime?.executeCommand({ type: "dialog:trigger", dialogKey: "welcomeMessage" });
+
+// Abrir/cerrar inventario
+runtime?.executeCommand({ type: "inventory:toggle" });
+```
+
+### Paso 3: Escuchar eventos del juego (juego → host)
+
+```ts
+const unsub = runtime?.on("scene:changed", (ev) => {
+  console.log("Entered scene:", ev.sceneId);
+});
+
+// También: "player:moved", "dialog:triggered", "dialog:dismissed"
+
+// Limpiar al desmontar:
+unsub?.();
+```
+
+### Paso 4: Leer estado React desde la UI
 
 ```tsx
-import { useGameActions, useGameState } from "@/app/lib/engine/publicApi";
+import { useGameState, useGameActions } from "@pointclick/engine-renderer-r3f";
 
 export function SceneSwitcher() {
   const sceneId = useGameState((s) => s.sceneId);
@@ -85,63 +96,78 @@ export function SceneSwitcher() {
 
   return (
     <div>
-      <p>Escena actual: {sceneId}</p>
-      <button onClick={() => setScene("town")}>Town</button>
+      <p>Escena: {sceneId}</p>
+      <button onClick={() => setScene("volcano")}>Volcano</button>
       <button onClick={() => requestRespawn()}>Respawn</button>
     </div>
   );
 }
 ```
 
-### Paso 4: Consumir capacidades web por puertos
+---
+
+## 3. Subpath exports de `engine-core`
+
+Para trees-haking granular, importa solo el módulo que necesitas:
 
 ```ts
-import { webPlatform } from "@/app/lib/platform-web";
-
-await webPlatform.clipboard.writeText("copiado");
-
-const dispose = webPlatform.env.addWindowEventListener("pointerup", () => {
-  // ...
-});
-
-dispose();
+import type { GameCommand }   from "@pointclick/engine-core/commands";
+import type { GameEvent }     from "@pointclick/engine-core/events";
+import type { IGameLoopPort } from "@pointclick/engine-core/ports";
+import type { GameVec3 }      from "@pointclick/engine-core/types";
+import { useSceneStore }      from "@pointclick/engine-core/state";
 ```
 
-## 4. SSR y cliente
+---
 
-- `GameViewport` es una integración cliente del runtime.
-- Los adapters de `platform-web` incluyen fallback seguro para SSR en los puertos definidos.
-- Si agregas una nueva capacidad de navegador, exponerla primero en `platform-web` para mantener consistencia.
+## 4. Registrar diálogos personalizados
 
-## 5. Errores comunes
+```ts
+import { registerRule } from "@pointclick/engine-renderer-r3f";
 
-1. Importar módulos internos de runtime/render directamente desde la app host.
-2. Mezclar APIs directas de `window/document/navigator` en lógica de interoperabilidad sin pasar por `platform-web`.
-3. Mutar estado interno fuera de las acciones públicas.
-4. Añadir features en UI sin evaluar si pertenecen a un puerto de plataforma.
+registerRule({ key: "welcomeMessage", phrases: ["¡Bienvenido al pueblo!", "¿Primera vez por aquí?"] });
+registerRule({ key: "boundaryHit", phrases: ["¡Hay una pared ahí!"] });
+```
 
-## 6. Checklist de consumo correcto
+---
 
-1. El host importa runtime desde `publicApi`.
-2. El host monta `GameViewport` y no el runtime interno directamente.
-3. Estado y acciones se consumen vía `useGameState`/`useGameActions` o `getGameState`/`getGameActions`.
-4. Interoperabilidad web pasa por `platform-web`.
-5. Validación de integración en verde:
-   - `npm run lint`
-   - `npm run test`
-   - `npm run build`
+## 5. Consideraciones SSR
 
-## 7. Criterio de cambios
+- `GameViewport` lleva `"use client"` — no renderiza en servidor.
+- `createGameRuntime` inicializa el store; hacerlo en `useEffect` para evitar hidratación conflictiva.
+- `getGameRuntime()` devuelve `null` antes de que el runtime se cree (útil para verificar antes de llamar).
 
-Cambio compatible:
+---
 
-- Añadir funciones nuevas sin romper firmas existentes.
-- Añadir campos opcionales en tipos públicos.
+## 6. Errores comunes
 
-Cambio breaking:
+| ❌ Hacer | ✅ En su lugar |
+|----------|--------------|
+| Importar módulos internos de `app/lib/engine/runtime/` directamente | Importar desde `@pointclick/engine-renderer-r3f` |
+| Usar `window.document` en lógica de juego | Pasar por ports / platform adapters |
+| Mutar `useSceneStore` directamente desde la UI | Usar `useGameActions()` o `executeCommand()` |
+| Crear el runtime varias veces | Un solo `createGameRuntime()` por instancia de juego |
 
-- Renombrar/remover exports públicos.
-- Cambiar la semántica de acciones/estado públicos.
-- Cambiar contratos de `platform-web` sin fallback.
+---
 
-Para breaking changes, documentar migración en la PR y actualizar esta guía.
+## 7. Criterio de breaking change
+
+**Compatible** (no requiere migración):
+- Nuevas funciones en la API pública sin cambiar firmas existentes.
+- Nuevos campos opcionales en tipos públicos.
+- Nuevos subpath exports.
+
+**Breaking** (requiere issue + guía de migración):
+- Renombrar o eliminar exports públicos.
+- Cambiar la semántica de commands/events.
+- Cambiar la forma de `GameViewport` props.
+
+---
+
+## 8. Ver también
+
+- [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Protocolo completo de commands & events
+- [`architecture/06-renderer-implementation-guide.md`](architecture/06-renderer-implementation-guide.md) — Escribir un renderer alternativo
+- [`architecture/02-public-api.md`](architecture/02-public-api.md) — Contrato estable de `publicApi`
+- `packages/engine-core/README.md` — Quickstart engine-core aislado
+- `packages/engine-renderer-r3f/README.md` — Quickstart renderer R3F
