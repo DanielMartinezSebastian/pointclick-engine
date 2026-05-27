@@ -1,4 +1,4 @@
-﻿# Library Consumption Guide
+# Library Consumption Guide
 
 Guía para integrar el Point & Click Game Engine en una aplicación host.
 

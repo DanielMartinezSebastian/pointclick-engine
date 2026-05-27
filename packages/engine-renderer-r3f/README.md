@@ -1,4 +1,4 @@
-﻿# @pointclick-engine/engine-renderer-r3f
+# @pointclick-engine/engine-renderer-r3f
 
 React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick-engine/engine-core).
 

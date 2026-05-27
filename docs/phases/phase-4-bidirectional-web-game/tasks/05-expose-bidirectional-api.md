@@ -1,4 +1,4 @@
-﻿# Task 05: Expose bidirectional API in `createGameRuntime`
+# Task 05: Expose bidirectional API in `createGameRuntime`
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 

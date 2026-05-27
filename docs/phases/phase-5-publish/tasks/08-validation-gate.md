@@ -1,4 +1,4 @@
-﻿# Task 08: Validation gate + tag v0.1.0
+# Task 08: Validation gate + tag v0.1.0
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 

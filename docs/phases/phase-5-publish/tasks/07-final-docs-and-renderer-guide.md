@@ -1,4 +1,4 @@
-﻿# Task 07: Renderer implementation guide + consumption refresh
+# Task 07: Renderer implementation guide + consumption refresh
 
 **Phase**: 5 | **Estimate**: 3h | **Owner**: —
 

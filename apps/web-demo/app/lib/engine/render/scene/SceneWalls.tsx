@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 

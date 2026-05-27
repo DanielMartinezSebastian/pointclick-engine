@@ -1,4 +1,4 @@
-﻿# Phase 3 Validation Report
+# Phase 3 Validation Report
 
 Date: 2026-05-27
 

@@ -1,4 +1,4 @@
-﻿# Phase 5 Validation Report
+# Phase 5 Validation Report
 
 **Date**: 2026-05-27
 **Branch**: main

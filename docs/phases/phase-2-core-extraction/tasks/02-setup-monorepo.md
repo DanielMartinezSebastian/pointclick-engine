@@ -1,4 +1,4 @@
-﻿# Task 02: Setup monorepo structure
+# Task 02: Setup monorepo structure
 
 **Phase**: 2 | **Estimate**: 2h | **Owner**: —
 

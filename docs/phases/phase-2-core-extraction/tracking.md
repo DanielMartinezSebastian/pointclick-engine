@@ -1,4 +1,4 @@
-﻿# Phase 2: Tracking
+# Phase 2: Tracking
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 

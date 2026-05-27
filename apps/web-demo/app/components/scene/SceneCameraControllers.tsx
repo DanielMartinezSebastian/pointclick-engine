@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useFrame } from "@react-three/fiber";
 import { MathUtils, OrthographicCamera as ThreeOrthoCamera } from "three";

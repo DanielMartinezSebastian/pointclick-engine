@@ -1,4 +1,4 @@
-﻿# ADR-0007: Release Strategy
+# ADR-0007: Release Strategy
 
 **Status**: accepted
 **Date**: 2026-05-27

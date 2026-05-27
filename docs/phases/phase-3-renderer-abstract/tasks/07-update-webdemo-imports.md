@@ -1,4 +1,4 @@
-﻿# Task 07: Update web-demo imports to consume engine-renderer-r3f
+# Task 07: Update web-demo imports to consume engine-renderer-r3f
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 

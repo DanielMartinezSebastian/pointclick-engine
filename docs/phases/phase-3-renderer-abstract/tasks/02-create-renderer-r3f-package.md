@@ -1,4 +1,4 @@
-﻿# Task 02: Create engine-renderer-r3f package scaffold
+# Task 02: Create engine-renderer-r3f package scaffold
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 

@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import type { GameSceneWall, GameScene } from "@pointclick-engine/engine-core";

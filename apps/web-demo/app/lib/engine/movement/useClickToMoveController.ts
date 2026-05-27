@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useRef } from "react";
 import { Vector2 } from "three";

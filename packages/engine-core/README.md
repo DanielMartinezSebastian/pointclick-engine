@@ -1,4 +1,4 @@
-﻿# @pointclick-engine/engine-core
+# @pointclick-engine/engine-core
 
 Framework-agnostic core for the Point & Click Game Engine. State, rules, pathfinding, ports — zero React, zero Three.js, zero browser globals.
 

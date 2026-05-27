@@ -1,4 +1,4 @@
-﻿# Task 03: Extract runtime events to engine-core
+# Task 03: Extract runtime events to engine-core
 
 **Phase**: 3 | **Estimate**: 2h | **Owner**: —
 

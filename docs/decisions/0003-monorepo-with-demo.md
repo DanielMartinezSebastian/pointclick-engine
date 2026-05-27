@@ -1,4 +1,4 @@
-﻿# 0003 — Monorepo with demo inside
+# 0003 — Monorepo with demo inside
 
 **Status**: accepted
 **Date**: 2026-05-23

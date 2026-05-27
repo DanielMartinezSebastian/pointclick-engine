@@ -1,4 +1,4 @@
-﻿# Task 07: Update web-demo imports to consume engine-core
+# Task 07: Update web-demo imports to consume engine-core
 
 **Phase**: 2 | **Estimate**: 2h | **Owner**: —
 

@@ -1,4 +1,4 @@
-﻿# How to Release
+# How to Release
 
 Guide for publishing `@pointclick-engine/engine-core` and `@pointclick-engine/engine-renderer-r3f` to npm.
 

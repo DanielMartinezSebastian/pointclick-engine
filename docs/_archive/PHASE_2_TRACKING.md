@@ -1,4 +1,4 @@
-﻿# Fase 2: Tracking de Progreso
+# Fase 2: Tracking de Progreso
 
 **Estado General**: Sem 2.5 - Preparación para comenzar  
 **Última actualización**: 2026-05-23  

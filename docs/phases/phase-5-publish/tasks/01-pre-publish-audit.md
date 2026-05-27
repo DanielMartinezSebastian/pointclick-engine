@@ -1,4 +1,4 @@
-﻿# Task 01: Pre-publish audit + release strategy ADR
+# Task 01: Pre-publish audit + release strategy ADR
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 

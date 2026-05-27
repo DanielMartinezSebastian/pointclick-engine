@@ -1,4 +1,4 @@
-﻿# Task 04: Package exports + metadata
+# Task 04: Package exports + metadata
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 

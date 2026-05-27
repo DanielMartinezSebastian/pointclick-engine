@@ -1,4 +1,4 @@
-﻿# Pre-publish Audit Report
+# Pre-publish Audit Report
 
 **Date**: 2026-05-27
 **Phase**: 5

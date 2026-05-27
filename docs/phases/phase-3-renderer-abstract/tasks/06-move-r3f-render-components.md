@@ -1,4 +1,4 @@
-﻿# Task 06: Move R3F render components to engine-renderer-r3f
+# Task 06: Move R3F render components to engine-renderer-r3f
 
 **Phase**: 3 | **Estimate**: 4h | **Owner**: —
 

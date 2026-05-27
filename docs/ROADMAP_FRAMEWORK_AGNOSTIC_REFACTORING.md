@@ -1,4 +1,4 @@
-﻿# Roadmap: Refactorización a Librería Agnóstica al Framework
+# Roadmap: Refactorización a Librería Agnóstica al Framework
 
 **Versión**: 1.0  
 **Fecha**: 2026-05-23  

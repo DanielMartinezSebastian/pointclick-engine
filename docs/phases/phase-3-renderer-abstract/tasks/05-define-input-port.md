@@ -1,4 +1,4 @@
-﻿# Task 05: Define InputPort + web adapters
+# Task 05: Define InputPort + web adapters
 
 **Phase**: 3 | **Estimate**: 3h | **Owner**: —
 

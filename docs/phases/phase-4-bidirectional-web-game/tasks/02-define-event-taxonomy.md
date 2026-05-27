@@ -1,4 +1,4 @@
-﻿# Task 02: Define event taxonomy in engine-core
+# Task 02: Define event taxonomy in engine-core
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 

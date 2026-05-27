@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to `@pointclick-engine/engine-core` are documented in this file.
 

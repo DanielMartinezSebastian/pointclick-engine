@@ -1,4 +1,4 @@
-﻿# Task 05: READMEs, LICENSE, CHANGELOG per package
+# Task 05: READMEs, LICENSE, CHANGELOG per package
 
 **Phase**: 5 | **Estimate**: 2h | **Owner**: —
 

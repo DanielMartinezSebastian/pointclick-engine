@@ -1,4 +1,4 @@
-﻿# Fase 2: Quick Start - Comenzar Ahora
+# Fase 2: Quick Start - Comenzar Ahora
 
 **Tiempo total**: ~4 semanas  
 **Semana 1 (Ahora - Semana 3)**: Setup + Auditoría  

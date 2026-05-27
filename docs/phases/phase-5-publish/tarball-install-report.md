@@ -1,4 +1,4 @@
-﻿# Tarball Install Report
+# Tarball Install Report
 
 **Date**: 2026-05-27
 **Phase**: 5, Task 06

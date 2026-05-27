@@ -1,4 +1,4 @@
-﻿# Task 04: Define GameLoopPort + R3F adapter
+# Task 04: Define GameLoopPort + R3F adapter
 
 **Phase**: 3 | **Estimate**: 3h | **Owner**: —
 

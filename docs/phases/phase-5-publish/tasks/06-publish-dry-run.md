@@ -1,4 +1,4 @@
-﻿# Task 06: Publish dry-run via tarball
+# Task 06: Publish dry-run via tarball
 
 **Phase**: 5 | **Estimate**: 3h | **Owner**: —
 

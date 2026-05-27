@@ -1,4 +1,4 @@
-﻿# Task 03: Create engine-core base
+# Task 03: Create engine-core base
 
 **Phase**: 2 | **Estimate**: 3h | **Owner**: —
 

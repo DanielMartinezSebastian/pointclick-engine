@@ -1,4 +1,4 @@
-﻿# Point & Click Game Engine
+# Point & Click Game Engine
 
 Framework-agnostic engine for 2D / 2.5D point-and-click games. First renderer: React Three Fiber.
 

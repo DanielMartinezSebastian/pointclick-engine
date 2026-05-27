@@ -1,4 +1,4 @@
-﻿# Phase 2: Core Extraction
+# Phase 2: Core Extraction
 
 **Objetivo**: Extraer lógica agnóstica a `packages/engine-core/` independiente, sin React/R3F/Next.js.
 **Duración estimada**: 4 semanas

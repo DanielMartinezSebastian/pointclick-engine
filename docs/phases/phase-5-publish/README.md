@@ -1,4 +1,4 @@
-﻿# Phase 5: Publish to npm
+# Phase 5: Publish to npm
 
 **Objetivo**: Dejar `@pointclick-engine/engine-core` y `@pointclick-engine/engine-renderer-r3f` listos para consumirse desde proyectos externos vía `npm install`, con metadatos completos, exports limpios, ejemplos de consumo y un proceso de release documentado.
 **Duración estimada**: 3-4 semanas

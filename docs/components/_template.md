@@ -1,4 +1,4 @@
-﻿# <ComponentName>
+# <ComponentName>
 
 **Type**: `<UI | Renderer | Sprite | Editor>` | **Layer**: `<UI | Renderer>` | **File**: `apps/web-demo/app/components/<path>.tsx`
 

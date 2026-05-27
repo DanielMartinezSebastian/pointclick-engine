@@ -1,4 +1,4 @@
-﻿// Visual components barrel for @pointclick-engine/engine-renderer-r3f/components
+// Visual components barrel for @pointclick-engine/engine-renderer-r3f/components
 
 // Sprite
 export { default as DavidSprite } from "../sprite/DavidSprite";

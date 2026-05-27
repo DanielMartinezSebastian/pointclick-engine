@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useLoader } from "@react-three/fiber";
 import { BallCollider, RigidBody } from "@react-three/rapier";

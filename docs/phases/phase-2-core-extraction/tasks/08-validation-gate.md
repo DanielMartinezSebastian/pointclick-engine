@@ -1,4 +1,4 @@
-﻿# Task 08: Validation gate (close Phase 2)
+# Task 08: Validation gate (close Phase 2)
 
 **Phase**: 2 | **Estimate**: 1h | **Owner**: —
 

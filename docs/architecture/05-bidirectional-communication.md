@@ -1,4 +1,4 @@
-﻿# Bidirectional Communication
+# Bidirectional Communication
 
 **Estado**: estable v0.4 | **Última revisión**: 2026-05-27
 

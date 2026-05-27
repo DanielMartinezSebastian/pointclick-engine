@@ -1,4 +1,4 @@
-﻿# Renderer Implementation Guide
+# Renderer Implementation Guide
 
 **Audience**: developers building an alternative renderer (PixiJS, Canvas 2D, native).
 **Estado**: estable v0.1 | **Última revisión**: 2026-05-27

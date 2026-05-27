@@ -1,4 +1,4 @@
-﻿# Task 07: Bidirectional communication docs
+# Task 07: Bidirectional communication docs
 
 **Phase**: 4 | **Estimate**: 2h | **Owner**: —
 

@@ -1,4 +1,4 @@
-﻿# Commit Convention
+# Commit Convention
 
 Conventional Commits + tracking-aware.
 

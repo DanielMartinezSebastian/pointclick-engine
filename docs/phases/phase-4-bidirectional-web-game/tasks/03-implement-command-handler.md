@@ -1,4 +1,4 @@
-﻿# Task 03: Implement CommandHandler in engine-core
+# Task 03: Implement CommandHandler in engine-core
 
 **Phase**: 4 | **Estimate**: 3h | **Owner**: —
 

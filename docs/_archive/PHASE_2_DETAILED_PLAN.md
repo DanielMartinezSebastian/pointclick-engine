@@ -1,4 +1,4 @@
-﻿# Fase 2: Plan Granular - Extracción del Core
+# Fase 2: Plan Granular - Extracción del Core
 **Versión**: 1.0  
 **Fecha**: 2026-05-23  
 **Duración estimada**: 4 semanas (Semanas 3-6 del roadmap)  
