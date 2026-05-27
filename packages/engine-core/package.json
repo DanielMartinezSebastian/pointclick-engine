@@ -9,8 +9,29 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./commands": {
+      "import": "./dist/game/commands/index.js",
+      "types": "./dist/game/commands/index.d.ts"
+    },
+    "./events": {
+      "import": "./dist/game/events/index.js",
+      "types": "./dist/game/events/index.d.ts"
+    },
+    "./ports": {
+      "import": "./dist/ports/index.js",
+      "types": "./dist/ports/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/game/types/index.js",
+      "types": "./dist/game/types/index.d.ts"
+    },
+    "./state": {
+      "import": "./dist/game/state/index.js",
+      "types": "./dist/game/state/index.d.ts"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist",
     "src"
@@ -36,5 +57,20 @@
     "engine"
   ],
   "author": "Daniel Martínez Sebastián",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielmartinezsebastian/2d-game-test.git",
+    "directory": "packages/engine-core"
+  },
+  "bugs": {
+    "url": "https://github.com/danielmartinezsebastian/2d-game-test/issues"
+  },
+  "homepage": "https://github.com/danielmartinezsebastian/2d-game-test#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

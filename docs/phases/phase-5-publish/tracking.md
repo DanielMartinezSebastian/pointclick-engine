@@ -2,7 +2,7 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 3/8 tareas
+## Progreso: 4/8 tareas
 
 ## Week 1 — Auditoría + completar API
 
@@ -12,7 +12,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 ## Week 2 — Empaquetado
 
-- [ ] [04-package-exports-and-metadata](tasks/04-package-exports-and-metadata.md) — subpath exports, sideEffects, peerDeps
+- [x] [04-package-exports-and-metadata](tasks/04-package-exports-and-metadata.md) — subpath exports, sideEffects, peerDeps
 - [ ] [05-readmes-licenses-changelogs](tasks/05-readmes-licenses-changelogs.md) — metadatos por package
 
 ## Week 3 — Validación + docs
