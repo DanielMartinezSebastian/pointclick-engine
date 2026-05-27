@@ -1,11 +1,25 @@
 import type { DialogKey } from "../dialogs/types";
 
+export type SceneWallOpening = {
+  id: string;
+  /** Position in wall-local space relative to wall center */
+  position: [number, number, number];
+  /** Half-extents of the opening: [halfWidth, halfHeight, halfDepth] */
+  halfSize: [number, number, number];
+};
+
 export type SceneWall = {
   position: [number, number, number];
   /** Rotation around Y axis in radians */
   rotationY?: number;
   /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
   halfSize: [number, number, number];
+  /** Openings (doors/windows) cut into this wall */
+  openings?: SceneWallOpening[];
+  /** Optional texture URL for wall billboard */
+  textureUrl?: string;
+  /** Optional texture position offset [x, y, z] */
+  texturePosition?: [number, number, number];
 };
 
 export type SceneInteractionDialogKeys = {
@@ -104,7 +118,29 @@ export const SCENES: Record<string, Scene> = {
       maxZ: 60.6,
       y: -3.15,
     },
-    walls: [],
+    walls: [
+      {
+        // Dungeon gate wall — spans the corridor at Z=3, blocks passage north→south.
+        // Ground y = -3.15 → wall center at y = -3.15 + 2.5 = -0.65 (halfY=2.5 → top at +1.85).
+        // Opening: centered door (X=0), bottom flush with wall base (Y local = -1.3),
+        // 3m wide × 2.4m tall — large enough for character (radius 0.5) to walk through.
+        position: [0, -0.65, 3],
+        halfSize: [3, 2.5, 0.25],
+        rotationY: 0,
+        openings: [
+          {
+            id: "dungeon-gate-door",
+            // Local to wall: X=0 (centered), Y=-1.3 (bottom at -2.5+1.2=-1.3 → flush with floor),
+            // Z=0 (centered in wall depth)
+            position: [0, -1.3, 0],
+            // halfX=1.5 → door is 3m wide (agent clearance after padding: 1.5-0.72=0.78 > 0.5 radius)
+            // halfY=1.2 → door is 2.4m tall
+            // halfZ=0.3 → 0.25+0.05 margin, spans full wall depth cleanly
+            halfSize: [1.5, 1.2, 0.3],
+          },
+        ],
+      },
+    ],
     interactions: [],
   },
   volcano: {

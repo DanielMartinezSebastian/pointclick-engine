@@ -36,3 +36,10 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 ## Notas / Blockers
 
 - Completed: 2026-05-27 in single session
+- 2026-05-27 (follow-up): Fixed critical pathfinding bug — `opening.halfZ - obstaclePadding`
+  was going negative for thin walls (halfZ≈0.30, padding=0.72). Fix: only X dimension
+  gets padding subtracted (horizontal clearance); Z (wall depth) uses full halfZ.
+- 2026-05-27 (follow-up): Updated app's `SceneWalls.tsx` to use `computeWallSegments`
+  (was still using single-collider, no opening support).
+- 2026-05-27 (follow-up): Added `SceneWallOpening` type to `scenes.ts`; added dungeon
+  gate wall with door opening at Z=3 for debugging.

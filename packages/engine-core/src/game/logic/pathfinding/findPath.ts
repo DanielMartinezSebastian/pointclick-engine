@@ -471,17 +471,20 @@ function isPointInsideObstacle(
   if (!insideWall) return false;
 
   // If the point is inside the wall, check if it is also inside an opening.
-  // Openings are holes that allow traversal — reduce their effective size by
-  // obstaclePadding so the agent fits through with clearance.
+  // Openings are holes that allow traversal.
+  // - halfX (horizontal width): subtract obstaclePadding so the agent fits
+  //   through with clearance (opening must be wide enough).
+  // - halfZ (wall depth/thickness): do NOT subtract padding — this dimension
+  //   spans the wall's thickness, not the passage width. The opening is always
+  //   set to wall.halfZ + margin, so subtracting obstaclePadding (0.72) would
+  //   make it negative for thin walls (halfZ ≈ 0.25–0.30).
   if (obstacle.openings && obstacle.openings.length > 0) {
     for (const opening of obstacle.openings) {
       const openHalfX = opening.halfX - obstaclePadding;
-      const openHalfZ = opening.halfZ - obstaclePadding;
       if (
         openHalfX > 0 &&
-        openHalfZ > 0 &&
         Math.abs(rotatedX - opening.centerX) <= openHalfX &&
-        Math.abs(rotatedZ - opening.centerZ) <= openHalfZ
+        Math.abs(rotatedZ - opening.centerZ) <= opening.halfZ
       ) {
         // Point is inside an opening → not blocked
         return false;
