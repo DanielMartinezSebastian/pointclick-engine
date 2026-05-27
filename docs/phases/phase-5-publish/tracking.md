@@ -2,7 +2,7 @@
 
 Marcar `[x]` cuando los Success Criteria del task estén validados.
 
-## Progreso: 5/8 tareas
+## Progreso: 6/8 tareas
 
 ## Week 1 — Auditoría + completar API
 
@@ -17,7 +17,7 @@ Marcar `[x]` cuando los Success Criteria del task estén validados.
 
 ## Week 3 — Validación + docs
 
-- [ ] [06-publish-dry-run](tasks/06-publish-dry-run.md) — `npm pack` + sandbox install
+- [x] [06-publish-dry-run](tasks/06-publish-dry-run.md) — `npm pack` + sandbox install
 - [ ] [07-final-docs-and-renderer-guide](tasks/07-final-docs-and-renderer-guide.md) — guía de renderer + consumption refresh
 
 ## Week 4 — Release
