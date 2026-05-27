@@ -2,6 +2,17 @@
 
 Framework-agnostic engine for 2D / 2.5D point-and-click games. First renderer: React Three Fiber.
 
+## 🎮 Live Demo
+
+Try it deployed with Next.js + React Three Fiber:  
+**[https://pointclick-engine-web-demo.vercel.app/](https://pointclick-engine-web-demo.vercel.app/)**
+
+| Route | Description |
+|-------|-------------|
+| [`/`](https://pointclick-engine-web-demo.vercel.app/) | Main game scene |
+| [`/example-bridge`](https://pointclick-engine-web-demo.vercel.app/example-bridge) | Bidirectional web ↔ game API |
+| [`/debug`](https://pointclick-engine-web-demo.vercel.app/debug) | Debug & editor tools |
+
 ## Packages
 
 | Package | Description |
