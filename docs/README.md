@@ -31,9 +31,9 @@ Cómo trabajar en este repo.
 
 Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 
-- [`phases/phase-2-core-extraction/`](phases/phase-2-core-extraction/) — **ACTIVA**: Extracción de core a `packages/engine-core/`
-- `phases/phase-3-renderer-abstract/` — FUTURA: Abstracción del renderer
-- `phases/phase-4-bidirectional/` — FUTURA: Comunicación web ↔ juego
+- [`phases/phase-2-core-extraction/`](phases/phase-2-core-extraction/) — ✅ Completed: Extracción de core a `packages/engine-core/`
+- [`phases/phase-3-renderer-abstract/`](phases/phase-3-renderer-abstract/) — ✅ Completed: Abstracción del renderer
+- [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — **ACTIVA**: Comunicación web ↔ juego
 - `phases/phase-5-publish/` — FUTURA: Publicación en npm
 
 ---
