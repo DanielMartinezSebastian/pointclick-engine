@@ -27,6 +27,8 @@ import { legacyRuntimeEventToGameEvent, type RuntimeEvent } from "@pointclick/en
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
+import { useDialogStore } from "../store/dialogStore";
+import { useInventoryStore } from "../store/inventoryStore";
 import { getRandomPhrase } from "../demo/content/dialogs/getRandomPhrase";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
@@ -103,15 +105,19 @@ export default function GameTouchCanvas({
     sceneOptions,
   } = useSceneRuntimeController();
 
+  // Dialog state lives in dialogStore (also writable via dialog:trigger / dialog:dismiss commands)
+  const speechText = useDialogStore((s) => s.text);
+  const speechVisible = useDialogStore((s) => s.visible);
+  const speechTrigger = useDialogStore((s) => s.triggerCount);
+
+  // Inventory visibility lives in inventoryStore (also writable via inventory:toggle command)
+  const isInventoryOpen = useInventoryStore((s) => s.isOpen);
+  const toggleInventory = useInventoryStore((s) => s.toggle);
+
   const {
-    speechText,
-    speechVisible,
-    speechTrigger,
-    isInventoryOpen,
     inventorySlots,
     draggedStack,
     placedItems,
-    setIsInventoryOpen,
     handleBoundaryHit,
     showSpeechBubble,
     hideSpeechBubble,
@@ -156,7 +162,7 @@ export default function GameTouchCanvas({
 
       <Canvas
         gl={{ alpha: false, antialias: true, preserveDrawingBuffer: false }}
-        onPointerDownCapture={() => setIsInventoryOpen(false)}
+        onPointerDownCapture={() => useInventoryStore.getState().close()}
         onCreated={(state) => {
           try {
             const glCtx = state.gl.getContext();
@@ -227,7 +233,7 @@ export default function GameTouchCanvas({
       <InventoryUI
         isOpen={isInventoryOpen}
         slots={inventorySlots}
-        onToggle={() => setIsInventoryOpen((open) => !open)}
+        onToggle={toggleInventory}
         onStartDrag={handleStartInventoryDrag}
       />
       {draggedStack && (

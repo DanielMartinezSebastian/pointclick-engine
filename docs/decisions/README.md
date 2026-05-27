@@ -40,6 +40,7 @@ Cada ADR es **~30 líneas**. Estructura:
 - [0004 — Modular docs strategy (subagent-first)](0004-modular-docs-strategy.md)
 - [0005 — Renderer ports design (GameLoopPort, InputPort, ViewportPort)](0005-renderer-ports-design.md)
 - [0006 — Command/Event architecture (bidirectional web ↔ game)](0006-command-event-architecture.md)
+- [0007 — Release strategy (npm scope, versioning, publish process)](0007-release-strategy.md)
 
 ## Cómo añadir un ADR
 

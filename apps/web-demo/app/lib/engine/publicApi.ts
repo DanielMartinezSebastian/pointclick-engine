@@ -30,6 +30,8 @@ import {
   type GameCommand,
 } from "@pointclick/engine-core";
 import GameTouchCanvas from "../../components/GameTouchCanvas";
+import { useInventoryStore } from "../../store/inventoryStore";
+import { useDialogStore } from "../../store/dialogStore";
 
 // ---------------------------------------------------------------------------
 // Tipos públicos reutilizables (importados o re-exportados de engine-core)
@@ -274,22 +276,60 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     useSceneStore.getState().setPlayerPosition(cmd.position);
   });
 
-  // Placeholder executors for commands not yet fully wired (Phase 4)
-  // These will be connected in Phase 5
-  const notYetWired = [
-    "player:stop",
-    "inventory:toggle",
-    "inventory:pickup",
-    "inventory:drop",
-    "dialog:trigger",
-    "dialog:dismiss",
-  ] as const;
+  // ---------------------------------------------------------------------------
+  // Wired executors (Phase 5)
+  // ---------------------------------------------------------------------------
 
-  for (const t of notYetWired) {
-    commands.register(t, (cmd) =>
-      console.warn(`[runtime] executor not yet wired: ${cmd.type}`),
-    );
-  }
+  commands.register("inventory:toggle", () => {
+    useInventoryStore.getState().toggle();
+  });
+
+  commands.register("dialog:trigger", (cmd) => {
+    const entry = _ruleRegistry.get(cmd.dialogKey);
+    const phrases = entry?.phrases ?? [];
+    const text =
+      phrases.length > 0
+        ? phrases[Math.floor(Math.random() * phrases.length)]!
+        : cmd.dialogKey;
+    useDialogStore.getState().show(text, cmd.dialogKey);
+    bus.emit("dialog:triggered", {
+      type: "dialog:triggered",
+      text,
+      dialogKey: cmd.dialogKey,
+      source: "command",
+    });
+  });
+
+  commands.register("dialog:dismiss", () => {
+    const { key } = useDialogStore.getState();
+    useDialogStore.getState().dismiss();
+    bus.emit("dialog:dismissed", {
+      type: "dialog:dismissed",
+      dialogKey: key,
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Formally deferred executors (v0.2.0)
+  // ---------------------------------------------------------------------------
+
+  commands.register("player:stop", (cmd) =>
+    console.warn(
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires renderer-r3f DI prop for cancelTarget. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+    ),
+  );
+
+  commands.register("inventory:pickup", (cmd) =>
+    console.warn(
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires full inventory state machine extraction. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+    ),
+  );
+
+  commands.register("inventory:drop", (cmd) =>
+    console.warn(
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires full inventory state machine extraction. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+    ),
+  );
 
   const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(_sceneRegistry),

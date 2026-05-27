@@ -11,6 +11,8 @@ import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
 } from "@pointclick/engine-core";
+import { useDialogStore } from "../../../store/dialogStore";
+import { useInventoryStore } from "../../../store/inventoryStore";
 import {
   addOneToInventory,
   inventoryRuleMessages,
@@ -63,10 +65,14 @@ export function useInventoryRuntimeController({
   playerPosition: [number, number, number];
   onRuntimeEvent?: RuntimeEventHandler;
 }) {
-  const [speechText, setSpeechText] = useState("");
-  const [speechVisible, setSpeechVisible] = useState(false);
-  const [speechTrigger, setSpeechTrigger] = useState(0);
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  // Dialog state now lives in dialogStore (wirable via dialog:trigger / dialog:dismiss commands)
+  const showDialog = useDialogStore((s) => s.show);
+  const dismissDialog = useDialogStore((s) => s.dismiss);
+
+  // Inventory visibility now lives in inventoryStore (wirable via inventory:toggle command)
+  const isInventoryOpen = useInventoryStore((s) => s.isOpen);
+  const setIsInventoryOpen = useInventoryStore((s) => s.close);
+
   const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() =>
     createInitialInventorySlots(),
   );
@@ -91,9 +97,7 @@ export function useInventoryRuntimeController({
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
-      setSpeechText(phrase);
-      setSpeechVisible(true);
-      setSpeechTrigger((current) => current + 1);
+      showDialog(phrase, "boundaryHit");
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDialog",
         source: "boundary",
@@ -101,7 +105,7 @@ export function useInventoryRuntimeController({
         dialogKey: "boundaryHit",
       });
     },
-    [onRuntimeEvent],
+    [onRuntimeEvent, showDialog],
   );
 
   const showSpeechBubble = useCallback(
@@ -109,9 +113,7 @@ export function useInventoryRuntimeController({
       nextText: string,
       meta?: { source?: "inventory" | "debug"; dialogKey?: string },
     ) => {
-      setSpeechText(nextText);
-      setSpeechVisible(true);
-      setSpeechTrigger((current) => current + 1);
+      showDialog(nextText, meta?.dialogKey);
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDialog",
         source: meta?.source ?? "inventory",
@@ -119,12 +121,12 @@ export function useInventoryRuntimeController({
         dialogKey: meta?.dialogKey,
       });
     },
-    [onRuntimeEvent],
+    [onRuntimeEvent, showDialog],
   );
 
   const hideSpeechBubble = useCallback(() => {
-    setSpeechVisible(false);
-  }, []);
+    dismissDialog();
+  }, [dismissDialog]);
 
   const handleInventoryDropHit = useCallback(
     (interaction: SceneInteraction, payload: DraggedInventoryPayload) => {
@@ -364,7 +366,7 @@ export function useInventoryRuntimeController({
       const stack = inventorySlots[slotIndex];
       if (!stack) return;
 
-      setIsInventoryOpen(false);
+      useInventoryStore.getState().close();
       setDraggedStack({
         stack,
         fromSlotIndex: slotIndex,
@@ -432,14 +434,12 @@ export function useInventoryRuntimeController({
   }, [sceneId, showSpeechBubble]);
 
   return {
-    speechText,
-    speechVisible,
-    speechTrigger,
+    // Note: speechText, speechVisible, speechTrigger are now in dialogStore
+    // Note: isInventoryOpen is now in inventoryStore
     isInventoryOpen,
     inventorySlots,
     draggedStack,
     placedItems,
-    setIsInventoryOpen,
     handleBoundaryHit,
     showSpeechBubble,
     hideSpeechBubble,

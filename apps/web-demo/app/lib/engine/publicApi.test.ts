@@ -1,8 +1,10 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
 import { DEFAULT_SCENE_ID, SCENES } from "../../demo/content/scenes";
+import { useInventoryStore } from "../../store/inventoryStore";
+import { useDialogStore } from "../../store/dialogStore";
 import {
   GameViewport,
   createGameRuntime,
@@ -229,5 +231,78 @@ describe("publicApi — bidirectional API (Phase 4)", () => {
       runtime.executeCommand({ type: "scene:set", sceneId: "bridge-scene-dispose" }),
     ).not.toThrow();
     warnSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5: Wired commands
+// ---------------------------------------------------------------------------
+
+describe("publicApi — wired commands (Phase 5)", () => {
+  beforeEach(() => {
+    // Reset stores before each test
+    useInventoryStore.setState({ isOpen: false });
+    useDialogStore.setState({ text: "", key: undefined, visible: false, triggerCount: 0 });
+  });
+
+  afterEach(() => {
+    getGameRuntime()?.dispose();
+  });
+
+  it("inventory:toggle toggles inventoryStore.isOpen", () => {
+    const runtime = createGameRuntime();
+    expect(useInventoryStore.getState().isOpen).toBe(false);
+
+    runtime.executeCommand({ type: "inventory:toggle" });
+    expect(useInventoryStore.getState().isOpen).toBe(true);
+
+    runtime.executeCommand({ type: "inventory:toggle" });
+    expect(useInventoryStore.getState().isOpen).toBe(false);
+  });
+
+  it("dialog:trigger shows text in dialogStore and emits event", () => {
+    const runtime = createGameRuntime({
+      rules: [{ key: "test.dialog", phrases: ["Hello world"] }],
+    });
+    const spy = vi.fn();
+    runtime.on("dialog:triggered", spy);
+
+    runtime.executeCommand({ type: "dialog:trigger", dialogKey: "test.dialog" });
+
+    expect(useDialogStore.getState().visible).toBe(true);
+    expect(useDialogStore.getState().text).toBe("Hello world");
+    expect(useDialogStore.getState().key).toBe("test.dialog");
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0][0]).toMatchObject({
+      type: "dialog:triggered",
+      text: "Hello world",
+      dialogKey: "test.dialog",
+      source: "command",
+    });
+  });
+
+  it("dialog:trigger uses dialogKey as fallback when rule not registered", () => {
+    const runtime = createGameRuntime();
+    runtime.executeCommand({ type: "dialog:trigger", dialogKey: "unregistered.key" });
+    expect(useDialogStore.getState().text).toBe("unregistered.key");
+  });
+
+  it("dialog:dismiss hides dialogStore and emits event", () => {
+    const runtime = createGameRuntime({
+      rules: [{ key: "test.dismiss", phrases: ["Dismiss me"] }],
+    });
+    const spy = vi.fn();
+    runtime.on("dialog:dismissed", spy);
+
+    runtime.executeCommand({ type: "dialog:trigger", dialogKey: "test.dismiss" });
+    expect(useDialogStore.getState().visible).toBe(true);
+
+    runtime.executeCommand({ type: "dialog:dismiss" });
+    expect(useDialogStore.getState().visible).toBe(false);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0][0]).toMatchObject({
+      type: "dialog:dismissed",
+      dialogKey: "test.dismiss",
+    });
   });
 });

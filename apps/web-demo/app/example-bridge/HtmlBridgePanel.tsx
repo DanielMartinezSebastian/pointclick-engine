@@ -34,6 +34,9 @@ export default function HtmlBridgePanel() {
       rt.on("dialog:triggered", (e) =>
         setLog((l) => [...l.slice(-9), `💬 ${e.text.slice(0, 45)}`]),
       ),
+      rt.on("dialog:dismissed", (e) =>
+        setLog((l) => [...l.slice(-9), `🔇 dialog dismissed (${e.dialogKey ?? "no key"})`]),
+      ),
     ];
 
     return () => unsubs.forEach((u) => u());
@@ -114,7 +117,29 @@ export default function HtmlBridgePanel() {
         style={btnStyle}
         onClick={() => dispatch({ type: "player:stop" })}
       >
-        player:stop (not yet wired)
+        player:stop (deferred v0.2.0)
+      </button>
+
+      <strong style={{ color: "#aaa", fontSize: 11, marginTop: 8 }}>Inventory commands</strong>
+      <button
+        style={btnStyle}
+        onClick={() => dispatch({ type: "inventory:toggle" })}
+      >
+        inventory:toggle
+      </button>
+
+      <strong style={{ color: "#aaa", fontSize: 11, marginTop: 8 }}>Dialog commands</strong>
+      <button
+        style={btnStyle}
+        onClick={() => dispatch({ type: "dialog:trigger", dialogKey: "personalRoomWelcome" })}
+      >
+        dialog:trigger → personalRoomWelcome
+      </button>
+      <button
+        style={btnStyle}
+        onClick={() => dispatch({ type: "dialog:dismiss" })}
+      >
+        dialog:dismiss
       </button>
 
       <strong style={{ color: "#aaa", fontSize: 11, marginTop: 8 }}>
