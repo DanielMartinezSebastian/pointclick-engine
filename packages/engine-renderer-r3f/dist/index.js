@@ -10,6 +10,7 @@ export { buildSpeakingAnimation } from "./sprite/speakingAnimation";
 export { SceneGround } from "./scene/SceneGround";
 export { SceneWalls } from "./scene/SceneWalls";
 export { SceneWallPlane } from "./scene/SceneWallPlane";
+export { computeWallSegments } from "./scene/wallSegments";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 // Runtime

@@ -3,32 +3,32 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import { SceneWallPlane } from "./SceneWallPlane";
+import { computeWallSegments } from "./wallSegments";
 export function SceneWalls({ debug, onStartWallMove, onStartWallResize, selectedWallIndex = null, onSelectWall, }) {
     const walls = useSceneStore((s) => s.scene.walls);
-    return (_jsxs(_Fragment, { children: [walls.map((wall, i) => (_jsxs(RigidBody, { type: "fixed", position: wall.position, rotation: [0, wall.rotationY, 0], children: [_jsx(CuboidCollider, { args: wall.halfSize }), debug && (_jsxs(_Fragment, { children: [_jsxs("mesh", { onPointerDown: (e) => {
-                                    e.stopPropagation();
-                                    onSelectWall?.(i);
-                                    onStartWallMove(i, e.point.x, e.point.z);
-                                }, children: [_jsx("boxGeometry", { args: [wall.halfSize[0] * 2, wall.halfSize[1] * 2, wall.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: selectedWallIndex === i ? "#ffff00" : "#ff4400", wireframe: true })] }), wall.openings?.map((opening, oi) => (_jsxs("group", { position: opening.position, children: [_jsxs("mesh", { children: [_jsx("boxGeometry", { args: [
-                                                    opening.halfSize[0] * 2,
-                                                    opening.halfSize[1] * 2,
-                                                    opening.halfSize[2] * 2,
-                                                ] }), _jsx("meshBasicMaterial", { color: "#001a1a", transparent: true, opacity: 0.85 })] }), _jsxs("mesh", { children: [_jsx("boxGeometry", { args: [
-                                                    opening.halfSize[0] * 2,
-                                                    opening.halfSize[1] * 2,
-                                                    opening.halfSize[2] * 2,
-                                                ] }), _jsx("meshBasicMaterial", { color: "#00ffcc", wireframe: true })] })] }, `opening-${oi}`))), selectedWallIndex === i && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
-                                            e.stopPropagation();
-                                            onStartWallResize(i, "x+");
-                                        }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [-wall.halfSize[0], 0, 0], onPointerDown: (e) => {
-                                            e.stopPropagation();
-                                            onStartWallResize(i, "x-");
-                                        }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [0, 0, wall.halfSize[2]], onPointerDown: (e) => {
-                                            e.stopPropagation();
-                                            onStartWallResize(i, "z+");
-                                        }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#ff00aa" })] }), _jsxs("mesh", { position: [0, 0, -wall.halfSize[2]], onPointerDown: (e) => {
-                                            e.stopPropagation();
-                                            onStartWallResize(i, "z-");
-                                        }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#ff00aa" })] })] }))] }))] }, i))), walls.map((wall, i) => wall.textureUrl ? (_jsx(SceneWallPlane, { wall: wall, renderOrder: i }, `wall-plane-${i}`)) : null)] }));
+    return (_jsxs(_Fragment, { children: [walls.map((wall, i) => {
+                // Decompose wall into solid segments around its openings.
+                // Each segment gets its own CuboidCollider (real physics holes)
+                // and its own debug mesh (real visual hole — no overlay).
+                const segments = computeWallSegments(wall.halfSize, wall.openings);
+                const isSelected = selectedWallIndex === i;
+                return (_jsxs(RigidBody, { type: "fixed", position: wall.position, rotation: [0, wall.rotationY, 0], children: [segments.map((seg, si) => (_jsx(CuboidCollider, { position: seg.position, args: seg.halfSize }, si))), debug && (_jsxs(_Fragment, { children: [segments.map((seg, si) => (_jsxs("mesh", { position: seg.position, onPointerDown: (e) => {
+                                        e.stopPropagation();
+                                        onSelectWall?.(i);
+                                        onStartWallMove(i, e.point.x, e.point.z);
+                                    }, children: [_jsx("boxGeometry", { args: [seg.halfSize[0] * 2, seg.halfSize[1] * 2, seg.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: isSelected ? "#ffff00" : "#ff4400", wireframe: true })] }, si))), isSelected && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
+                                                e.stopPropagation();
+                                                onStartWallResize(i, "x+");
+                                            }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [-wall.halfSize[0], 0, 0], onPointerDown: (e) => {
+                                                e.stopPropagation();
+                                                onStartWallResize(i, "x-");
+                                            }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [0, 0, wall.halfSize[2]], onPointerDown: (e) => {
+                                                e.stopPropagation();
+                                                onStartWallResize(i, "z+");
+                                            }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#ff00aa" })] }), _jsxs("mesh", { position: [0, 0, -wall.halfSize[2]], onPointerDown: (e) => {
+                                                e.stopPropagation();
+                                                onStartWallResize(i, "z-");
+                                            }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#ff00aa" })] })] }))] }))] }, i));
+            }), walls.map((wall, i) => wall.textureUrl ? (_jsx(SceneWallPlane, { wall: wall, renderOrder: i }, `wall-plane-${i}`)) : null)] }));
 }
 //# sourceMappingURL=SceneWalls.js.map

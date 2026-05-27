@@ -64,8 +64,9 @@ export const useSceneEditorStore = create<SceneEditorStore>()((set, get) => ({
       const playerPosition = sceneState.playerPosition;
 
       const newWall: GameSceneWall = {
-        position: [playerPosition[0], groundY + 2, playerPosition[2]],
-        halfSize: [2, 2, 0.25],
+        // Default: wider (6m) and taller (5m) wall, half-unit thick
+        position: [playerPosition[0], groundY + 2.5, playerPosition[2]],
+        halfSize: [3, 2.5, 0.25],
         rotationY: 0,
       };
 
@@ -108,14 +109,16 @@ export const useSceneEditorStore = create<SceneEditorStore>()((set, get) => ({
 
       const wall = useSceneStore.getState().scene.walls[selectedWallIndex];
 
-      // Default: door centered on wall (X=0), bottom flush with wall's bottom edge.
-      // halfSize[1] of wall is in wall-local Y — door occupies bottom portion.
-      const openingHalfY = Math.min(1.0, wall.halfSize[1]);
-      // Center X=0, bottom = -wall.halfSize[1], so center = -wall.halfSize[1] + openingHalfY
-      const openingCenterY = -wall.halfSize[1] + openingHalfY;
-      // Width: reasonable door width (~1.2m), capped at wall width
-      const openingHalfX = Math.min(0.6, wall.halfSize[0] * 0.5);
-      // Depth: span full wall depth + small margin so pathfinding clearance is clean
+      // Default: centered door (X=0), bottom flush with wall's bottom edge.
+      //
+      // Character physics radius = 0.5 units.
+      // Default pathfinding obstaclePadding = 0.72 — opening needs halfX > 0.72
+      // to be traversable. 1.5 (3m wide) gives comfortable passage.
+      // halfY = 1.2 (2.4m tall) clears the character sprite with margin.
+      const openingHalfY = Math.min(1.2, wall.halfSize[1]);
+      const openingCenterY = -wall.halfSize[1] + openingHalfY; // bottom at wall base
+      const openingHalfX = Math.min(1.5, wall.halfSize[0] * 0.5);
+      // Depth: span full wall depth + margin so the cut is clean
       const openingHalfZ = wall.halfSize[2] + 0.05;
 
       const newOpening: GameSceneWallOpening = {
