@@ -73,16 +73,18 @@ function SceneDropTarget({
         <boxGeometry args={[interaction.halfSize[0] * 2.2, interaction.halfSize[1] * 2.2, interaction.halfSize[2] * 2.2]} />
         <meshStandardMaterial transparent opacity={0.01} depthWrite={false} />
       </mesh>
-      <group>
-        <mesh position={[0, -interaction.halfSize[1] * 0.15, 0]}>
-          <cylinderGeometry args={[interaction.halfSize[0] * 0.84, interaction.halfSize[0] * 0.92, interaction.halfSize[1] * 0.55, 4]} />
-          <meshStandardMaterial color="#3a4f75" roughness={0.9} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, interaction.halfSize[1] * 0.15, 0]}>
-          <boxGeometry args={[interaction.halfSize[0] * 1.1, interaction.halfSize[1] * 0.42, interaction.halfSize[2] * 1.1]} />
-          <meshStandardMaterial color="#7fb7ff" emissive="#3f74d2" emissiveIntensity={0.35} roughness={0.45} metalness={0.2} />
-        </mesh>
-      </group>
+      {!interaction.invisible && (
+        <group>
+          <mesh position={[0, -interaction.halfSize[1] * 0.15, 0]}>
+            <cylinderGeometry args={[interaction.halfSize[0] * 0.84, interaction.halfSize[0] * 0.92, interaction.halfSize[1] * 0.55, 4]} />
+            <meshStandardMaterial color="#3a4f75" roughness={0.9} metalness={0.1} />
+          </mesh>
+          <mesh position={[0, interaction.halfSize[1] * 0.15, 0]}>
+            <boxGeometry args={[interaction.halfSize[0] * 1.1, interaction.halfSize[1] * 0.42, interaction.halfSize[2] * 1.1]} />
+            <meshStandardMaterial color="#7fb7ff" emissive="#3f74d2" emissiveIntensity={0.35} roughness={0.45} metalness={0.2} />
+          </mesh>
+        </group>
+      )}
     </RigidBody>
   );
 }

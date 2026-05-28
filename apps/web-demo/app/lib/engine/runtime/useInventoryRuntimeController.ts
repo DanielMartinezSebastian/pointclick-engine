@@ -44,13 +44,26 @@ type RuntimeDraggedStack = DraggedInventoryPayload & {
 
 function createInitialInventorySlots(): InventorySlots {
   return Array.from({ length: 9 }, (_, index) => {
-    if (index !== 0) return null;
-    return {
-      id: "gameboy",
-      name: "Gameboy",
-      spriteUrl: "/assets/gameboy/gameboy.png",
-      quantity: 1,
-    };
+    if (index === 0) {
+      return {
+        id: "gameboy",
+        name: "Gameboy",
+        spriteUrl: "/assets/gameboy/gameboy.png",
+        quantity: 1,
+      };
+    }
+    if (index === 1) {
+      // Gold key seeded so the player can immediately test the dungeon door
+      // pipeline. Once items can be picked up from scene placements, this
+      // seed should be removed and the key dropped into a scene instead.
+      return {
+        id: "gold-key",
+        name: "Llave dorada",
+        spriteUrl: "/assets/key/gold-key.png",
+        quantity: 1,
+      };
+    }
+    return null;
   });
 }
 

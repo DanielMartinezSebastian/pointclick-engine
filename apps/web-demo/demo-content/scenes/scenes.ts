@@ -45,6 +45,12 @@ export type SceneInteraction = {
   halfSize: [number, number, number];
   /** If true, character collides and cannot pass through this interaction */
   hasCollision?: boolean;
+  /**
+   * Suppress the default drop-target visual (cylinder + box). Use when
+   * another renderer (e.g. SceneDoors) already shows the interactable
+   * surface. The pick volume + drop logic remain active.
+   */
+  invisible?: boolean;
   /** Item ids accepted by this interaction. If omitted, any item can be accepted. */
   acceptsItemIds?: string[];
   dialogKeys: SceneInteractionDialogKeys;
@@ -70,6 +76,51 @@ export type SceneGround = {
   y: number;
 };
 
+/**
+ * Door — interactive opening with two visual states driven by two full-wall
+ * textures (one with the door painted in, one with the door cut out).
+ *
+ * When `closed`, the matching wall's `textureUrl` is swapped to the closed
+ * variant, a CuboidCollider blocks the wall's opening, and the wall's
+ * `openings[]` entry matching `openingId` is removed so pathfinding treats
+ * the wall as solid.
+ *
+ * When `open`, the texture, the collider and the opening are restored.
+ *
+ * The texture swap (vs. an overlay sprite) avoids the depthTest=false
+ * sandwich problem where a sprite of the door would paint on top of the
+ * character — both textures live on the same SceneWallPlane.
+ */
+export type SceneDoor = {
+  id: string;
+  /** Index into `scene.walls` of the wall this door belongs to. */
+  wallIndex: number;
+  /** Id of the opening entry in `wall.openings[]` to enable/disable. */
+  openingId: string;
+  /** Wall texture displayed when the door is open (with the hole carved in). */
+  openTextureUrl: string;
+  /** Wall texture displayed when the door is closed (door painted in). */
+  closedTextureUrl: string;
+  /**
+   * World-space center of the closed-state collider AND the invisible click
+   * area used to toggle the door. Match this to the visible doorway in the
+   * wall texture so clicks land naturally.
+   */
+  position: [number, number, number];
+  /** Half-extents of the click area / closed-state collider. */
+  halfSize: [number, number, number];
+  /** Optional Y rotation in radians (match wall rotation). */
+  rotationY?: number;
+  /** If true, the door starts open. Default false. */
+  openByDefault?: boolean;
+  /**
+   * When the door is open, suppress its hint dialogs (proximity + inspect).
+   * Default false (open door = no hint, the user is done). Set to true if
+   * the open state still has something useful to say.
+   */
+  showHintWhenOpen?: boolean;
+};
+
 export type Scene = {
   id: string;
   label: string;
@@ -78,6 +129,8 @@ export type Scene = {
   ground: SceneGround;
   walls: SceneWall[];
   interactions: SceneInteraction[];
+  /** Optional interactive doors. */
+  doors?: SceneDoor[];
 };
 
 export const SCENES: Record<string, Scene> = {
@@ -121,27 +174,103 @@ export const SCENES: Record<string, Scene> = {
     walls: [
       {
         // Dungeon gate wall — spans the corridor at Z=3, blocks passage north→south.
-        // Ground y = -3.15 → wall center at y = -3.15 + 2.5 = -0.65 (halfY=2.5 → top at +1.85).
-        // Opening: centered door (X=0), bottom flush with wall base (Y local = -1.3),
-        // 3m wide × 2.4m tall — large enough for character (radius 0.5) to walk through.
-        position: [0, -0.65, 3],
-        halfSize: [3, 2.5, 0.25],
+        // Snapped to the ground (editor invariant): wall base sits exactly on
+        // ground.y = -3.15. With halfY=4.4 the center is at -3.15 + 4.4 = +1.25
+        // and the top reaches world Y=+5.65 — a tall arch.
+        // halfZ=1.65 keeps the wall ~3.3m deep so the player visibly tunnels
+        // through it instead of just brushing past a plane.
+        position: [0, 1.25, 3],
+        halfSize: [3, 4.4, 1.650227616485946],
         rotationY: 0,
+        // Initial texture matches the door's default "closed" state. The
+        // SceneDoors system will swap to the open texture if/when the door
+        // opens (and back when it closes).
+        textureUrl: "/assets/walldoor/dungeon_wall_door.png",
         openings: [
           {
             id: "dungeon-gate-door",
-            // Local to wall: X=0 (centered), Y=-1.3 (bottom at -2.5+1.2=-1.3 → flush with floor),
-            // Z=0 (centered in wall depth)
-            position: [0, -1.3, 0],
-            // halfX=1.5 → door is 3m wide (agent clearance after padding: 1.5-0.72=0.78 > 0.5 radius)
-            // halfY=1.2 → door is 2.4m tall
-            // halfZ=0.3 → 0.25+0.05 margin, spans full wall depth cleanly
-            halfSize: [1.5, 1.2, 0.3],
+            // ── Door sized to fit the character through ───────────────────────
+            // Player collider is DYNAMIC: its halfY tracks the sprite's scale
+            // (SPRITE_MIN_SCALE=1.4 ↔ SPRITE_MAX_SCALE=2.94) so it matches the
+            // visible silhouette. The opening must clear the worst case, which
+            // is when the sprite is at its biggest (the player closer to the
+            // camera, depthFactor → 1):
+            //   player_top_world(max) = spawnY(-1.1) + 2*2.94 - 0.95 = +3.83
+            //
+            // Y (height) — wall_center_Y = +1.25, wall halfY = 4.4:
+            //   bottom_local = -0.6 - 3.8 = -4.4    (= -halfY → flush ground)
+            //   top_local    = -0.6 + 3.8 = +3.2    (world Y = +4.45)
+            //   → 0.62 of headroom above the tallest sprite.
+            //   Remaining lintel above the opening = +4.45..+5.65 (1.2m tall).
+            //
+            // X (width) — wall halfX = 3:
+            //   halfX=1.75 → 3.5m wide. After pathfinding's obstaclePadding
+            //   (0.72) the navigable half-width is 1.03, which fits ~3 grid
+            //   cells (cellSize=0.9). One-cell-wide openings make A* fail
+            //   from far away because diagonal moves through the gap are
+            //   blocked by adjacent cells; three cells give A* room to plan.
+            //
+            // Z (depth) — wall halfZ = 1.65. The opening's halfZ MUST cover
+            // the wall thickness PLUS the pathfinder's obstaclePadding (0.72
+            // by default), otherwise grid cells near the wall's front/back
+            // faces fall inside the wall but outside the opening and get
+            // marked as blocked → no path through. 1.65 + 0.72 + 0.13 margin
+            // = 2.5 leaves room for the agent to plan a route through.
+            position: [0, -0.6, 0],
+            halfSize: [1.75, 3.8, 2.5],
           },
         ],
       },
     ],
-    interactions: [],
+    interactions: [
+      {
+        // Drop-target that lives in the same world-space as the dungeon door.
+        // Lets the engine's declarative inventory rules drive door unlocks:
+        //   - drag gold-key onto here  →  ItemRule outcome="consume"
+        //                              →  item:dropped event fires
+        //                              →  SceneDoors listens and opens the door
+        //   - any other item (or no item) gets the default rule's "return".
+        // `hasCollision: false` so the target volume itself is not a wall and
+        // pathfinding can route through it; the closed door's collider does
+        // the actual blocking until the door opens.
+        id: "dungeon-gate-door",
+        kind: "drop-target",
+        position: [0, -1.15, 3],
+        halfSize: [1.5, 2, 1.65],
+        hasCollision: false,
+        invisible: true,
+        acceptsItemIds: ["gold-key"],
+        dialogKeys: {
+          hit: "item.gold-key.drop.dungeon-gate-door.hit",
+          miss: "item.gold-key.drop.dungeon-gate-door.miss",
+        },
+        // Hint shown via useProximityHintController when the player walks
+        // up to the door, and on click via handleInteractionInspect.
+        hintDialogKeys: {
+          empty: "interaction.dungeon-gate-door.empty",
+          occupied: "interaction.dungeon-gate-door.occupied",
+        },
+        label: "Puerta de la mazmorra",
+      },
+    ],
+    doors: [
+      {
+        id: "dungeon-gate-door",
+        wallIndex: 0,
+        openingId: "dungeon-gate-door",
+        // Texture swap pattern — closed and open versions are full wall textures
+        // baked at authoring time. Avoids depthTest=false sprite stacking
+        // problems where a door sprite would draw over the character.
+        openTextureUrl: "/assets/walldoor/dungeon_wall_door_open.png",
+        closedTextureUrl: "/assets/walldoor/dungeon_wall_door.png",
+        // Click area + closed-state collider. Width matches the opening
+        // (halfX=1.5 → 3m), height 4m starting from the floor, depth equal
+        // to the wall's halfZ so the closed door blocks the whole tunnel.
+        position: [0, -1.15, 3],
+        halfSize: [1.5, 2, 1.65],
+        rotationY: 0,
+      },
+    ],
   },
   volcano: {
     id: "volcano",

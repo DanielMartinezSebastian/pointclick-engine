@@ -96,6 +96,44 @@ export const dialogs: DialogLocales = {
         "Mira eso. Todo en su sitio. No suele pasar.",
       ],
     },
+    "item.gold-key.description": {
+      phrases: [
+        "Una llave dorada y pesada. Algo seguro la espera al otro lado de una puerta.",
+        "Llave de oro. No se gastan así en serrajeros baratos.",
+      ],
+    },
+    "item.gold-key.drop.dungeon-gate-door.hit": {
+      phrases: [
+        "La llave gira con un clic seco. ¡La puerta cede!",
+        "Click. Cling. La puerta de la mazmorra se abre.",
+        "Encajó. La cerradura no opuso resistencia.",
+      ],
+    },
+    "item.gold-key.drop.dungeon-gate-door.miss": {
+      phrases: [
+        "La llave gira... pero algo va mal. Vuelve al bolsillo.",
+        "No es esta puerta. Aún no.",
+      ],
+    },
+    "item.gold-key.drop.default.miss": {
+      phrases: [
+        "Aquí esta llave no hace nada. La guardo de nuevo.",
+        "Esto no es una cerradura. La llave vuelve al inventario.",
+      ],
+    },
+    "interaction.dungeon-gate-door.empty": {
+      phrases: [
+        "Una puerta cerrada con candado. Necesito una llave para abrirla.",
+        "Esta puerta está cerrada. Hay una cerradura dorada — quizá tengo algo que encaje.",
+        "Cerrada. La llave dorada debería servir.",
+      ],
+    },
+    "interaction.dungeon-gate-door.occupied": {
+      phrases: [
+        "La puerta está abierta. Adelante.",
+        "Camino libre. La cerradura ya no es un problema.",
+      ],
+    },
   },
   en: {
     boundaryHit: {
@@ -190,6 +228,44 @@ export const dialogs: DialogLocales = {
         "The Gameboy at rest. Ready for the next session.",
         "Perfectly placed. Almost a shame to move it.",
         "Look at that. Everything in its place. Doesn't happen often.",
+      ],
+    },
+    "item.gold-key.description": {
+      phrases: [
+        "A heavy gold key. Something safe waits behind a door.",
+        "Solid gold. Definitely not from a cheap locksmith.",
+      ],
+    },
+    "item.gold-key.drop.dungeon-gate-door.hit": {
+      phrases: [
+        "The key turns with a sharp click. The door swings open!",
+        "Click. Clang. The dungeon gate unlocks.",
+        "Perfect fit. The lock gave way without protest.",
+      ],
+    },
+    "item.gold-key.drop.dungeon-gate-door.miss": {
+      phrases: [
+        "The key turns... but something is off. Back to the pocket.",
+        "Not this door. Not yet.",
+      ],
+    },
+    "item.gold-key.drop.default.miss": {
+      phrases: [
+        "This key does nothing here. Putting it away.",
+        "That is no lock. The key returns to the inventory.",
+      ],
+    },
+    "interaction.dungeon-gate-door.empty": {
+      phrases: [
+        "A locked door. I need a key to open it.",
+        "This door is locked. There is a golden lock — maybe I have something that fits.",
+        "Locked. The golden key should do the trick.",
+      ],
+    },
+    "interaction.dungeon-gate-door.occupied": {
+      phrases: [
+        "The door is open. Go through.",
+        "Path's clear. The lock isn't an issue anymore.",
       ],
     },
   },
