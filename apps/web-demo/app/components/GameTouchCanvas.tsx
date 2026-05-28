@@ -17,6 +17,8 @@ import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
 import { FreeCameraController } from "./scene/FreeCameraController";
+import { SceneDoors } from "./scene/SceneDoors";
+import { SCENES } from "../../demo-content/scenes/scenes";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { GameTouchSpriteRuntime } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
@@ -24,13 +26,18 @@ import { useInteractionEditorController } from "../lib/engine/runtime/useInterac
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
+import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
 import { legacyRuntimeEventToGameEvent, type RuntimeEvent, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useInventoryStore } from "../store/inventoryStore";
-import { selectGameInteractionsDisabled, useEditorModeStore } from "../store/editorModeStore";
+import {
+  selectGameInteractionsDisabled,
+  selectSceneEditingBlocked,
+  useEditorModeStore,
+} from "../store/editorModeStore";
 import { getRandomPhrase } from "../../demo-content/dialogs/getRandomPhrase";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
@@ -76,7 +83,7 @@ export default function GameTouchCanvas({
     };
   }, [runtimeDebug]);
 
-  const handleRuntimeEvent = useCallback((event: RuntimeEvent) => {
+  const baseRuntimeEvent = useCallback((event: RuntimeEvent) => {
     // Legacy callback (backwards compat)
     onRuntimeEvent?.(event);
     // Also emit to the bidirectional event bus (Phase 4)
@@ -112,6 +119,16 @@ export default function GameTouchCanvas({
     resetInteractionsFromSceneConfig,
     sceneOptions,
   } = useSceneRuntimeController();
+
+  // Doors are demo-only data (not in engine-core's GameScene). Read them from
+  // the SCENES registry by current sceneId. The door event bridge wraps the
+  // base runtime handler so `onDrop`+`consume` events open matching doors.
+  const currentScene = SCENES[sceneId];
+  const sceneDoors = currentScene?.doors ?? [];
+  const { handleRuntimeEvent, getEffectiveClickGoal } = useDoorSystem({
+    scene: currentScene,
+    passthrough: baseRuntimeEvent,
+  });
 
   // Dialog state lives in dialogStore (also writable via dialog:trigger / dialog:dismiss commands)
   const speechText = useDialogStore((s) => s.text);
@@ -164,8 +181,11 @@ export default function GameTouchCanvas({
 
   // Editor / camera modes (debug only; defaults preserve runtime behavior)
   const disableClickToMove = useEditorModeStore(selectGameInteractionsDisabled);
+  const sceneEditingBlocked = useEditorModeStore(selectSceneEditingBlocked);
+  const wallInteractionsEnabled = !sceneEditingBlocked;
   const wallOpacityMode = useEditorModeStore((s) => s.wallOpacityMode);
   const cameraMode = useEditorModeStore((s) => s.cameraMode);
+  const showPlayerCollider = useEditorModeStore((s) => s.showPlayerCollider);
 
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
@@ -208,9 +228,12 @@ export default function GameTouchCanvas({
               debug={runtimeDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}
+              showPlayerCollider={showPlayerCollider}
               wallOpacityMode={wallOpacityMode}
+              wallInteractionsEnabled={wallInteractionsEnabled}
               wallToolMode={wallToolMode}
               disableClickToMove={disableClickToMove}
+              getEffectiveClickGoal={getEffectiveClickGoal}
               wallPointResetSignal={wallPointResetSignal}
               speechText={speechText}
               speechVisible={speechVisible}
@@ -244,6 +267,7 @@ export default function GameTouchCanvas({
             onPickup={handlePickupPlacedItem}
             canPickup={!isInventoryOpen && !disableClickToMove}
           />
+          <SceneDoors doors={sceneDoors} />
         </Physics>
       </Canvas>
 

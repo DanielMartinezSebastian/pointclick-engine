@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody, type RapierRigidBody } from "@react-three/rapier";
-import { MathUtils, Mesh, Vector2 } from "three";
+import type { Collider as RapierCollider } from "@dimforge/rapier3d-compat";
+import { MathUtils, Mesh, Vector2, Vector3 } from "three";
 
 import SpeechBubble from "./SpeechBubble";
 import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
@@ -211,8 +212,8 @@ type MovementAction = GameDirection;
 type WallPointStart = { point: Vector2; resetSignal: number };
 type WallPointPreview = { start: Vector2; end: Vector2; resetSignal: number };
 type WallInteraction =
-  | { mode: "move"; offsetX: number; offsetZ: number }
-  | { mode: "resize"; handle: WallResizeHandle }
+  | { mode: "move"; index: number; offsetX: number; offsetZ: number }
+  | { mode: "resize"; index: number; handle: WallResizeHandle }
   | null;
 
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
@@ -277,7 +278,9 @@ export function GameTouchSpriteRuntime({
   debug,
   showDebugGround,
   showDebugWalls,
+  showPlayerCollider = false,
   wallOpacityMode = "wireframe",
+  wallInteractionsEnabled = true,
   wallToolMode,
   wallPointResetSignal,
   speechText,
@@ -295,13 +298,22 @@ export function GameTouchSpriteRuntime({
   onSelectWall,
   updateSelectedWall,
   disableClickToMove = false,
+  getEffectiveClickGoal,
 }: {
   activeCharacter: GameCharacterName;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
+  /** Draws a wireframe over the player's CuboidCollider for inspection. */
+  showPlayerCollider?: boolean;
   /** Render mode for debug walls. `wireframe` (default) o `opaque` (sólidos). */
   wallOpacityMode?: "wireframe" | "opaque";
+  /**
+   * When false, all wall meshes (wireframes + resize handles) ignore pointer
+   * events. Used while the camera is in `free` mode so OrbitControls drag
+   * doesn't pick up scene elements.
+   */
+  wallInteractionsEnabled?: boolean;
   wallToolMode: WallToolMode;
   wallPointResetSignal: number;
   speechText: string;
@@ -351,10 +363,28 @@ export function GameTouchSpriteRuntime({
    * The point-tool path keeps working so walls can still be drawn.
    */
   disableClickToMove?: boolean;
+  /**
+   * DI: optional pre-processor for click-to-move goals. Receives the
+   * clamped click point and the player's current position; returns a
+   * possibly redirected goal. Use to snap clicks that would otherwise
+   * route around an obstacle (e.g. a closed door) to a sensible approach
+   * point instead. Return `null` or `undefined` to leave the goal as-is.
+   */
+  getEffectiveClickGoal?: (
+    clickX: number,
+    clickZ: number,
+    playerX: number,
+    playerZ: number,
+  ) => { x: number; z: number } | null | undefined;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
+  const characterColliderRef = useRef<RapierCollider | null>(null);
+  const colliderWireframeRef = useRef<Mesh>(null);
+  // Reusable vectors for per-frame collider mutation (avoids allocation in useFrame).
+  const colliderHalfExtentsRef = useRef(new Vector3(0.55, 0.95, 0.18));
+  const colliderTranslationRef = useRef(new Vector3(0, 0, 0));
   const currentActionRef = useRef<MovementAction>("idle");
   const currentInputModeRef = useRef<"auto" | "keyboard" | "joystick">("auto");
   const hadManualInputRef = useRef(false);
@@ -425,7 +455,10 @@ export function GameTouchSpriteRuntime({
         return;
       }
 
-      const halfHeight = 2;
+      // Default wall height matches addWall in sceneEditorStore — tall enough
+      // that a subsequent default opening (full-height minus a thin lintel)
+      // clears the character sprite's worst-case height.
+      const halfHeight = 4;
       const halfThickness = 0.25;
       const centerX = (startPoint.x + clickedPoint.x) / 2;
       const centerZ = (startPoint.y + clickedPoint.y) / 2;
@@ -448,9 +481,22 @@ export function GameTouchSpriteRuntime({
     const body = characterBodyRef.current;
     const scene = useSceneStore.getState().scene;
     const startPosition = body?.translation() ?? { x: playerSpawn[0], z: playerSpawn[2] };
+
+    // Give the host app a chance to redirect the goal. Typical use: when
+    // the click points past a closed door, snap to the door's approach
+    // point on the player's side instead of letting A* hunt for a long
+    // way around the wall.
+    const redirected = getEffectiveClickGoal?.(
+      clamped.x,
+      clamped.z,
+      startPosition.x,
+      startPosition.z,
+    );
+    const effectiveGoal = redirected ?? clamped;
+
     const route = findPath({
       start: { x: startPosition.x, z: startPosition.z },
-      goal: clamped,
+      goal: effectiveGoal,
       bounds: playableBounds,
       walls: scene.walls,
       interactions: scene.interactions,
@@ -461,8 +507,8 @@ export function GameTouchSpriteRuntime({
       return;
     }
 
-    setTarget(clamped.x, clamped.z);
-  }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
+    setTarget(effectiveGoal.x, effectiveGoal.z);
+  }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, getEffectiveClickGoal, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
 
   const stopWallInteraction = useCallback(() => {
     wallInteractionRef.current = null;
@@ -473,6 +519,7 @@ export function GameTouchSpriteRuntime({
     if (!wall) return;
     wallInteractionRef.current = {
       mode: "move",
+      index,
       offsetX: pointX - wall.position[0],
       offsetZ: pointZ - wall.position[2],
     };
@@ -482,6 +529,7 @@ export function GameTouchSpriteRuntime({
     onSelectWall?.(index);
     wallInteractionRef.current = {
       mode: "resize",
+      index,
       handle,
     };
   }, [onSelectWall]);
@@ -490,10 +538,13 @@ export function GameTouchSpriteRuntime({
     const interaction = wallInteractionRef.current;
     if (!interaction) return;
     if (!updateSelectedWall) return;
-    if (selectedWallIndex == null) return;
 
+    // Read the wall via the interaction's own index — NOT the DI
+    // `selectedWallIndex` prop. The latter is captured by closure and lags
+    // behind the store by one render cycle, so the very first `onPointerMove`
+    // after a click sees the stale value `null` and the drag never starts.
     const sceneState = useSceneStore.getState();
-    const wall = sceneState.scene.walls[selectedWallIndex];
+    const wall = sceneState.scene.walls[interaction.index];
     if (!wall) return;
 
     if (interaction.mode === "move") {
@@ -532,7 +583,7 @@ export function GameTouchSpriteRuntime({
       }
       return { ...prev, halfSize };
     });
-  }, [selectedWallIndex, updateSelectedWall]);
+  }, [updateSelectedWall]);
 
   const handleHoverPointWallTool = useCallback((x: number, z: number) => {
     if (!debug || wallToolMode !== "points") return;
@@ -812,6 +863,26 @@ export function GameTouchSpriteRuntime({
       meshRef.current.scale.set(spriteScale * flipX, spriteScale, 1);
       meshRef.current.position.y = spriteScale - 0.95;
     }
+
+    // The player sprite plane is `planeHeight=2` units tall, scaled by
+    // `spriteScale` and offset to keep its feet at local Y=-0.95. Match the
+    // physics collider to that exact box so the player can't slip through
+    // openings that visually wouldn't let them past.
+    //   bottom (local Y) = -0.95   (foot, fixed)
+    //   top    (local Y) =  2 * spriteScale - 0.95
+    //   halfY  = spriteScale
+    //   center = spriteScale - 0.95
+    const collider = characterColliderRef.current;
+    if (collider) {
+      colliderHalfExtentsRef.current.set(0.55, spriteScale, 0.18);
+      collider.setHalfExtents(colliderHalfExtentsRef.current);
+      colliderTranslationRef.current.set(0, spriteScale - 0.95, 0);
+      collider.setTranslationWrtParent(colliderTranslationRef.current);
+    }
+    if (colliderWireframeRef.current) {
+      colliderWireframeRef.current.scale.set(1, spriteScale, 1);
+      colliderWireframeRef.current.position.y = spriteScale - 0.95;
+    }
   });
 
   const wallPointPreview =
@@ -838,6 +909,7 @@ export function GameTouchSpriteRuntime({
       <SceneWalls
         debug={debug && showDebugWalls}
         opacityMode={wallOpacityMode}
+        interactionsEnabled={wallInteractionsEnabled}
         onStartWallMove={handleStartWallMove}
         onStartWallResize={handleStartWallResize}
         selectedWallIndex={selectedWallIndex}
@@ -858,7 +930,21 @@ export function GameTouchSpriteRuntime({
         ccd
         enabledRotations={[false, false, false]}
       >
-        <CuboidCollider args={[0.55, 0.95, 0.18]} friction={2.2} restitution={0} />
+        <CuboidCollider
+          ref={characterColliderRef}
+          args={[0.55, 0.95, 0.18]}
+          friction={2.2}
+          restitution={0}
+        />
+        {debug && showPlayerCollider && (
+          // box base height = 2; the useFrame above scales Y to `spriteScale`
+          // and offsets Y position so the wireframe exactly mirrors the
+          // physics collider (whose halfY is also set to `spriteScale`).
+          <mesh ref={colliderWireframeRef} raycast={() => null}>
+            <boxGeometry args={[1.1, 2, 0.36]} />
+            <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.85} />
+          </mesh>
+        )}
         <DavidSprite
           ref={spriteRef}
           meshRef={meshRef}

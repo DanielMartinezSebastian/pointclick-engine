@@ -1,12 +1,20 @@
 import { type GameCharacterName } from "./sprite/clips";
 import { type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
-export declare function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, wallOpacityMode, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, getMobileInput, addWallWithData, getPhrase, selectedWallIndex, onSelectWall, updateSelectedWall, disableClickToMove, }: {
+export declare function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, showPlayerCollider, wallOpacityMode, wallInteractionsEnabled, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, getMobileInput, addWallWithData, getPhrase, selectedWallIndex, onSelectWall, updateSelectedWall, disableClickToMove, getEffectiveClickGoal, }: {
     activeCharacter: GameCharacterName;
     debug: boolean;
     showDebugGround: boolean;
     showDebugWalls: boolean;
+    /** Draws a wireframe over the player's CuboidCollider for inspection. */
+    showPlayerCollider?: boolean;
     /** Render mode for debug walls. `wireframe` (default) o `opaque` (sólidos). */
     wallOpacityMode?: "wireframe" | "opaque";
+    /**
+     * When false, all wall meshes (wireframes + resize handles) ignore pointer
+     * events. Used while the camera is in `free` mode so OrbitControls drag
+     * doesn't pick up scene elements.
+     */
+    wallInteractionsEnabled?: boolean;
     wallToolMode: WallToolMode;
     wallPointResetSignal: number;
     speechText: string;
@@ -58,5 +66,16 @@ export declare function GameTouchSpriteRuntime({ activeCharacter, debug, showDeb
      * The point-tool path keeps working so walls can still be drawn.
      */
     disableClickToMove?: boolean;
+    /**
+     * DI: optional pre-processor for click-to-move goals. Receives the
+     * clamped click point and the player's current position; returns a
+     * possibly redirected goal. Use to snap clicks that would otherwise
+     * route around an obstacle (e.g. a closed door) to a sensible approach
+     * point instead. Return `null` or `undefined` to leave the goal as-is.
+     */
+    getEffectiveClickGoal?: (clickX: number, clickZ: number, playerX: number, playerZ: number) => {
+        x: number;
+        z: number;
+    } | null | undefined;
 }): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=GameTouchSpriteRuntime.d.ts.map

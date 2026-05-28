@@ -2,6 +2,7 @@
 
 import { RoundedBox, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { type Group, type Mesh } from "three";
 
 import { useSceneStore } from "@pointclick-engine/engine-core";
 
@@ -161,6 +162,43 @@ export default function SpeechBubble({
     return clamp(textHeight + TEXT_PADDING_Y * 2, MIN_BUBBLE_HEIGHT, MAX_BUBBLE_HEIGHT);
   }, [displayedText]);
 
+  // Belt-and-braces guarantee for "dialog must always be readable, even when
+  // a wall texture would otherwise cover it":
+  // - drei's RoundedBox / Text wrap their own meshes and may not always
+  //   forward `renderOrder` / material depth flags through JSX shorthand.
+  // - We traverse the bubble group on every render where the bubble is
+  //   visible and force every Mesh + material to use a very late render
+  //   order with depth tests disabled.
+  //
+  // NOTE: useRef and useEffect MUST live above any early `return null` so
+  // React always counts the same number of hooks per render.
+  const BUBBLE_RENDER_ORDER = 20000;
+  const bubbleGroupRef = useRef<Group | null>(null);
+  useEffect(() => {
+    if (!visible) return;
+    const root = bubbleGroupRef.current;
+    if (!root) return;
+    root.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.renderOrder = BUBBLE_RENDER_ORDER;
+      const material = mesh.material;
+      if (Array.isArray(material)) {
+        for (const m of material) {
+          m.depthTest = false;
+          m.depthWrite = false;
+          m.transparent = true;
+          m.needsUpdate = true;
+        }
+      } else if (material) {
+        material.depthTest = false;
+        material.depthWrite = false;
+        material.transparent = true;
+        material.needsUpdate = true;
+      }
+    });
+  }, [visible, displayedText, bubbleWidth, bubbleHeight]);
+
   if (!visible || normalizedText.length === 0) {
     return null;
   }
@@ -176,7 +214,7 @@ export default function SpeechBubble({
   const arrowRotationZ = shouldShowLeft ? -Math.PI / 2 : Math.PI / 2;
 
   return (
-    <group position={[0, offsetY, 0]}>
+    <group ref={bubbleGroupRef} position={[0, offsetY, 0]}>
       <group position={[bubbleCenterX, -bubbleHeight / 2, 0.03]}>
         <RoundedBox
           args={[1, 1, 0.02]}
@@ -184,8 +222,9 @@ export default function SpeechBubble({
           radius={0.14}
           smoothness={4}
           position={[0, 0, -0.003]}
+          renderOrder={BUBBLE_RENDER_ORDER}
         >
-          <meshBasicMaterial color="#ffffff" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} depthTest={false} />
         </RoundedBox>
         <RoundedBox
           args={[1, 1, 0.018]}
@@ -193,8 +232,9 @@ export default function SpeechBubble({
           radius={0.12}
           smoothness={4}
           position={[0, 0, 0]}
+          renderOrder={BUBBLE_RENDER_ORDER + 1}
         >
-          <meshBasicMaterial color="#ffffff" toneMapped={false} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} depthTest={false} />
         </RoundedBox>
         <Text
           position={[-(bubbleWidth / 2) + TEXT_PADDING_X, 0, 0.012]}
@@ -207,18 +247,28 @@ export default function SpeechBubble({
           textAlign="left"
           outlineWidth={0.005}
           outlineColor="#ffffff"
+          renderOrder={BUBBLE_RENDER_ORDER + 2}
+          material-depthTest={false}
         >
           {displayedText}
         </Text>
       </group>
 
-      <mesh position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.027]} rotation={[0, 0, arrowRotationZ]}>
+      <mesh
+        position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.027]}
+        rotation={[0, 0, arrowRotationZ]}
+        renderOrder={BUBBLE_RENDER_ORDER}
+      >
         <coneGeometry args={[0.16, 0.27, 3]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} depthTest={false} />
       </mesh>
-      <mesh position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.028]} rotation={[0, 0, arrowRotationZ]}>
+      <mesh
+        position={[arrowBaseX, -fullBubbleHeight * 0.3, 0.028]}
+        rotation={[0, 0, arrowRotationZ]}
+        renderOrder={BUBBLE_RENDER_ORDER + 1}
+      >
         <coneGeometry args={[0.13, 0.22, 3]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} depthTest={false} />
       </mesh>
     </group>
   );

@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { MathUtils, Vector2 } from "three";
+import { MathUtils, Vector2, Vector3 } from "three";
 import SpeechBubble from "./SpeechBubble";
 import DavidSprite from "./sprite/DavidSprite";
 import { DAVE_IDLE_SPEAKING, GAME_CHARACTER_SPRITES, } from "./sprite/clips";
@@ -190,12 +190,17 @@ function getWallAxes(rotationY) {
 function projectDistance(originX, originZ, pointX, pointZ, axis) {
     return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
 }
-export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, wallOpacityMode = "wireframe", wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, 
+export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, showPlayerCollider = false, wallOpacityMode = "wireframe", wallInteractionsEnabled = true, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, 
 // DI props for demo-specific dependencies
-getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhrase = () => "", selectedWallIndex = null, onSelectWall, updateSelectedWall, disableClickToMove = false, }) {
+getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhrase = () => "", selectedWallIndex = null, onSelectWall, updateSelectedWall, disableClickToMove = false, getEffectiveClickGoal, }) {
     const spriteRef = useRef(null);
     const meshRef = useRef(null);
     const characterBodyRef = useRef(null);
+    const characterColliderRef = useRef(null);
+    const colliderWireframeRef = useRef(null);
+    // Reusable vectors for per-frame collider mutation (avoids allocation in useFrame).
+    const colliderHalfExtentsRef = useRef(new Vector3(0.55, 0.95, 0.18));
+    const colliderTranslationRef = useRef(new Vector3(0, 0, 0));
     const currentActionRef = useRef("idle");
     const currentInputModeRef = useRef("auto");
     const hadManualInputRef = useRef(false);
@@ -255,7 +260,10 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
                 setWallPointPreviewState({ start: startPoint, end: clickedPoint, resetSignal: wallPointResetSignal });
                 return;
             }
-            const halfHeight = 2;
+            // Default wall height matches addWall in sceneEditorStore — tall enough
+            // that a subsequent default opening (full-height minus a thin lintel)
+            // clears the character sprite's worst-case height.
+            const halfHeight = 4;
             const halfThickness = 0.25;
             const centerX = (startPoint.x + clickedPoint.x) / 2;
             const centerZ = (startPoint.y + clickedPoint.y) / 2;
@@ -275,9 +283,15 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         const body = characterBodyRef.current;
         const scene = useSceneStore.getState().scene;
         const startPosition = body?.translation() ?? { x: playerSpawn[0], z: playerSpawn[2] };
+        // Give the host app a chance to redirect the goal. Typical use: when
+        // the click points past a closed door, snap to the door's approach
+        // point on the player's side instead of letting A* hunt for a long
+        // way around the wall.
+        const redirected = getEffectiveClickGoal?.(clamped.x, clamped.z, startPosition.x, startPosition.z);
+        const effectiveGoal = redirected ?? clamped;
         const route = findPath({
             start: { x: startPosition.x, z: startPosition.z },
-            goal: clamped,
+            goal: effectiveGoal,
             bounds: playableBounds,
             walls: scene.walls,
             interactions: scene.interactions,
@@ -286,8 +300,8 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             setRoute(route);
             return;
         }
-        setTarget(clamped.x, clamped.z);
-    }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
+        setTarget(effectiveGoal.x, effectiveGoal.z);
+    }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, getEffectiveClickGoal, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
     const stopWallInteraction = useCallback(() => {
         wallInteractionRef.current = null;
     }, []);
@@ -297,6 +311,7 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             return;
         wallInteractionRef.current = {
             mode: "move",
+            index,
             offsetX: pointX - wall.position[0],
             offsetZ: pointZ - wall.position[2],
         };
@@ -305,6 +320,7 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         onSelectWall?.(index);
         wallInteractionRef.current = {
             mode: "resize",
+            index,
             handle,
         };
     }, [onSelectWall]);
@@ -314,10 +330,12 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             return;
         if (!updateSelectedWall)
             return;
-        if (selectedWallIndex == null)
-            return;
+        // Read the wall via the interaction's own index — NOT the DI
+        // `selectedWallIndex` prop. The latter is captured by closure and lags
+        // behind the store by one render cycle, so the very first `onPointerMove`
+        // after a click sees the stale value `null` and the drag never starts.
         const sceneState = useSceneStore.getState();
-        const wall = sceneState.scene.walls[selectedWallIndex];
+        const wall = sceneState.scene.walls[interaction.index];
         if (!wall)
             return;
         if (interaction.mode === "move") {
@@ -354,7 +372,7 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             }
             return { ...prev, halfSize };
         });
-    }, [selectedWallIndex, updateSelectedWall]);
+    }, [updateSelectedWall]);
     const handleHoverPointWallTool = useCallback((x, z) => {
         if (!debug || wallToolMode !== "points")
             return;
@@ -579,6 +597,25 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             meshRef.current.scale.set(spriteScale * flipX, spriteScale, 1);
             meshRef.current.position.y = spriteScale - 0.95;
         }
+        // The player sprite plane is `planeHeight=2` units tall, scaled by
+        // `spriteScale` and offset to keep its feet at local Y=-0.95. Match the
+        // physics collider to that exact box so the player can't slip through
+        // openings that visually wouldn't let them past.
+        //   bottom (local Y) = -0.95   (foot, fixed)
+        //   top    (local Y) =  2 * spriteScale - 0.95
+        //   halfY  = spriteScale
+        //   center = spriteScale - 0.95
+        const collider = characterColliderRef.current;
+        if (collider) {
+            colliderHalfExtentsRef.current.set(0.55, spriteScale, 0.18);
+            collider.setHalfExtents(colliderHalfExtentsRef.current);
+            colliderTranslationRef.current.set(0, spriteScale - 0.95, 0);
+            collider.setTranslationWrtParent(colliderTranslationRef.current);
+        }
+        if (colliderWireframeRef.current) {
+            colliderWireframeRef.current.scale.set(1, spriteScale, 1);
+            colliderWireframeRef.current.position.y = spriteScale - 0.95;
+        }
     });
     const wallPointPreview = debug && wallToolMode === "points" && wallPointPreviewState?.resetSignal === wallPointResetSignal
         ? wallPointPreviewState
@@ -588,6 +625,10 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
                         handleHoverWorld(x, z);
                         handleHoverPointWallTool(x, z);
                     }
-                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, opacityMode: wallOpacityMode, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: playerSpawn, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), _jsx(DavidSprite, { ref: spriteRef, meshRef: meshRef, animation: activeAnimation, preloadAnimations: characterAnimations, scale: [SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1], isPaused: false }), _jsx(SpeechBubble, { text: speechText, visible: speechVisible, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss }, speechTrigger)] })] }));
+                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, opacityMode: wallOpacityMode, interactionsEnabled: wallInteractionsEnabled, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: playerSpawn, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { ref: characterColliderRef, args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), debug && showPlayerCollider && (
+                    // box base height = 2; the useFrame above scales Y to `spriteScale`
+                    // and offsets Y position so the wireframe exactly mirrors the
+                    // physics collider (whose halfY is also set to `spriteScale`).
+                    _jsxs("mesh", { ref: colliderWireframeRef, raycast: () => null, children: [_jsx("boxGeometry", { args: [1.1, 2, 0.36] }), _jsx("meshBasicMaterial", { color: "#00ffff", wireframe: true, transparent: true, opacity: 0.85 })] })), _jsx(DavidSprite, { ref: spriteRef, meshRef: meshRef, animation: activeAnimation, preloadAnimations: characterAnimations, scale: [SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1], isPaused: false }), _jsx(SpeechBubble, { text: speechText, visible: speechVisible, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss }, speechTrigger)] })] }));
 }
 //# sourceMappingURL=GameTouchSpriteRuntime.js.map
