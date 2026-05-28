@@ -10,12 +10,15 @@ export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
 
 export function SceneWalls({
   debug,
+  opacityMode = "wireframe",
   onStartWallMove,
   onStartWallResize,
   selectedWallIndex = null,
   onSelectWall,
 }: {
   debug: boolean;
+  /** `wireframe` (default) o `opaque` (sólidos translúcidos). */
+  opacityMode?: "wireframe" | "opaque";
   onStartWallMove: (index: number, pointX: number, pointZ: number) => void;
   onStartWallResize: (index: number, handle: WallResizeHandle) => void;
   /** Currently selected wall index for debug editor (injected via DI). */
@@ -23,6 +26,7 @@ export function SceneWalls({
   /** Callback to select a wall in the editor (injected via DI). */
   onSelectWall?: (index: number) => void;
 }) {
+  const isOpaque = opacityMode === "opaque";
   const walls = useSceneStore((s) => s.scene.walls);
 
   return (
@@ -63,7 +67,10 @@ export function SceneWalls({
                     />
                     <meshBasicMaterial
                       color={isSelected ? "#ffff00" : "#ff4400"}
-                      wireframe
+                      wireframe={!isOpaque}
+                      transparent={isOpaque}
+                      opacity={isOpaque ? 0.65 : 1}
+                      depthWrite={!isOpaque}
                     />
                   </mesh>
                 ))}

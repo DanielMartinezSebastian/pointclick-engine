@@ -1,6 +1,8 @@
 export type WallResizeHandle = "x+" | "x-" | "z+" | "z-";
-export declare function SceneWalls({ debug, onStartWallMove, onStartWallResize, selectedWallIndex, onSelectWall, }: {
+export declare function SceneWalls({ debug, opacityMode, onStartWallMove, onStartWallResize, selectedWallIndex, onSelectWall, }: {
     debug: boolean;
+    /** `wireframe` (default) o `opaque` (sólidos translúcidos). */
+    opacityMode?: "wireframe" | "opaque";
     onStartWallMove: (index: number, pointX: number, pointZ: number) => void;
     onStartWallResize: (index: number, handle: WallResizeHandle) => void;
     /** Currently selected wall index for debug editor (injected via DI). */

@@ -275,6 +275,7 @@ export function GameTouchSpriteRuntime({
   debug,
   showDebugGround,
   showDebugWalls,
+  wallOpacityMode = "wireframe",
   wallToolMode,
   wallPointResetSignal,
   speechText,
@@ -290,11 +291,15 @@ export function GameTouchSpriteRuntime({
   getPhrase = () => "",
   selectedWallIndex = null,
   onSelectWall,
+  updateSelectedWall,
+  disableClickToMove = false,
 }: {
   activeCharacter: GameCharacterName;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
+  /** Render mode for debug walls. `wireframe` (default) o `opaque` (sólidos). */
+  wallOpacityMode?: "wireframe" | "opaque";
   wallToolMode: WallToolMode;
   wallPointResetSignal: number;
   speechText: string;
@@ -329,6 +334,21 @@ export function GameTouchSpriteRuntime({
    * Inject from sceneEditorStore for demo.
    */
   onSelectWall?: (index: number) => void;
+  /**
+   * DI: Mutator for the currently selected wall.
+   * Required for click-and-drag move/resize to persist into scene state.
+   * Inject from sceneEditorStore for demo.
+   */
+  updateSelectedWall?: (
+    updater: (wall: GameSceneWall) => GameSceneWall,
+  ) => void;
+  /**
+   * If true, clicks on the ground will not move the player. Used by the
+   * debug editor mode to avoid race conditions with mouse-driven edits and
+   * by the free-camera mode to prevent accidental pathfinding triggers.
+   * The point-tool path keeps working so walls can still be drawn.
+   */
+  disableClickToMove?: boolean;
 }) {
   const spriteRef = useRef<DavidSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
@@ -420,6 +440,8 @@ export function GameTouchSpriteRuntime({
       return;
     }
 
+    if (disableClickToMove) return;
+
     const clamped = clampToPlayableArea(x, z);
     const body = characterBodyRef.current;
     const scene = useSceneStore.getState().scene;
@@ -438,7 +460,7 @@ export function GameTouchSpriteRuntime({
     }
 
     setTarget(clamped.x, clamped.z);
-  }, [addWallWithData, clampToPlayableArea, debug, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
+  }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
 
   const stopWallInteraction = useCallback(() => {
     wallInteractionRef.current = null;
@@ -465,24 +487,50 @@ export function GameTouchSpriteRuntime({
   const handleHoverWorld = useCallback((x: number, z: number) => {
     const interaction = wallInteractionRef.current;
     if (!interaction) return;
-
-    const sceneState = useSceneStore.getState();
+    if (!updateSelectedWall) return;
     if (selectedWallIndex == null) return;
 
+    const sceneState = useSceneStore.getState();
     const wall = sceneState.scene.walls[selectedWallIndex];
     if (!wall) return;
 
     if (interaction.mode === "move") {
-      // Note: wall mutation via DI – the editor store handles actual persistence
-      // In debug mode, the parent (GameTouchCanvas) is responsible for providing
-      // an updateSelectedWall callback. For now, this is a no-op in renderer-r3f.
-      // TODO: add updateSelectedWall DI prop if needed.
+      const nextX = x - interaction.offsetX;
+      const nextZ = z - interaction.offsetZ;
+      updateSelectedWall((prev) => ({
+        ...prev,
+        position: [nextX, prev.position[1], nextZ],
+      }));
       return;
     }
 
-    // Wall resize similarly needs editor store DI – left as no-op in renderer-r3f.
-    // The debug editor in web-demo should handle this via its own controller.
-  }, [selectedWallIndex]);
+    // resize: project the cursor onto the wall's local X (length) or Z (thickness)
+    // axis, halve the resulting distance from the wall's center, and clamp to
+    // a sane minimum. The wall's center stays fixed during resize.
+    const rotationY = wall.rotationY ?? 0;
+    const { axisX, axisZ } = getWallAxes(rotationY);
+    const projX = projectDistance(wall.position[0], wall.position[2], x, z, axisX);
+    const projZ = projectDistance(wall.position[0], wall.position[2], x, z, axisZ);
+
+    updateSelectedWall((prev) => {
+      const halfSize = [...prev.halfSize] as [number, number, number];
+      switch (interaction.handle) {
+        case "x+":
+          halfSize[0] = Math.max(MIN_WALL_HALF_EXTENT, projX);
+          break;
+        case "x-":
+          halfSize[0] = Math.max(MIN_WALL_HALF_EXTENT, -projX);
+          break;
+        case "z+":
+          halfSize[2] = Math.max(MIN_WALL_HALF_EXTENT, projZ);
+          break;
+        case "z-":
+          halfSize[2] = Math.max(MIN_WALL_HALF_EXTENT, -projZ);
+          break;
+      }
+      return { ...prev, halfSize };
+    });
+  }, [selectedWallIndex, updateSelectedWall]);
 
   const handleHoverPointWallTool = useCallback((x: number, z: number) => {
     if (!debug || wallToolMode !== "points") return;
@@ -787,6 +835,7 @@ export function GameTouchSpriteRuntime({
       />
       <SceneWalls
         debug={debug && showDebugWalls}
+        opacityMode={wallOpacityMode}
         onStartWallMove={handleStartWallMove}
         onStartWallResize={handleStartWallResize}
         selectedWallIndex={selectedWallIndex}

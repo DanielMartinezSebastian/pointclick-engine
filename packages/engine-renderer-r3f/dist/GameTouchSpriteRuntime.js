@@ -188,9 +188,9 @@ function getWallAxes(rotationY) {
 function projectDistance(originX, originZ, pointX, pointZ, axis) {
     return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
 }
-export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, 
+export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, wallOpacityMode = "wireframe", wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, 
 // DI props for demo-specific dependencies
-getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhrase = () => "", selectedWallIndex = null, onSelectWall, }) {
+getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhrase = () => "", selectedWallIndex = null, onSelectWall, updateSelectedWall, disableClickToMove = false, }) {
     const spriteRef = useRef(null);
     const meshRef = useRef(null);
     const characterBodyRef = useRef(null);
@@ -267,6 +267,8 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             setWallPointPreviewState({ start: clickedPoint, end: clickedPoint, resetSignal: wallPointResetSignal });
             return;
         }
+        if (disableClickToMove)
+            return;
         const clamped = clampToPlayableArea(x, z);
         const body = characterBodyRef.current;
         const scene = useSceneStore.getState().scene;
@@ -283,7 +285,7 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
             return;
         }
         setTarget(clamped.x, clamped.z);
-    }, [addWallWithData, clampToPlayableArea, debug, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
+    }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
     const stopWallInteraction = useCallback(() => {
         wallInteractionRef.current = null;
     }, []);
@@ -308,22 +310,49 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         const interaction = wallInteractionRef.current;
         if (!interaction)
             return;
-        const sceneState = useSceneStore.getState();
+        if (!updateSelectedWall)
+            return;
         if (selectedWallIndex == null)
             return;
+        const sceneState = useSceneStore.getState();
         const wall = sceneState.scene.walls[selectedWallIndex];
         if (!wall)
             return;
         if (interaction.mode === "move") {
-            // Note: wall mutation via DI – the editor store handles actual persistence
-            // In debug mode, the parent (GameTouchCanvas) is responsible for providing
-            // an updateSelectedWall callback. For now, this is a no-op in renderer-r3f.
-            // TODO: add updateSelectedWall DI prop if needed.
+            const nextX = x - interaction.offsetX;
+            const nextZ = z - interaction.offsetZ;
+            updateSelectedWall((prev) => ({
+                ...prev,
+                position: [nextX, prev.position[1], nextZ],
+            }));
             return;
         }
-        // Wall resize similarly needs editor store DI – left as no-op in renderer-r3f.
-        // The debug editor in web-demo should handle this via its own controller.
-    }, [selectedWallIndex]);
+        // resize: project the cursor onto the wall's local X (length) or Z (thickness)
+        // axis, halve the resulting distance from the wall's center, and clamp to
+        // a sane minimum. The wall's center stays fixed during resize.
+        const rotationY = wall.rotationY ?? 0;
+        const { axisX, axisZ } = getWallAxes(rotationY);
+        const projX = projectDistance(wall.position[0], wall.position[2], x, z, axisX);
+        const projZ = projectDistance(wall.position[0], wall.position[2], x, z, axisZ);
+        updateSelectedWall((prev) => {
+            const halfSize = [...prev.halfSize];
+            switch (interaction.handle) {
+                case "x+":
+                    halfSize[0] = Math.max(MIN_WALL_HALF_EXTENT, projX);
+                    break;
+                case "x-":
+                    halfSize[0] = Math.max(MIN_WALL_HALF_EXTENT, -projX);
+                    break;
+                case "z+":
+                    halfSize[2] = Math.max(MIN_WALL_HALF_EXTENT, projZ);
+                    break;
+                case "z-":
+                    halfSize[2] = Math.max(MIN_WALL_HALF_EXTENT, -projZ);
+                    break;
+            }
+            return { ...prev, halfSize };
+        });
+    }, [selectedWallIndex, updateSelectedWall]);
     const handleHoverPointWallTool = useCallback((x, z) => {
         if (!debug || wallToolMode !== "points")
             return;
@@ -557,6 +586,6 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
                         handleHoverWorld(x, z);
                         handleHoverPointWallTool(x, z);
                     }
-                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: playerSpawn, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), _jsx(DavidSprite, { ref: spriteRef, meshRef: meshRef, animation: activeAnimation, preloadAnimations: characterAnimations, scale: [SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1], isPaused: false }), _jsx(SpeechBubble, { text: speechText, visible: speechVisible, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss }, speechTrigger)] })] }));
+                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, opacityMode: wallOpacityMode, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: playerSpawn, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), _jsx(DavidSprite, { ref: spriteRef, meshRef: meshRef, animation: activeAnimation, preloadAnimations: characterAnimations, scale: [SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1], isPaused: false }), _jsx(SpeechBubble, { text: speechText, visible: speechVisible, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss }, speechTrigger)] })] }));
 }
 //# sourceMappingURL=GameTouchSpriteRuntime.js.map

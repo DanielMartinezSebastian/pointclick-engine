@@ -16,6 +16,7 @@ import { SceneDropTargets } from "./inventory/SceneDropTargets";
 import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
 import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
+import { FreeCameraController } from "./scene/FreeCameraController";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { GameTouchSpriteRuntime } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
@@ -29,6 +30,7 @@ import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useInventoryStore } from "../store/inventoryStore";
+import { selectGameInteractionsDisabled, useEditorModeStore } from "../store/editorModeStore";
 import { getRandomPhrase } from "../../demo-content/dialogs/getRandomPhrase";
 
 // Carga el joystick solo en cliente (ssr: false); la detección de dispositivo
@@ -75,14 +77,10 @@ export default function GameTouchCanvas({
   }, [onRuntimeEvent, runtimeDebug]);
 
   const {
-    debugPanelSide,
-    setDebugPanelSide,
     isDebugGroundVisible,
     setIsDebugGroundVisible,
     isDebugWallsVisible,
     setIsDebugWallsVisible,
-    editorMode,
-    setEditorMode,
     wallToolMode,
     wallPointResetSignal,
     handleWallToolModeChange,
@@ -152,6 +150,12 @@ export default function GameTouchCanvas({
   const addWallWithData = useSceneEditorStore((s) => s.addWallWithData);
   const selectedWallIndex = useSceneEditorStore((s) => s.selectedWallIndex);
   const onSelectWall = useSceneEditorStore((s) => s.selectWall);
+  const updateSelectedWall = useSceneEditorStore((s) => s.updateSelectedWall);
+
+  // Editor / camera modes (debug only; defaults preserve runtime behavior)
+  const disableClickToMove = useEditorModeStore(selectGameInteractionsDisabled);
+  const wallOpacityMode = useEditorModeStore((s) => s.wallOpacityMode);
+  const cameraMode = useEditorModeStore((s) => s.cameraMode);
 
   const readyMessage = `${selectedCharacter} listo — flechas/WASD o click para moverse`;
 
@@ -180,12 +184,13 @@ export default function GameTouchCanvas({
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, background: "transparent", display: "block" }}
       >
         <OrthographicCamera makeDefault position={CAMERA_POSITION} rotation={[-0.24, 0, 0]} near={0.01} far={120} />
-        <CameraFitHeight desiredWorldHeight={19.28} />
+        {cameraMode === "fixed" && <CameraFitHeight desiredWorldHeight={19.28} />}
         {/* <fog attach="fog" args={["#070d1f", 20, 55]} /> */}
         <ambientLight intensity={1.1} color="#8bc2ff" />
         <directionalLight position={[3, 9, 6]} intensity={1.5} color="#d8ecff" />
         <SceneBackgroundPlane url={sceneBackground} />
-        <CameraController />
+        {cameraMode === "fixed" && <CameraController />}
+        <FreeCameraController />
         <Physics gravity={[0, -20, 0]}>
           <Suspense fallback={null}>
             <GameTouchSpriteRuntime
@@ -193,7 +198,9 @@ export default function GameTouchCanvas({
               debug={runtimeDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}
+              wallOpacityMode={wallOpacityMode}
               wallToolMode={wallToolMode}
+              disableClickToMove={disableClickToMove}
               wallPointResetSignal={wallPointResetSignal}
               speechText={speechText}
               speechVisible={speechVisible}
@@ -207,6 +214,7 @@ export default function GameTouchCanvas({
               getPhrase={getRandomPhrase}
               selectedWallIndex={selectedWallIndex}
               onSelectWall={onSelectWall}
+              updateSelectedWall={updateSelectedWall}
             />
             <SceneReadyReporter onReady={handleSceneReady} />
           </Suspense>
@@ -224,7 +232,7 @@ export default function GameTouchCanvas({
           <PlacedSceneItems
             items={placedItems}
             onPickup={handlePickupPlacedItem}
-            canPickup={!isInventoryOpen}
+            canPickup={!isInventoryOpen && !disableClickToMove}
           />
         </Physics>
       </Canvas>
@@ -245,8 +253,6 @@ export default function GameTouchCanvas({
       )}
       <DebugOverlayRuntimePanel
         isDebug={runtimeDebug}
-        debugPanelSide={debugPanelSide}
-        setDebugPanelSide={setDebugPanelSide}
         isDebugGroundVisible={isDebugGroundVisible}
         setIsDebugGroundVisible={setIsDebugGroundVisible}
         isDebugWallsVisible={isDebugWallsVisible}
@@ -256,8 +262,6 @@ export default function GameTouchCanvas({
         sceneOptions={sceneOptions}
         readyMessage={readyMessage}
         requestRespawn={requestRespawn}
-        editorMode={editorMode}
-        setEditorMode={setEditorMode}
         wallToolMode={wallToolMode}
         handleWallToolModeChange={handleWallToolModeChange}
         resetWallPointTool={resetWallPointTool}

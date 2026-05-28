@@ -8,6 +8,7 @@ import { type WallToolMode } from "../../lib/engine/types/gameRuntime";
 import { browserClipboardAdapter, browserTimerAdapter } from "../../lib/platform-web";
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import { useSceneEditorStore } from "../../store/sceneEditorStore";
+import { useEditorModeStore } from "../../store/editorModeStore";
 import { DebugButton, DebugNumberInput } from "./controls";
 import { WallOpeningEditor } from "./WallOpeningEditor";
 
@@ -30,6 +31,9 @@ export function WallEditorPanel({
   const removeSelectedWall = useSceneEditorStore((s) => s.removeSelectedWall);
   const updateSelectedWall = useSceneEditorStore((s) => s.updateSelectedWall);
   const [copyLabel, setCopyLabel] = useState("Copiar JSON");
+
+  const wallOpacityMode = useEditorModeStore((s) => s.wallOpacityMode);
+  const toggleWallOpacity = useEditorModeStore((s) => s.toggleWallOpacity);
 
   const addOpeningToSelectedWall = useSceneEditorStore((s) => s.addOpeningToSelectedWall);
   const removeOpeningFromSelectedWall = useSceneEditorStore((s) => s.removeOpeningFromSelectedWall);
@@ -86,14 +90,19 @@ export function WallEditorPanel({
   }, [wallsJson]);
 
   return (
-    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de muros ({sceneId})</strong>
+    <div style={{ display: "grid", gap: "10px" }}>
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
-        Edicion en vivo solo en navegador. Usa copiar JSON para pegar el resultado en scenes.ts.
+        Escena: <strong>{sceneId}</strong>. Edición en vivo solo en navegador.
+        Usa copiar JSON para pegar el resultado en scenes.ts.
       </span>
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
         Arrastra el wireframe amarillo para mover. Los cubos azules cambian el largo y los rosas el grosor.
       </span>
+
+      <DebugButton
+        label={wallOpacityMode === "opaque" ? "Muros: opacos ✓" : "Ver muros opacos"}
+        onClick={toggleWallOpacity}
+      />
 
       <PixelSelect
         label="Herramienta"

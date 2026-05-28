@@ -1,15 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { type DebugEditorMode, type WallToolMode } from "../types/gameRuntime";
+import { type WallToolMode } from "../types/gameRuntime";
 
 export function useDebugPanelController() {
-  const [debugPanelSide, setDebugPanelSide] = useState<"left" | "right">(
-    "left",
-  );
   const [isDebugGroundVisible, setIsDebugGroundVisible] = useState(true);
   const [isDebugWallsVisible, setIsDebugWallsVisible] = useState(true);
-  const [editorMode, setEditorMode] = useState<DebugEditorMode>("walls");
   const [wallToolMode, setWallToolMode] = useState<WallToolMode>("manual");
   const [wallPointResetSignal, setWallPointResetSignal] = useState(0);
   const [speechDraft, setSpeechDraft] = useState(
@@ -27,14 +23,10 @@ export function useDebugPanelController() {
   }, []);
 
   return {
-    debugPanelSide,
-    setDebugPanelSide,
     isDebugGroundVisible,
     setIsDebugGroundVisible,
     isDebugWallsVisible,
     setIsDebugWallsVisible,
-    editorMode,
-    setEditorMode,
     wallToolMode,
     wallPointResetSignal,
     handleWallToolModeChange,

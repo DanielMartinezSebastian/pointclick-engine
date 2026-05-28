@@ -4,7 +4,8 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import { SceneWallPlane } from "./SceneWallPlane";
 import { computeWallSegments } from "./wallSegments";
-export function SceneWalls({ debug, onStartWallMove, onStartWallResize, selectedWallIndex = null, onSelectWall, }) {
+export function SceneWalls({ debug, opacityMode = "wireframe", onStartWallMove, onStartWallResize, selectedWallIndex = null, onSelectWall, }) {
+    const isOpaque = opacityMode === "opaque";
     const walls = useSceneStore((s) => s.scene.walls);
     return (_jsxs(_Fragment, { children: [walls.map((wall, i) => {
                 // Decompose wall into solid segments around its openings.
@@ -16,7 +17,7 @@ export function SceneWalls({ debug, onStartWallMove, onStartWallResize, selected
                                         e.stopPropagation();
                                         onSelectWall?.(i);
                                         onStartWallMove(i, e.point.x, e.point.z);
-                                    }, children: [_jsx("boxGeometry", { args: [seg.halfSize[0] * 2, seg.halfSize[1] * 2, seg.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: isSelected ? "#ffff00" : "#ff4400", wireframe: true })] }, si))), isSelected && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
+                                    }, children: [_jsx("boxGeometry", { args: [seg.halfSize[0] * 2, seg.halfSize[1] * 2, seg.halfSize[2] * 2] }), _jsx("meshBasicMaterial", { color: isSelected ? "#ffff00" : "#ff4400", wireframe: !isOpaque, transparent: isOpaque, opacity: isOpaque ? 0.65 : 1, depthWrite: !isOpaque })] }, si))), isSelected && (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [wall.halfSize[0], 0, 0], onPointerDown: (e) => {
                                                 e.stopPropagation();
                                                 onStartWallResize(i, "x+");
                                             }, children: [_jsx("boxGeometry", { args: [0.35, 0.35, 0.35] }), _jsx("meshBasicMaterial", { color: "#00d8ff" })] }), _jsxs("mesh", { position: [-wall.halfSize[0], 0, 0], onPointerDown: (e) => {

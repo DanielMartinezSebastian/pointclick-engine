@@ -1,7 +1,5 @@
 export type WallToolMode = "manual" | "points";
 
-export type DebugEditorMode = "walls" | "ground" | "items" | "targets";
-
 export type PlacedSceneItem = {
   id: string;
   itemId: string;

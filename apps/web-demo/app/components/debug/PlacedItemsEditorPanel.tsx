@@ -56,8 +56,7 @@ export function PlacedItemsEditorPanel({
   }, [itemsJson]);
 
   return (
-    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de items colocados</strong>
+    <div style={{ display: "grid", gap: "10px" }}>
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
         Reubica items ya colocados en vivo para ajustar su encaje exacto en la escena.
       </span>

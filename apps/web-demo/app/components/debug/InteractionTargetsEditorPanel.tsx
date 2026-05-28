@@ -61,8 +61,7 @@ export function InteractionTargetsEditorPanel({
   }, [interactionsJson]);
 
   return (
-    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de targets de drop</strong>
+    <div style={{ display: "grid", gap: "10px" }}>
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
         Ajusta la zona donde se detecta y se permite colocar el item (posicion y tamano del detector).
       </span>

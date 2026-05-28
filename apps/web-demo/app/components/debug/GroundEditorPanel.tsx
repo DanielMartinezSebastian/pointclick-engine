@@ -47,10 +47,9 @@ export function GroundEditorPanel() {
   const depth = (ground.maxZ - ground.minZ).toFixed(2);
 
   return (
-    <div style={{ display: "grid", gap: "10px", paddingTop: "6px", borderTop: "2px solid rgb(0 255 65 / 30%)" }}>
-      <strong style={{ fontSize: "12px", lineHeight: "1.4" }}>Editor de suelo ({sceneId})</strong>
+    <div style={{ display: "grid", gap: "10px" }}>
       <span style={{ fontSize: "10px", lineHeight: "1.5", opacity: 0.85 }}>
-        Cambios en vivo para ajustar el plano. Incluye limites y altura Y.
+        Escena: <strong>{sceneId}</strong>. Cambios en vivo para ajustar el plano. Incluye límites y altura Y.
       </span>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
