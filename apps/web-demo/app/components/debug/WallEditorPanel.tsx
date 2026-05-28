@@ -34,6 +34,8 @@ export function WallEditorPanel({
 
   const wallOpacityMode = useEditorModeStore((s) => s.wallOpacityMode);
   const toggleWallOpacity = useEditorModeStore((s) => s.toggleWallOpacity);
+  const wallAllowBelowGround = useEditorModeStore((s) => s.wallAllowBelowGround);
+  const toggleWallAllowBelowGround = useEditorModeStore((s) => s.toggleWallAllowBelowGround);
 
   const addOpeningToSelectedWall = useSceneEditorStore((s) => s.addOpeningToSelectedWall);
   const removeOpeningFromSelectedWall = useSceneEditorStore((s) => s.removeOpeningFromSelectedWall);
@@ -48,21 +50,41 @@ export function WallEditorPanel({
   );
   const wallsJson = useMemo(() => JSON.stringify(walls, null, 2), [walls]);
 
+  /**
+   * Wall placement invariant: by default the base of the wall (position.Y -
+   * halfSize.Y) is kept snapped to ground.y. Editing Y position only adjusts
+   * height-from-floor; editing halfY automatically repositions to preserve
+   * the snap. The `wallAllowBelowGround` toggle disables the invariant.
+   */
   const setWallPosition = useCallback((axis: 0 | 1 | 2, value: number) => {
     updateSelectedWall((wall) => {
       const position = [...wall.position] as [number, number, number];
-      position[axis] = value;
+      const nextValue =
+        axis === 1 && !wallAllowBelowGround
+          ? Math.max(groundY + wall.halfSize[1], value)
+          : value;
+      position[axis] = nextValue;
       return { ...wall, position };
     });
-  }, [updateSelectedWall]);
+  }, [groundY, updateSelectedWall, wallAllowBelowGround]);
 
   const setWallHalfSize = useCallback((axis: 0 | 1 | 2, value: number) => {
     updateSelectedWall((wall) => {
       const halfSize = [...wall.halfSize] as [number, number, number];
       halfSize[axis] = Math.max(0.05, value);
-      return { ...wall, halfSize };
+      // Re-anchor Y position so the wall base stays at ground.y unless the
+      // user explicitly opts out via wallAllowBelowGround.
+      const position =
+        axis === 1 && !wallAllowBelowGround
+          ? ([wall.position[0], groundY + halfSize[1], wall.position[2]] as [
+              number,
+              number,
+              number,
+            ])
+          : wall.position;
+      return { ...wall, halfSize, position };
     });
-  }, [updateSelectedWall]);
+  }, [groundY, updateSelectedWall, wallAllowBelowGround]);
 
   const setWallRotationDeg = useCallback((value: number) => {
     updateSelectedWall((wall) => ({
@@ -99,10 +121,20 @@ export function WallEditorPanel({
         Arrastra el wireframe amarillo para mover. Los cubos azules cambian el largo y los rosas el grosor.
       </span>
 
-      <DebugButton
-        label={wallOpacityMode === "opaque" ? "Muros: opacos ✓" : "Ver muros opacos"}
-        onClick={toggleWallOpacity}
-      />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+        <DebugButton
+          label={wallOpacityMode === "opaque" ? "Muros: opacos ✓" : "Ver muros opacos"}
+          onClick={toggleWallOpacity}
+        />
+        <DebugButton
+          label={
+            wallAllowBelowGround
+              ? "Atravesar suelo ✓"
+              : "Pegar al suelo ✓"
+          }
+          onClick={toggleWallAllowBelowGround}
+        />
+      </div>
 
       <PixelSelect
         label="Herramienta"

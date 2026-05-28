@@ -1,6 +1,7 @@
 "use client";
 
 import PixelSelect from "../PixelSelect";
+import { useEditorModeStore } from "../../store/editorModeStore";
 import { DebugButton } from "./controls";
 
 export function ScenePanel({
@@ -24,6 +25,11 @@ export function ScenePanel({
   isDebugWallsVisible: boolean;
   onToggleWalls: () => void;
 }) {
+  const showPlayerCollider = useEditorModeStore((s) => s.showPlayerCollider);
+  const toggleShowPlayerCollider = useEditorModeStore(
+    (s) => s.toggleShowPlayerCollider,
+  );
+
   return (
     <>
       <PixelSelect
@@ -56,6 +62,15 @@ export function ScenePanel({
           onClick={onToggleWalls}
         />
       </div>
+
+      <DebugButton
+        label={
+          showPlayerCollider
+            ? "Collider del personaje ✓"
+            : "Ver collider del personaje"
+        }
+        onClick={toggleShowPlayerCollider}
+      />
     </>
   );
 }

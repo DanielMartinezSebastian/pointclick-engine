@@ -29,7 +29,13 @@ export function SceneWalls({
         const isSelected = selectedWallIndex === i;
 
         return (
-          <RigidBody key={i} type="fixed" position={wall.position} rotation={[0, wall.rotationY ?? 0, 0]}>
+          <RigidBody
+            key={i}
+            type="fixed"
+            colliders={false}
+            position={wall.position}
+            rotation={[0, wall.rotationY ?? 0, 0]}
+          >
             {/* One collider per solid segment → openings have no collision */}
             {segments.map((seg, si) => (
               <CuboidCollider

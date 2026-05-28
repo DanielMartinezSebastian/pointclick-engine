@@ -115,8 +115,14 @@ export function EditorTabsBar() {
         variant="warning"
       />
       <TabChip
-        label={cameraMode === "free" ? "Cámara: Libre" : "Cámara: Fija"}
-        active={cameraMode === "free"}
+        label={
+          cameraMode === "free"
+            ? "Cámara: Libre"
+            : cameraMode === "locked"
+              ? "Cámara: Bloqueada"
+              : "Cámara: Fija"
+        }
+        active={cameraMode !== "fixed"}
         onClick={toggleCameraMode}
         variant="primary"
       />

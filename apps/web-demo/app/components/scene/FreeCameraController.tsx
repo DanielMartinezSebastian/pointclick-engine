@@ -32,10 +32,14 @@ export function FreeCameraController() {
   const previousModeRef = useRef(cameraMode);
 
   useEffect(() => {
-    const wasFree = previousModeRef.current === "free";
+    const wasManual =
+      previousModeRef.current === "free" || previousModeRef.current === "locked";
     const isFixed = cameraMode === "fixed";
 
-    if (wasFree && isFixed) {
+    // Only restore the default pose when returning to `fixed`. Transitions
+    // between `free` ↔ `locked` keep whatever pose the user dialed in so the
+    // "freeze where I am now" workflow works.
+    if (wasManual && isFixed) {
       camera.position.set(...DEFAULT_POSITION);
       camera.rotation.set(...DEFAULT_ROTATION);
       camera.updateProjectionMatrix();
@@ -44,6 +48,9 @@ export function FreeCameraController() {
     previousModeRef.current = cameraMode;
   }, [cameraMode, camera]);
 
+  // OrbitControls only while explicitly `free`. In `locked` the camera stays
+  // exactly where the user left it and no controls intercept the pointer —
+  // that lets the editor pick up clicks on scene elements again.
   if (cameraMode !== "free") return null;
 
   // Orbit around the world center (0, 0, 0) by default. Allow generous
