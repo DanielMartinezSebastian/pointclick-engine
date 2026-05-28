@@ -118,6 +118,8 @@ function useKeyboardMovementInput() {
         return { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed: moveLeft || moveRight || moveUp || moveDown };
     }, []);
     useEffect(() => {
+        // DEBUG: expose keyset on window for E2E tests
+        window.__keysPressedSet = keysPressedRef.current;
         const handleKeyDown = (event) => {
             const e = event;
             const key = e.key.toLowerCase();

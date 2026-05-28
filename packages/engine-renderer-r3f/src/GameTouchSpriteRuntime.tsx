@@ -182,6 +182,8 @@ function useKeyboardMovementInput() {
   }, []);
 
   useEffect(() => {
+    // DEBUG: expose keyset on window for E2E tests
+    (window as unknown as Record<string, unknown>).__keysPressedSet = keysPressedRef.current;
     const handleKeyDown: EventListener = (event) => {
       const e = event as KeyboardEvent;
       const key = e.key.toLowerCase();

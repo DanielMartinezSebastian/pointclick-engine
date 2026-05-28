@@ -13,6 +13,7 @@
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "cross-env": "^7.0.3",

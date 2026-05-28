@@ -24,7 +24,7 @@ import { useInteractionEditorController } from "../lib/engine/runtime/useInterac
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
-import { legacyRuntimeEventToGameEvent, type RuntimeEvent } from "@pointclick-engine/engine-core";
+import { legacyRuntimeEventToGameEvent, type RuntimeEvent, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
@@ -65,6 +65,16 @@ export default function GameTouchCanvas({
 
   const { isDebug } = useDebugModeEffects();
   const runtimeDebug = typeof debugOverride === "boolean" ? debugOverride : isDebug;
+
+  // Expone el sceneStore en window para tests E2E / debug externo.
+  // Solo activo cuando debug mode está habilitado (nunca en producción).
+  useEffect(() => {
+    if (!runtimeDebug) return;
+    (window as unknown as Record<string, unknown>).__sceneStore = useSceneStore;
+    return () => {
+      delete (window as unknown as Record<string, unknown>).__sceneStore;
+    };
+  }, [runtimeDebug]);
 
   const handleRuntimeEvent = useCallback((event: RuntimeEvent) => {
     // Legacy callback (backwards compat)
