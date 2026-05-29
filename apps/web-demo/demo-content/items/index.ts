@@ -50,6 +50,30 @@ export const ITEMS: Record<string, ItemDefinition> = {
       missDialogKey: "item.gold-key.drop.default.miss",
     },
   },
+  trophy: {
+    id: "trophy",
+    name: "Trophy",
+    spriteUrl: "/assets/trophy/trophy.png",
+    descriptionDialogKey: "item.trophy.description",
+    interactionRules: {
+      "town-trophy-pedestal": {
+        outcome: "place",
+        hitDialogKey: "item.trophy.drop.town-trophy-pedestal.hit",
+        missDialogKey: "item.trophy.drop.town-trophy-pedestal.miss",
+        placeCanPickup: true,
+        placeHasCollision: true,
+        placeCollisionHalfSize: [0.38, 0.38, 0.38],
+        pickupSuccessDialogKey:
+          "item.trophy.pickup.town-trophy-pedestal.allowed",
+        pickupBlockedDialogKey:
+          "item.trophy.pickup.town-trophy-pedestal.blocked",
+      },
+    },
+    defaultRule: {
+      outcome: "return",
+      missDialogKey: "item.trophy.drop.default.miss",
+    },
+  },
 };
 
 export function getItemDefinition(itemId: string): ItemDefinition | null {

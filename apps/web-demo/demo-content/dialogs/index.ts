@@ -134,6 +134,61 @@ export const dialogs: DialogLocales = {
         "Camino libre. La cerradura ya no es un problema.",
       ],
     },
+    "item.trophy.description": {
+      phrases: [
+        "Un trofeo reluciente. Símbolo de victoria, gloria y trabajo duro.",
+        "Mi trofeo: prueba de que lo logré. Brilla como mis sueños.",
+      ],
+    },
+    "item.trophy.drop.town-trophy-pedestal.hit": {
+      phrases: [
+        "Perfecto, el trofeo descansa en su peana.",
+        "Encaja de lujo. El trofeo brilla en su lugar.",
+      ],
+    },
+    "item.trophy.drop.town-trophy-pedestal.miss": {
+      phrases: [
+        "No encaja en esa peana.",
+        "Ese no es el sitio del trofeo.",
+      ],
+    },
+    "item.trophy.drop.default.miss": {
+      phrases: [
+        "El trofeo vuelve al inventario.",
+        "No se puede colocar ahí. Lo guardo otra vez.",
+      ],
+    },
+    "item.trophy.pickup.town-trophy-pedestal.allowed": {
+      phrases: [
+        "Recogida. El trofeo vuelve al inventario.",
+        "Lo guardo en la mochila otra vez.",
+      ],
+    },
+    "item.trophy.pickup.town-trophy-pedestal.blocked": {
+      phrases: [
+        "Este trofeo está fijo. No se puede recoger.",
+        "No sale de la peana, está bloqueado.",
+      ],
+    },
+    "interaction.trophy-pedestal.empty": {
+      phrases: [
+        "Aquí falta algo. Un hueco con forma de gloria.",
+        "Esta peana parece vacía... como mis vitrinas.",
+        "Hmm, aquí debería haber algo. Lo noto en los píxeles.",
+        "La peana está sola. Igual que yo los domingos.",
+        "Hay algo que encajaría perfectamente aquí.",
+        "La peana espera pacientemente. Tiene más paciencia que yo.",
+      ],
+    },
+    "interaction.trophy-pedestal.occupied": {
+      phrases: [
+        "El trofeo descansa en su peana. Como debe ser.",
+        "Ahí está, bien colocado. El orden tiene su magia.",
+        "El trofeo en reposo. Símbolo de gloria.",
+        "Perfectamente colocado. Casi da pena moverlo.",
+        "Mira eso. Todo en su sitio. No suele pasar.",
+      ],
+    },
   },
   en: {
     boundaryHit: {
@@ -266,6 +321,61 @@ export const dialogs: DialogLocales = {
       phrases: [
         "The door is open. Go through.",
         "Path's clear. The lock isn't an issue anymore.",
+      ],
+    },
+    "item.trophy.description": {
+      phrases: [
+        "A gleaming trophy. Symbol of victory, glory, and hard work.",
+        "My trophy: proof that I made it. Shines like my dreams.",
+      ],
+    },
+    "item.trophy.drop.town-trophy-pedestal.hit": {
+      phrases: [
+        "Perfect. The trophy rests on its pedestal.",
+        "Great fit. The trophy gleams in its place.",
+      ],
+    },
+    "item.trophy.drop.town-trophy-pedestal.miss": {
+      phrases: [
+        "That does not fit this pedestal.",
+        "That is not the correct spot for the trophy.",
+      ],
+    },
+    "item.trophy.drop.default.miss": {
+      phrases: [
+        "The trophy goes back to the inventory.",
+        "Cannot place it there. Returning it to the bag.",
+      ],
+    },
+    "item.trophy.pickup.town-trophy-pedestal.allowed": {
+      phrases: [
+        "Picked up. The trophy is back in inventory.",
+        "Got it. Putting the trophy back in the bag.",
+      ],
+    },
+    "item.trophy.pickup.town-trophy-pedestal.blocked": {
+      phrases: [
+        "This trophy is fixed here. Cannot pick it up.",
+        "It is locked to the pedestal.",
+      ],
+    },
+    "interaction.trophy-pedestal.empty": {
+      phrases: [
+        "Something is missing here. A gap shaped like glory.",
+        "This pedestal looks empty... like my trophy case.",
+        "Hmm, something should go here. I can feel it in the pixels.",
+        "The pedestal is lonely. Just like me on Sundays.",
+        "There is something that would fit perfectly here.",
+        "The pedestal waits patiently. More patience than I have.",
+      ],
+    },
+    "interaction.trophy-pedestal.occupied": {
+      phrases: [
+        "The trophy rests on its pedestal. As it should.",
+        "There it is, neatly placed. Order has its magic.",
+        "The trophy at rest. Symbol of glory.",
+        "Perfectly placed. Almost a shame to move it.",
+        "Look at that. Everything in its place. Doesn't happen often.",
       ],
     },
   },

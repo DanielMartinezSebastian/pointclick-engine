@@ -1,6 +1,9 @@
 import type { DialogKey } from "../dialogs/types";
 import type { GameSceneTransition } from "@pointclick-engine/engine-core";
-import { sceneTransitionOnCollision } from "@pointclick-engine/engine-core";
+import {
+  sceneTransitionOnCollision,
+  sceneTransitionOnItemDrop,
+} from "@pointclick-engine/engine-core";
 
 export type SceneWallOpening = {
   id: string;
@@ -161,13 +164,39 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [5.8, 3, 2],
       },
     ],
-    interactions: [],
+    interactions: [
+      {
+        id: "town-trophy-pedestal",
+        kind: "drop-target",
+        label: "Peana del Trofeo",
+        position: [8.5, -1.65, 20.0],
+        halfSize: [0.95, 0.55, 0.95],
+        hasCollision: true,
+        acceptsItemIds: ["trophy"],
+        dialogKeys: {
+          hit: "inventoryDropHit",
+          miss: "inventoryDropMiss",
+        },
+        hintDialogKeys: {
+          empty: "interaction.trophy-pedestal.empty",
+          occupied: "interaction.trophy-pedestal.occupied",
+        },
+      },
+    ],
     transitions: [
       sceneTransitionOnCollision({
         id: "town-to-dungeon",
         targetSceneId: "dungeon",
         position: [2, -1, -12],
         halfSize: [6, 4, 2],
+      }),
+      sceneTransitionOnItemDrop({
+        id: "town-trophy-to-personal-room",
+        targetSceneId: "personalRoom",
+        position: [8.5, -1.65, 20.0],
+        halfSize: [0.95, 0.55, 0.95],
+        requiresItemId: "trophy",
+        consumeItem: false,
       }),
     ],
   },
