@@ -78,7 +78,7 @@ function createInitialPlacedItems(): PlacedSceneItem[] {
       spriteUrl: "/assets/trophy/trophy.png",
       worldPosition: [5.5, -1.3, 22.0],
       canPickup: true,
-      hasCollision: true,
+      hasCollision: false,
       collisionHalfSize: [0.38, 0.38, 0.38],
       pickupSuccessDialogKey: "item.trophy.pickup.town-trophy-pedestal.allowed",
       pickupBlockedDialogKey: "item.trophy.pickup.town-trophy-pedestal.blocked",

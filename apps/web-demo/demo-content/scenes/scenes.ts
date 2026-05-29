@@ -171,7 +171,7 @@ export const SCENES: Record<string, Scene> = {
         label: "Peana del Trofeo",
         position: [8.5, -1.65, 20.0],
         halfSize: [0.95, 0.55, 0.95],
-        hasCollision: true,
+        hasCollision: false,
         acceptsItemIds: ["trophy"],
         dialogKeys: {
           hit: "inventoryDropHit",
