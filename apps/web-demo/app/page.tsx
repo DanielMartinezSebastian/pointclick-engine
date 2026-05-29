@@ -1,10 +1,10 @@
 import { GameViewport } from "./lib/engine/publicApi";
-import { CRTEffectCustom } from "./lib/components/CRTEffectCustom";
+import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
 
 export default function Home() {
   return (
-    <CRTEffectCustom preset="arcade" scanlineOpacity={0.25}>
+    <CRTEffectWrapper>
       <GameViewport />
-    </CRTEffectCustom>
+    </CRTEffectWrapper>
   );
 }
