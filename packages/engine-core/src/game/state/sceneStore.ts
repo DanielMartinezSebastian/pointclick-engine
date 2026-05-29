@@ -124,6 +124,12 @@ type SceneStore = {
   appendWall: (wall: GameSceneWall) => void;
   removeWall: (index: number) => void;
   updateWall: (index: number, updater: (wall: GameSceneWall) => GameSceneWall) => void;
+  updateTransition: (
+    id: string,
+    updater: (transition: import("../types").GameSceneTransition) => import("../types").GameSceneTransition
+  ) => void;
+  addTransition: (transition: import("../types").GameSceneTransition) => void;
+  removeTransition: (id: string) => void;
 };
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
@@ -234,6 +240,30 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     set({ respawnSignal: nextRespawnSignal });
     emit({ type: "scene:respawnRequested", sceneId: state.sceneId });
   },
+  updateTransition: (id, updater) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        transitions: (state.scene.transitions || []).map((transition) => {
+          if (transition.id !== id) return transition;
+          return updater(transition);
+        }),
+      },
+    })),
+  addTransition: (transition) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        transitions: [...(state.scene.transitions || []), transition],
+      },
+    })),
+  removeTransition: (id) =>
+    set((state) => ({
+      scene: {
+        ...state.scene,
+        transitions: (state.scene.transitions || []).filter((t) => t.id !== id),
+      },
+    })),
 }));
 
 /** Read state without React (for use from other renderers or tests) */

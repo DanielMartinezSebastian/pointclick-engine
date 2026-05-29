@@ -165,6 +165,28 @@ export const useSceneStore = create((set, get) => ({
         set({ respawnSignal: nextRespawnSignal });
         emit({ type: "scene:respawnRequested", sceneId: state.sceneId });
     },
+    updateTransition: (id, updater) => set((state) => ({
+        scene: {
+            ...state.scene,
+            transitions: (state.scene.transitions || []).map((transition) => {
+                if (transition.id !== id)
+                    return transition;
+                return updater(transition);
+            }),
+        },
+    })),
+    addTransition: (transition) => set((state) => ({
+        scene: {
+            ...state.scene,
+            transitions: [...(state.scene.transitions || []), transition],
+        },
+    })),
+    removeTransition: (id) => set((state) => ({
+        scene: {
+            ...state.scene,
+            transitions: (state.scene.transitions || []).filter((t) => t.id !== id),
+        },
+    })),
 }));
 /** Read state without React (for use from other renderers or tests) */
 export function getSceneState() {

@@ -32,6 +32,9 @@ type SceneStore = {
     appendWall: (wall: GameSceneWall) => void;
     removeWall: (index: number) => void;
     updateWall: (index: number, updater: (wall: GameSceneWall) => GameSceneWall) => void;
+    updateTransition: (id: string, updater: (transition: import("../types").GameSceneTransition) => import("../types").GameSceneTransition) => void;
+    addTransition: (transition: import("../types").GameSceneTransition) => void;
+    removeTransition: (id: string) => void;
 };
 export declare const useSceneStore: import("zustand").UseBoundStore<import("zustand").StoreApi<SceneStore>>;
 /** Read state without React (for use from other renderers or tests) */
