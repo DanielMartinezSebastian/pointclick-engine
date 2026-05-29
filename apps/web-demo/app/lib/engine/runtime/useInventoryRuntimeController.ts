@@ -131,7 +131,7 @@ export function useInventoryRuntimeController({
     setPlacedItemsInStore(placedItems);
   }, [placedItems, setPlacedItemsInStore]);
 
-  // Manage scene-specific placed items: filter to current scene and ensure required items exist
+  // Manage scene-specific placed items: filter to current scene and create initial items only once
   useEffect(() => {
     setPlacedItems((prev) => {
       // Keep only items that belong to the current scene
@@ -140,10 +140,13 @@ export function useInventoryRuntimeController({
         item.sceneId === sceneId || (item.sceneId === undefined && sceneId === "personalRoom")
       );
 
-      // For personalRoom, ensure initial items exist
+      // For personalRoom, create initial items only once (on first visit)
       if (sceneId === "personalRoom") {
+        const { initialItemsCreated } = usePlacedItemsStore.getState();
         const trophyExists = itemsForThisScene.some((i) => i.itemId === "trophy");
-        if (!trophyExists) {
+
+        if (!initialItemsCreated && !trophyExists) {
+          usePlacedItemsStore.getState().markInitialItemsCreated();
           return [...itemsForThisScene, ...createInitialPlacedItems(sceneId)];
         }
       }
