@@ -18,7 +18,6 @@ import { findPath, useClickToMoveController, useKeyboardMovementInput } from "..
 import { useMobileInputStore } from "../../../store/mobileInputStore";
 import { useSceneStore } from "@pointclick-engine/engine-core";
 import { useSceneEditorStore } from "../../../store/sceneEditorStore";
-import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import { type WallToolMode } from "../types/gameRuntime";
 import { emitRuntimeEvent, type RuntimeEventHandler } from "@pointclick-engine/engine-core";
@@ -542,13 +541,11 @@ export function GameTouchSpriteRuntime({
       const now = performance.now();
       if (now - lastBoundaryHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
         lastBoundaryHitRef.current = now;
-        const phrase = getRandomPhrase("boundaryHit");
         emitRuntimeEvent(onRuntimeEvent, {
           type: "onCollide",
           reason: "boundary",
           position: [clampedPosition.x, currentPosition.y, clampedPosition.z],
         });
-        onBoundaryHit(phrase);
       }
     }
 
