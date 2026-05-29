@@ -235,12 +235,13 @@ export const SCENES: Record<string, Scene> = {
       },
     ],
     transitions: [
-      sceneTransitionOnCollision({
-        id: "dungeon-to-town",
-        targetSceneId: "town",
-        position: [0, -1, 55],
-        halfSize: [8, 4, 2.5],
-      }),
+      {
+        id: "transition-1780039416187",
+        kind: "collision",
+        position: [0, -2.2, -9],
+        halfSize: [1, 1, 1],
+        targetSceneId: "personalRoom",
+      },
     ],
     interactions: [
       {
@@ -426,6 +427,15 @@ export const SCENES: Record<string, Scene> = {
         ],
         rotationY: -1.5707963267948966,
         halfSize: [1.9532208005620664, 2, 0.25],
+      },
+    ],
+    transitions: [
+      {
+        id: "transition-1780039538724",
+        kind: "collision",
+        position: [-1.8, 0.7, 3.8],
+        halfSize: [2, 2.9, 1],
+        targetSceneId: "dungeon",
       },
     ],
     interactions: [
