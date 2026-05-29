@@ -8,6 +8,8 @@ import type {
   GameSceneTransitionOnCollision,
 } from "@pointclick-engine/engine-core";
 
+const EMPTY_TRANSITIONS: GameSceneTransition[] = [];
+
 function CollisionZone({
   transition,
   onActivate,
@@ -54,7 +56,7 @@ export function SceneTransitions({
   debug?: boolean;
   onTransitionTriggered?: (transitionId: string, targetSceneId: string) => void;
 }) {
-  const transitions = useSceneStore((s) => s.scene.transitions ?? ([] as GameSceneTransition[]));
+  const transitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
 
   return (
     <>

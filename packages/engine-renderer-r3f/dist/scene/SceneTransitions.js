@@ -3,6 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useSceneStore } from "@pointclick-engine/engine-core";
+const EMPTY_TRANSITIONS = [];
 function CollisionZone({ transition, onActivate, debug, }) {
     const insideRef = useRef(false);
     useFrame(() => {
@@ -26,7 +27,7 @@ function CollisionZone({ transition, onActivate, debug, }) {
     return (_jsxs("mesh", { position: [x, y, z], raycast: () => null, children: [_jsx("boxGeometry", { args: [hx * 2, hy * 2, hz * 2] }), _jsx("meshBasicMaterial", { color: "#00ff88", wireframe: true, transparent: true, opacity: 0.5, depthWrite: false })] }));
 }
 export function SceneTransitions({ debug = false, onTransitionTriggered, }) {
-    const transitions = useSceneStore((s) => s.scene.transitions ?? []);
+    const transitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
     return (_jsx(_Fragment, { children: transitions.map((transition) => {
             if (transition.kind === "collision") {
                 return (_jsx(CollisionZone, { transition: transition, debug: debug, onActivate: () => onTransitionTriggered?.(transition.id, transition.targetSceneId) }, transition.id));
