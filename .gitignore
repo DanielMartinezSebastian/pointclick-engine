@@ -41,3 +41,6 @@ next-env.d.ts
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# Claude Code worktrees (prevent VS Code from indexing them)
+.claude/worktrees/
