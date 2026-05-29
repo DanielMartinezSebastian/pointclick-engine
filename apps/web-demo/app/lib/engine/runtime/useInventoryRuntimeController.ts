@@ -117,6 +117,7 @@ export function useInventoryRuntimeController({
     return [];
   });
   const pickupLockRef = useRef<Set<string>>(new Set());
+  const trophyPickedUpRef = useRef(false);
   const setPlacedItemsInStore = usePlacedItemsStore((s) => s.setItems);
 
   useEffect(() => {
@@ -135,6 +136,25 @@ export function useInventoryRuntimeController({
   useEffect(() => {
     setPlacedItemsInStore(placedItems);
   }, [placedItems, setPlacedItemsInStore]);
+
+  // Initialize trophy on first entry to personalRoom, track when it's picked up
+  useEffect(() => {
+    if (sceneId === "personalRoom") {
+      const trophyInInventory = inventorySlots.some(slot => slot?.id === "trophy");
+      const trophyPlaced = placedItems.some(item => item.itemId === "trophy");
+
+      if (trophyInInventory) {
+        // Trophy is in inventory - mark as picked up
+        trophyPickedUpRef.current = true;
+      } else if (!trophyPlaced && !trophyPickedUpRef.current) {
+        // Trophy not in inventory and not placed - ensure it's available
+        setPlacedItems((current) => {
+          const hasTrophy = current.some(item => item.itemId === "trophy");
+          return hasTrophy ? current : createInitialPlacedItems();
+        });
+      }
+    }
+  }, [sceneId, inventorySlots, placedItems]);
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
