@@ -153,17 +153,7 @@ export const SCENES: Record<string, Scene> = {
       maxZ: 30,
       y: -3.25,
     },
-    walls: [
-      {
-        position: [-11, -0.1, 13.56],
-        halfSize: [1.15, 2, 8],
-      },
-      {
-        position: [-4.42, 0, 4],
-        rotationY: -2.9329,
-        halfSize: [5.8, 3, 2],
-      },
-    ],
+    walls: [],
     interactions: [
       {
         id: "town-trophy-pedestal",
