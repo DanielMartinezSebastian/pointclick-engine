@@ -34,7 +34,6 @@ export function CameraController() {
     // Snap camera position when scene changes, lerp for normal movement within scene
     const isSceneTransition = prevSceneIdRef.current !== sceneId;
     if (isSceneTransition) {
-      console.log(`[CameraController] Scene transition detected: ${prevSceneIdRef.current} → ${sceneId}, snapping camera from ${camera.position.x.toFixed(2)} to ${clampedX.toFixed(2)}`);
       camera.position.setX(clampedX);
       prevSceneIdRef.current = sceneId;
     } else {
