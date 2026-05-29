@@ -801,13 +801,11 @@ export function GameTouchSpriteRuntime({
       const now = performance.now();
       if (now - lastBoundaryHitRef.current > BOUNDARY_HIT_COOLDOWN_MS) {
         lastBoundaryHitRef.current = now;
-        const phrase = getPhrase("boundaryHit");
         emitRuntimeEvent(onRuntimeEvent, {
           type: "onCollide",
           reason: "boundary",
           position: [clampedPosition.x, currentPosition.y, clampedPosition.z],
         });
-        onBoundaryHit(phrase);
       }
     }
 
