@@ -1,7 +1,8 @@
 const UNKNOWN_ITEM_MESSAGE = "No conozco este item todavía.";
 const DEFAULT_DROP_MISS_DIALOG_KEY = "inventoryDropMiss";
-const DEFAULT_PICKUP_ALLOWED_DIALOG_KEY = "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed";
-const DEFAULT_PICKUP_BLOCKED_DIALOG_KEY = "item.gameboy.pickup.personal-room-gameboy-drop-target.blocked";
+function getDefaultPickupDialogKey(itemId, type) {
+    return `item.${itemId}.pickup.${type}`;
+}
 export function removeOneFromSlot(slots, slotIndex) {
     const slot = slots[slotIndex];
     if (!slot)
@@ -120,7 +121,7 @@ export function resolvePickupPlacedItemDecision(context, { placedItem, }) {
     if (!placedItem.canPickup) {
         return {
             kind: "blocked",
-            dialogKey: placedItem.pickupBlockedDialogKey || DEFAULT_PICKUP_BLOCKED_DIALOG_KEY,
+            dialogKey: placedItem.pickupBlockedDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "blocked"),
         };
     }
     return {
@@ -131,7 +132,7 @@ export function resolvePickupPlacedItemDecision(context, { placedItem, }) {
             name: itemDefinition.name,
             spriteUrl: itemDefinition.spriteUrl,
         },
-        successDialogKey: placedItem.pickupSuccessDialogKey || DEFAULT_PICKUP_ALLOWED_DIALOG_KEY,
+        successDialogKey: placedItem.pickupSuccessDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "allowed"),
     };
 }
 export const inventoryRuleMessages = {

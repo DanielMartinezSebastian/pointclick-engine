@@ -236,7 +236,7 @@ export function resolveInventoryDropOnPlayerMessage({
 export function resolvePickupPlacedItemDecision({
   placedItem,
 }: {
-  placedItem: PlacedItemState;
+  placedItem: PlacedSceneItem;
 }): PickupDecision {
   const itemDefinition = getItemDefinition(placedItem.itemId);
   if (!itemDefinition) {

@@ -1,29 +1,5 @@
-import type { GameSceneInteraction, DialogKey } from "../../types";
-export type ItemDefinition = {
-    id: string;
-    name: string;
-    spriteUrl: string;
-    descriptionDialogKey?: string;
-    interactionRules: Record<string, ItemInteractionRule>;
-    defaultRule: ItemInteractionRule;
-};
-export type ItemInteractionRule = {
-    outcome: "place" | "consume" | "return";
-    hitDialogKey?: DialogKey;
-    missDialogKey?: DialogKey;
-    placeCanPickup?: boolean;
-    placeHasCollision?: boolean;
-    placeCollisionHalfSize?: [number, number, number];
-    pickupSuccessDialogKey?: DialogKey;
-    pickupBlockedDialogKey?: DialogKey;
-};
-type InventoryStackState = {
-    id: string;
-    name: string;
-    spriteUrl: string;
-    quantity: number;
-};
-export type InventorySlotsState = Array<InventoryStackState | null>;
+import type { GameSceneInteraction, DialogKey, ItemDefinition, ItemInteractionRule, InventoryStackState, InventorySlotsState, PlacedSceneItem } from "../../types";
+export type { ItemDefinition, ItemInteractionRule, InventoryStackState, InventorySlotsState, PlacedSceneItem };
 type DraggedPayloadState = {
     stack: {
         id: string;
@@ -31,19 +7,6 @@ type DraggedPayloadState = {
         spriteUrl: string;
     };
     fromSlotIndex: number;
-};
-export type PlacedItemState = {
-    id: string;
-    itemId: string;
-    interactionId: string;
-    name: string;
-    spriteUrl: string;
-    worldPosition: [number, number, number];
-    canPickup: boolean;
-    hasCollision?: boolean;
-    collisionHalfSize?: [number, number, number];
-    pickupSuccessDialogKey?: string;
-    pickupBlockedDialogKey?: string;
 };
 type DropHitDecision = {
     kind: "unknown-item";
@@ -54,7 +17,7 @@ type DropHitDecision = {
 } | {
     kind: "place";
     fromSlotIndex: number;
-    placedItem: PlacedItemState;
+    placedItem: PlacedSceneItem;
     dialogKey: DialogKey;
 } | {
     kind: "consume";
@@ -122,11 +85,10 @@ export declare function resolveInventoryDropOnPlayerMessage(context: InventoryRu
     dialogKey: DialogKey;
 };
 export declare function resolvePickupPlacedItemDecision(context: InventoryRuleContext, { placedItem, }: {
-    placedItem: PlacedItemState;
+    placedItem: PlacedSceneItem;
 }): PickupDecision;
 export declare const inventoryRuleMessages: {
     unknownItem: string;
     inventoryFull: string;
 };
-export {};
 //# sourceMappingURL=inventoryRules.d.ts.map
