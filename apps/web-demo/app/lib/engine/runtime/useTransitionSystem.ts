@@ -25,6 +25,8 @@ export function useTransitionSystem() {
   const placedItems = usePlacedItemsStore((s) => s.items);
   const isTransitioningRef = useRef(false);
   const showDialog = useDialogStore((s) => s.show);
+  const dialogVisible = useDialogStore((s) => s.visible);
+  const pendingTransitionRef = useRef<{ id: string; targetSceneId: string } | null>(null);
 
   const changeScene = useCallback(
     (targetSceneId: string, transitionId: string) => {
@@ -86,6 +88,7 @@ export function useTransitionSystem() {
   /**
    * Handles item-drop events from the inventory system.
    * Returns a passthrough handler that checks if the drop matches a transition.
+   * Defers the scene change until the dialog is dismissed.
    */
   const wrapRuntimeEventForTransitions = useCallback(
     (passthrough: (event: RuntimeEvent) => void) =>
@@ -105,13 +108,23 @@ export function useTransitionSystem() {
               transitionId: matching.id,
               targetSceneId: matching.targetSceneId,
             });
-            changeScene(matching.targetSceneId, matching.id);
+            // Store transition to trigger after dialog closes
+            pendingTransitionRef.current = { id: matching.id, targetSceneId: matching.targetSceneId };
           }
         }
         passthrough(event);
       },
-    [changeScene],
+    [],
   );
+
+  // Execute pending transition after dialog is dismissed
+  useEffect(() => {
+    if (!dialogVisible && pendingTransitionRef.current) {
+      const t = pendingTransitionRef.current;
+      pendingTransitionRef.current = null;
+      changeScene(t.targetSceneId, t.id);
+    }
+  }, [dialogVisible, changeScene]);
 
   return { handleTransitionTriggered, wrapRuntimeEventForTransitions };
 }

@@ -4,9 +4,13 @@ import type { PlacedSceneItem } from "../lib/engine/types/gameRuntime";
 type PlacedItemsStoreState = {
   items: PlacedSceneItem[];
   setItems: (items: PlacedSceneItem[]) => void;
+  trophyCollected: boolean;
+  setTrophyCollected: () => void;
 };
 
 export const usePlacedItemsStore = create<PlacedItemsStoreState>((set) => ({
   items: [],
   setItems: (items: PlacedSceneItem[]) => set({ items }),
+  trophyCollected: false,
+  setTrophyCollected: () => set({ trophyCollected: true }),
 }));
