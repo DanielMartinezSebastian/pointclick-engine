@@ -181,7 +181,7 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [6, 4, 2],
       }),
       sceneTransitionOnItemDrop({
-        id: "town-trophy-to-personal-room",
+        id: "town-trophy-pedestal",
         targetSceneId: "personalRoom",
         position: [8.5, -1.65, 20.0],
         halfSize: [0.95, 0.55, 0.95],
@@ -452,8 +452,8 @@ export const SCENES: Record<string, Scene> = {
       {
         id: "transition-1780039538724",
         kind: "collision",
-        position: [0, -1, 5],
-        halfSize: [3, 2.5, 2],
+        position: [-1.9, -1, 2.5],
+        halfSize: [1.9, 2.5, 2],
         targetSceneId: "dungeon",
       },
     ],
