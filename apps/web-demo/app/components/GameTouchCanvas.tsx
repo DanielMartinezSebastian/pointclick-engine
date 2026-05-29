@@ -28,7 +28,8 @@ import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
 import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
-import { legacyRuntimeEventToGameEvent, type RuntimeEvent, useSceneStore } from "@pointclick-engine/engine-core";
+import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
+import { legacyRuntimeEventToGameEvent, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
@@ -46,6 +47,7 @@ import { getRandomPhrase } from "../../demo-content/dialogs/getRandomPhrase";
 const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
+const EMPTY_TRANSITIONS: GameSceneTransition[] = [];
 
 type GameTouchCanvasProps = {
   debug?: boolean;
@@ -145,6 +147,9 @@ export default function GameTouchCanvas({
   const speechVisible = useDialogStore((s) => s.visible);
   const speechTrigger = useDialogStore((s) => s.triggerCount);
 
+  // Get transitions from scene
+  const sceneTransitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
+
   // Inventory visibility lives in inventoryStore (also writable via inventory:toggle command)
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
   const toggleInventory = useInventoryStore((s) => s.toggle);
@@ -182,6 +187,15 @@ export default function GameTouchCanvas({
     scenePlayerSpawnY: scenePlayerSpawn[1],
     updateInteraction,
   });
+
+  const {
+    updateTransitionPosition,
+    updateTransitionHalfSize,
+    updateTransitionTargetScene,
+    moveTransitionToPlayer,
+    createTransition,
+    deleteTransition,
+  } = useTransitionEditorController();
 
   // DI props for renderer-r3f's GameTouchSpriteRuntime
   const addWallWithData = useSceneEditorStore((s) => s.addWallWithData);
@@ -330,6 +344,13 @@ export default function GameTouchCanvas({
         updatePlacedItemPosition={updatePlacedItemPosition}
         movePlacedItemToPlayer={movePlacedItemToPlayer}
         removePlacedItemById={removePlacedItemById}
+        sceneTransitions={sceneTransitions}
+        updateTransitionPosition={updateTransitionPosition}
+        updateTransitionHalfSize={updateTransitionHalfSize}
+        updateTransitionTargetScene={updateTransitionTargetScene}
+        moveTransitionToPlayer={moveTransitionToPlayer}
+        addTransition={createTransition}
+        removeTransition={deleteTransition}
       />
     </div>
   );

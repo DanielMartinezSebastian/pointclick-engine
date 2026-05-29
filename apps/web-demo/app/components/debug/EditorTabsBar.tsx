@@ -18,6 +18,7 @@ const TABS: TabDescriptor[] = [
   { id: "ground", label: "Suelo" },
   { id: "items", label: "Items" },
   { id: "targets", label: "Targets" },
+  { id: "transitions", label: "Transiciones" },
   { id: "speech", label: "Diálogo" },
 ];
 

@@ -6,6 +6,7 @@ import { EditorTabsBar } from "./EditorTabsBar";
 import { FloatingPanel } from "./FloatingPanel";
 import { GroundEditorPanel } from "./GroundEditorPanel";
 import { InteractionTargetsEditorPanel } from "./InteractionTargetsEditorPanel";
+import { TransitionTargetsEditorPanel } from "./TransitionTargetsEditorPanel";
 import { PlacedItemsEditorPanel } from "./PlacedItemsEditorPanel";
 import { ScenePanel } from "./ScenePanel";
 import { SpeechPanel } from "./SpeechPanel";
@@ -15,6 +16,7 @@ import {
   type PlacedSceneItem,
   type WallToolMode,
 } from "../../lib/engine/types/gameRuntime";
+import { type GameSceneTransition } from "@pointclick-engine/engine-core";
 import { useEditorModeStore } from "../../store/editorModeStore";
 
 /**
@@ -55,6 +57,13 @@ export function DebugOverlayRuntimePanel({
   updatePlacedItemPosition,
   movePlacedItemToPlayer,
   removePlacedItemById,
+  sceneTransitions,
+  updateTransitionPosition,
+  updateTransitionHalfSize,
+  updateTransitionTargetScene,
+  moveTransitionToPlayer,
+  addTransition,
+  removeTransition,
 }: {
   isDebug: boolean;
   isDebugGroundVisible: boolean;
@@ -86,6 +95,13 @@ export function DebugOverlayRuntimePanel({
   updatePlacedItemPosition: (id: string, axis: 0 | 1 | 2, value: number) => void;
   movePlacedItemToPlayer: (id: string) => void;
   removePlacedItemById: (id: string) => void;
+  sceneTransitions: GameSceneTransition[];
+  updateTransitionPosition: (id: string, axis: 0 | 1 | 2, value: number) => void;
+  updateTransitionHalfSize: (id: string, axis: 0 | 1 | 2, value: number) => void;
+  updateTransitionTargetScene: (id: string, targetSceneId: string) => void;
+  moveTransitionToPlayer: (id: string) => void;
+  addTransition: (transition: GameSceneTransition) => void;
+  removeTransition: (id: string) => void;
 }) {
   const activePanels = useEditorModeStore((s) => s.activePanels);
   const runSpeechBubble = useCallback(() => {
@@ -175,6 +191,26 @@ export function DebugOverlayRuntimePanel({
             onSetRotationDeg={updateInteractionRotationDeg}
             onMoveToPlayer={moveInteractionToPlayer}
             onResetFromSceneConfig={resetInteractionsFromSceneConfig}
+          />
+        </FloatingPanel>
+      )}
+
+      {activePanels.has("transitions") && (
+        <FloatingPanel
+          id="transitions"
+          title="Transiciones de escena"
+          defaultPosition={{ x: 1100, y: 72 }}
+          width={340}
+        >
+          <TransitionTargetsEditorPanel
+            transitions={sceneTransitions}
+            onSetPosition={updateTransitionPosition}
+            onSetHalfSize={updateTransitionHalfSize}
+            onSetTargetScene={updateTransitionTargetScene}
+            onMoveToPlayer={moveTransitionToPlayer}
+            onAddTransition={addTransition}
+            onRemoveTransition={removeTransition}
+            sceneOptions={sceneOptions}
           />
         </FloatingPanel>
       )}

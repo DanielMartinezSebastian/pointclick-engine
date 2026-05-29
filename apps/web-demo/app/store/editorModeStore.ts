@@ -29,6 +29,7 @@ export type EditorTabId =
   | "ground"
   | "items"
   | "targets"
+  | "transitions"
   | "speech";
 
 export type InteractionMode = "game" | "edit";
@@ -87,6 +88,7 @@ export const useEditorModeStore = create<EditorModeStore>((set) => ({
     ground: undefined,
     items: undefined,
     targets: undefined,
+    transitions: undefined,
     speech: undefined,
   },
 
