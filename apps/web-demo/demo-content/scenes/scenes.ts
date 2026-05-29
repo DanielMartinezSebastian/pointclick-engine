@@ -269,7 +269,7 @@ export const SCENES: Record<string, Scene> = {
         kind: "collision",
         position: [0, -2.2, -9],
         halfSize: [1, 1, 1],
-        targetSceneId: "personalRoom",
+        targetSceneId: "town",
       },
     ],
     interactions: [

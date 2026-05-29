@@ -13,6 +13,7 @@ import {
 } from "@pointclick-engine/engine-core";
 import { useDialogStore } from "../../../store/dialogStore";
 import { useInventoryStore } from "../../../store/inventoryStore";
+import { usePlacedItemsStore } from "../../../store/placedItemsStore";
 import {
   addOneToInventory,
   inventoryRuleMessages,
@@ -67,6 +68,24 @@ function createInitialInventorySlots(): InventorySlots {
   });
 }
 
+function createInitialPlacedItems(): PlacedSceneItem[] {
+  return [
+    {
+      id: "trophy-ground",
+      itemId: "trophy",
+      interactionId: "trophy-ground-pickup",
+      name: "Trophy",
+      spriteUrl: "/assets/trophy/trophy.png",
+      worldPosition: [5.5, -1.3, 22.0],
+      canPickup: true,
+      hasCollision: true,
+      collisionHalfSize: [0.38, 0.38, 0.38],
+      pickupSuccessDialogKey: "item.trophy.pickup.town-trophy-pedestal.allowed",
+      pickupBlockedDialogKey: "item.trophy.pickup.town-trophy-pedestal.blocked",
+    },
+  ];
+}
+
 export function useInventoryRuntimeController({
   sceneId,
   sceneInteractions,
@@ -91,8 +110,14 @@ export function useInventoryRuntimeController({
   const [draggedStack, setDraggedStack] = useState<RuntimeDraggedStack | null>(
     null,
   );
-  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
+  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>(() => {
+    if (sceneId === "personalRoom") {
+      return createInitialPlacedItems();
+    }
+    return [];
+  });
   const pickupLockRef = useRef<Set<string>>(new Set());
+  const setPlacedItemsInStore = usePlacedItemsStore((s) => s.setItems);
 
   useEffect(() => {
     if (pickupLockRef.current.size === 0) {
@@ -106,6 +131,10 @@ export function useInventoryRuntimeController({
       }
     }
   }, [placedItems]);
+
+  useEffect(() => {
+    setPlacedItemsInStore(placedItems);
+  }, [placedItems, setPlacedItemsInStore]);
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {

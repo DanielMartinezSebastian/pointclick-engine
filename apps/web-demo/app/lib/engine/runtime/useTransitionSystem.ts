@@ -5,6 +5,9 @@ import { useSceneStore } from "@pointclick-engine/engine-core";
 import { resolveTransitionFromItemDrop } from "@pointclick-engine/engine-core";
 import { SCENES } from "../../../../demo-content/scenes/scenes";
 import { getGameRuntime } from "../publicApi";
+import { useDialogStore } from "../../../store/dialogStore";
+import { usePlacedItemsStore } from "../../../store/placedItemsStore";
+import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import type { RuntimeEvent } from "@pointclick-engine/engine-core";
 
 /**
@@ -19,7 +22,9 @@ import type { RuntimeEvent } from "@pointclick-engine/engine-core";
  */
 export function useTransitionSystem() {
   const storeSetScene = useSceneStore((s) => s.setScene);
+  const placedItems = usePlacedItemsStore((s) => s.items);
   const isTransitioningRef = useRef(false);
+  const showDialog = useDialogStore((s) => s.show);
 
   const changeScene = useCallback(
     (targetSceneId: string, transitionId: string) => {
@@ -57,6 +62,17 @@ export function useTransitionSystem() {
   /** Called by SceneTransitions renderer when player enters a collision zone. */
   const handleTransitionTriggered = useCallback(
     (transitionId: string, targetSceneId: string) => {
+      const currentSceneId = useSceneStore.getState().sceneId;
+
+      // Check if leaving personalRoom without collecting trophy
+      if (currentSceneId === "personalRoom" && targetSceneId === "dungeon") {
+        const trophyStillPlaced = placedItems.some(item => item.itemId === "trophy");
+        if (trophyStillPlaced) {
+          showDialog("Sería mejor recoger todo lo que pueda del cuarto antes de irme...", "interaction.trophy-pedestal.empty");
+          return;
+        }
+      }
+
       getGameRuntime()?.emit({
         type: "transition:triggered",
         transitionId,
@@ -64,7 +80,7 @@ export function useTransitionSystem() {
       });
       changeScene(targetSceneId, transitionId);
     },
-    [changeScene],
+    [changeScene, showDialog, placedItems],
   );
 
   /**
