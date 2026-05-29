@@ -310,6 +310,49 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
   });
 
   // ---------------------------------------------------------------------------
+  // Transition executors (Phase 8)
+  // ---------------------------------------------------------------------------
+
+  commands.register("transition:activate", (cmd) => {
+    const state = useSceneStore.getState();
+    const transition = state.scene.transitions?.find(
+      (t) => t.id === cmd.transitionId,
+    );
+    if (!transition) {
+      console.warn(`[runtime] transition:activate — unknown transition: ${cmd.transitionId}`);
+      return;
+    }
+    const fromSceneId = state.sceneId;
+    bus.emit("transition:started", {
+      type: "transition:started",
+      transitionId: cmd.transitionId,
+    });
+    const sceneConfig = _sceneRegistry.get(transition.targetSceneId);
+    if (!sceneConfig) {
+      console.warn(`[runtime] transition:activate — target scene not registered: ${transition.targetSceneId}`);
+      return;
+    }
+    useSceneStore.getState().setScene(sceneConfig.id, {
+      id: sceneConfig.id,
+      label: sceneConfig.label,
+      background: sceneConfig.background,
+      playerSpawn: sceneConfig.playerSpawn,
+      ground: sceneConfig.ground,
+      walls: sceneConfig.walls,
+      interactions: sceneConfig.interactions,
+    });
+    bus.emit("transition:completed", {
+      type: "transition:completed",
+      fromSceneId,
+      toSceneId: transition.targetSceneId,
+    });
+  });
+
+  commands.register("transition:cancel", (cmd) => {
+    useSceneStore.getState().setTransitionItemOccupying(cmd.transitionId, undefined);
+  });
+
+  // ---------------------------------------------------------------------------
   // Formally deferred executors (v0.2.0)
   // ---------------------------------------------------------------------------
 
