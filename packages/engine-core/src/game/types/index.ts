@@ -74,7 +74,38 @@ export type PlacedSceneItem = {
   collisionHalfSize?: GameVec3;
   pickupSuccessDialogKey?: string;
   pickupBlockedDialogKey?: string;
+  sceneId?: string; // Tracks which scene this item belongs to for multi-scene management
 };
+
+export type ItemInteractionRule = {
+  outcome: "place" | "consume" | "return";
+  hitDialogKey?: DialogKey;
+  missDialogKey?: DialogKey;
+  placeCanPickup?: boolean;
+  placeHasCollision?: boolean;
+  placeCollisionHalfSize?: GameVec3;
+  pickupSuccessDialogKey?: DialogKey;
+  pickupBlockedDialogKey?: DialogKey;
+};
+
+export type ItemDefinition = {
+  id: string;
+  name: string;
+  spriteUrl: string;
+  descriptionDialogKey?: string;
+  interactionRules: Record<string, ItemInteractionRule>;
+  defaultRule: ItemInteractionRule;
+};
+
+// Inventory state
+export type InventoryStackState = {
+  id: string;
+  name: string;
+  spriteUrl: string;
+  quantity: number;
+};
+
+export type InventorySlotsState = Array<InventoryStackState | null>;
 
 // Dialog key (simple string alias)
 export type DialogKey = string;

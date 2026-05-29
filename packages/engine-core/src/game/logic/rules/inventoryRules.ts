@@ -1,36 +1,14 @@
 import type {
   GameSceneInteraction,
   DialogKey,
+  ItemDefinition,
+  ItemInteractionRule,
+  InventoryStackState,
+  InventorySlotsState,
+  PlacedSceneItem,
 } from "../../types";
 
-export type ItemDefinition = {
-  id: string;
-  name: string;
-  spriteUrl: string;
-  descriptionDialogKey?: string;
-  interactionRules: Record<string, ItemInteractionRule>;
-  defaultRule: ItemInteractionRule;
-};
-
-export type ItemInteractionRule = {
-  outcome: "place" | "consume" | "return";
-  hitDialogKey?: DialogKey;
-  missDialogKey?: DialogKey;
-  placeCanPickup?: boolean;
-  placeHasCollision?: boolean;
-  placeCollisionHalfSize?: [number, number, number];
-  pickupSuccessDialogKey?: DialogKey;
-  pickupBlockedDialogKey?: DialogKey;
-};
-
-type InventoryStackState = {
-  id: string;
-  name: string;
-  spriteUrl: string;
-  quantity: number;
-};
-
-export type InventorySlotsState = Array<InventoryStackState | null>;
+export type { ItemDefinition, ItemInteractionRule, InventoryStackState, InventorySlotsState, PlacedSceneItem };
 
 type DraggedPayloadState = {
   stack: {
@@ -39,20 +17,6 @@ type DraggedPayloadState = {
     spriteUrl: string;
   };
   fromSlotIndex: number;
-};
-
-export type PlacedItemState = {
-  id: string;
-  itemId: string;
-  interactionId: string;
-  name: string;
-  spriteUrl: string;
-  worldPosition: [number, number, number];
-  canPickup: boolean;
-  hasCollision?: boolean;
-  collisionHalfSize?: [number, number, number];
-  pickupSuccessDialogKey?: string;
-  pickupBlockedDialogKey?: string;
 };
 
 type DropHitDecision =
@@ -67,7 +31,7 @@ type DropHitDecision =
   | {
       kind: "place";
       fromSlotIndex: number;
-      placedItem: PlacedItemState;
+      placedItem: PlacedSceneItem;
       dialogKey: DialogKey;
     }
   | {
@@ -101,10 +65,10 @@ type PickupDecision =
 
 const UNKNOWN_ITEM_MESSAGE = "No conozco este item todavía.";
 const DEFAULT_DROP_MISS_DIALOG_KEY: DialogKey = "inventoryDropMiss";
-const DEFAULT_PICKUP_ALLOWED_DIALOG_KEY: DialogKey =
-  "item.gameboy.pickup.personal-room-gameboy-drop-target.allowed";
-const DEFAULT_PICKUP_BLOCKED_DIALOG_KEY: DialogKey =
-  "item.gameboy.pickup.personal-room-gameboy-drop-target.blocked";
+
+function getDefaultPickupDialogKey(itemId: string, type: "allowed" | "blocked"): DialogKey {
+  return `item.${itemId}.pickup.${type}` as DialogKey;
+}
 
 export function removeOneFromSlot(
   slots: InventorySlotsState,
@@ -288,7 +252,7 @@ export function resolvePickupPlacedItemDecision(
   {
     placedItem,
   }: {
-    placedItem: PlacedItemState;
+    placedItem: PlacedSceneItem;
   },
 ): PickupDecision {
   const itemDefinition = context.getItemDefinition(placedItem.itemId);
@@ -300,7 +264,7 @@ export function resolvePickupPlacedItemDecision(
     return {
       kind: "blocked",
       dialogKey:
-        placedItem.pickupBlockedDialogKey || DEFAULT_PICKUP_BLOCKED_DIALOG_KEY,
+        placedItem.pickupBlockedDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "blocked"),
     };
   }
 
@@ -313,7 +277,7 @@ export function resolvePickupPlacedItemDecision(
       spriteUrl: itemDefinition.spriteUrl,
     },
     successDialogKey:
-      placedItem.pickupSuccessDialogKey || DEFAULT_PICKUP_ALLOWED_DIALOG_KEY,
+      placedItem.pickupSuccessDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "allowed"),
   };
 }
 

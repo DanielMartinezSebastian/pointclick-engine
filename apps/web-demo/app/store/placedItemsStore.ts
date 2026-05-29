@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { PlacedSceneItem } from "../lib/engine/types/gameRuntime";
+import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
 
 type PlacedItemsStoreState = {
   items: PlacedSceneItem[];

@@ -1,15 +1,13 @@
 import { getItemDefinition, resolveItemRule } from "../../../../demo-content/items";
 import type { DialogKey } from "../../../../demo-content/dialogs/types";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
+import type {
+  InventorySlotsState,
+  InventoryStackState,
+  PlacedSceneItem,
+} from "@pointclick-engine/engine-core";
 
-type InventoryStackState = {
-  id: string;
-  name: string;
-  spriteUrl: string;
-  quantity: number;
-};
-
-export type InventorySlotsState = Array<InventoryStackState | null>;
+export type { InventorySlotsState, InventoryStackState, PlacedSceneItem };
 
 type DraggedPayloadState = {
   stack: {
@@ -18,20 +16,6 @@ type DraggedPayloadState = {
     spriteUrl: string;
   };
   fromSlotIndex: number;
-};
-
-export type PlacedItemState = {
-  id: string;
-  itemId: string;
-  interactionId: string;
-  name: string;
-  spriteUrl: string;
-  worldPosition: [number, number, number];
-  canPickup: boolean;
-  hasCollision?: boolean;
-  collisionHalfSize?: [number, number, number];
-  pickupSuccessDialogKey?: string;
-  pickupBlockedDialogKey?: string;
 };
 
 type DropHitDecision =
@@ -46,7 +30,7 @@ type DropHitDecision =
   | {
       kind: "place";
       fromSlotIndex: number;
-      placedItem: PlacedItemState;
+      placedItem: PlacedSceneItem;
       dialogKey: DialogKey;
     }
   | {
@@ -167,10 +151,10 @@ export function resolveInventoryDropHitDecision({
           interaction.position[0],
           interaction.position[1] + interaction.halfSize[1] + 0.175,
           interaction.position[2],
-        ],
+        ] as [number, number, number],
         canPickup: rule.placeCanPickup ?? false,
         hasCollision: rule.placeHasCollision ?? false,
-        collisionHalfSize: rule.placeCollisionHalfSize,
+        collisionHalfSize: rule.placeCollisionHalfSize as [number, number, number] | undefined,
         pickupSuccessDialogKey: rule.pickupSuccessDialogKey,
         pickupBlockedDialogKey: rule.pickupBlockedDialogKey,
       },
