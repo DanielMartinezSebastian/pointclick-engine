@@ -35,6 +35,17 @@ export type GameEvent = {
 } | {
     type: "dialog:dismissed";
     dialogKey?: string;
+} | {
+    type: "transition:triggered";
+    transitionId: string;
+    targetSceneId: string;
+} | {
+    type: "transition:started";
+    transitionId: string;
+} | {
+    type: "transition:completed";
+    fromSceneId: string;
+    toSceneId: string;
 };
 export type GameEventType = GameEvent["type"];
 export type GameEventHandler<T extends GameEventType = GameEventType> = (event: Extract<GameEvent, {

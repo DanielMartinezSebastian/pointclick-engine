@@ -79,6 +79,41 @@ export interface GameSceneInteractionFull extends GameSceneInteraction {
     hintDialogKeys?: GameSceneInteractionHintDialogKeys;
     label: string;
 }
+export interface BaseSceneTransition {
+    id: string;
+    targetSceneId: string;
+    position: GameVec3;
+    halfSize: GameVec3;
+    rotationY?: number;
+    preTransitionDialogKey?: DialogKey;
+    postTransitionDialogKey?: DialogKey;
+}
+export interface GameSceneTransitionOnCollision extends BaseSceneTransition {
+    kind: "collision";
+}
+export interface GameSceneTransitionOnItemDrop extends BaseSceneTransition {
+    kind: "item-drop";
+    requiresItemId?: string;
+    consumeItem?: boolean;
+    hintDialogKeys?: {
+        empty?: DialogKey;
+        occupied?: DialogKey;
+    };
+}
+export interface GameSceneTransitionOnItemConsume extends BaseSceneTransition {
+    kind: "item-consume";
+    requiresItemId: string;
+    preConsumptionDialogKey?: DialogKey;
+}
+export type GameSceneTransition = GameSceneTransitionOnCollision | GameSceneTransitionOnItemDrop | GameSceneTransitionOnItemConsume;
+export interface TransitionState {
+    /** Source scene recorded when the transition was last triggered. */
+    lastVisitedSceneId?: string;
+    /** For item-drop transitions: item currently occupying the zone. */
+    itemIdOccupying?: string;
+    /** Whether this transition can be triggered. Default true. */
+    isAvailable: boolean;
+}
 export interface GameScene {
     id: string;
     label: string;
@@ -87,6 +122,8 @@ export interface GameScene {
     ground: GameSceneGround;
     walls: GameSceneWall[];
     interactions: GameSceneInteractionFull[];
+    /** Declarative scene exit/transition zones. */
+    transitions?: GameSceneTransition[];
 }
 export type WallToolMode = "manual" | "points";
 export type DebugEditorMode = "walls" | "ground" | "items" | "targets";

@@ -27,6 +27,12 @@ export type GameCommand = {
     dialogKey: string;
 } | {
     type: "dialog:dismiss";
+} | {
+    type: "transition:activate";
+    transitionId: string;
+} | {
+    type: "transition:cancel";
+    transitionId: string;
 };
 export type GameCommandType = GameCommand["type"];
 //# sourceMappingURL=types.d.ts.map

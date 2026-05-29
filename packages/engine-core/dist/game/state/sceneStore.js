@@ -61,6 +61,9 @@ function cloneScene(scene) {
         ground: { ...scene.ground },
         walls: scene.walls.map(cloneWall),
         interactions: scene.interactions.map(cloneInteraction),
+        transitions: scene.transitions
+            ? scene.transitions.map((t) => ({ ...t, position: [...t.position], halfSize: [...t.halfSize] }))
+            : undefined,
     };
 }
 export const useSceneStore = create((set, get) => ({
@@ -76,6 +79,7 @@ export const useSceneStore = create((set, get) => ({
     },
     playerPosition: [0, 0, 0],
     respawnSignal: 0,
+    transitionStates: {},
     setScene: (id, scene) => {
         const clonedScene = cloneScene(scene);
         logSceneStore("set-scene", {
@@ -137,6 +141,18 @@ export const useSceneStore = create((set, get) => ({
         };
     }),
     setPlayerPosition: (position) => set({ playerPosition: position }),
+    setTransitionAvailable: (id, available) => set((state) => ({
+        transitionStates: {
+            ...state.transitionStates,
+            [id]: { ...state.transitionStates[id], isAvailable: available },
+        },
+    })),
+    setTransitionItemOccupying: (id, itemId) => set((state) => ({
+        transitionStates: {
+            ...state.transitionStates,
+            [id]: { ...state.transitionStates[id], itemIdOccupying: itemId },
+        },
+    })),
     requestRespawn: () => {
         const state = get();
         const nextRespawnSignal = state.respawnSignal + 1;
