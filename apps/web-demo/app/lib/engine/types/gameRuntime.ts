@@ -12,4 +12,5 @@ export type PlacedSceneItem = {
   collisionHalfSize?: [number, number, number];
   pickupSuccessDialogKey?: string;
   pickupBlockedDialogKey?: string;
+  sceneId?: string; // Optional: tracks which scene this item belongs to
 };

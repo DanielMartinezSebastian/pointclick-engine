@@ -68,7 +68,7 @@ function createInitialInventorySlots(): InventorySlots {
   });
 }
 
-function createInitialPlacedItems(): PlacedSceneItem[] {
+function createInitialPlacedItems(sceneId: string): PlacedSceneItem[] {
   return [
     {
       id: "trophy-ground",
@@ -80,6 +80,7 @@ function createInitialPlacedItems(): PlacedSceneItem[] {
       canPickup: true,
       hasCollision: true,
       collisionHalfSize: [0.5, 0.8, 0.5],
+      sceneId, // Track which scene this item belongs to
       // No dialog keys for ground pickup - will use defaults from resolvePickupPlacedItemDecision
     },
   ];
@@ -130,17 +131,25 @@ export function useInventoryRuntimeController({
     setPlacedItemsInStore(placedItems);
   }, [placedItems, setPlacedItemsInStore]);
 
-  // Initialize trophy on first entry to personalRoom only (race-condition free via store flag)
+  // Manage scene-specific placed items: filter to current scene and ensure required items exist
   useEffect(() => {
-    if (sceneId === "personalRoom") {
-      const { trophyCollected } = usePlacedItemsStore.getState();
-      if (!trophyCollected) {
-        setPlacedItems((prev) => {
-          const has = prev.some((i) => i.itemId === "trophy");
-          return has ? prev : createInitialPlacedItems();
-        });
+    setPlacedItems((prev) => {
+      // Keep only items that belong to the current scene
+      // Items with matching sceneId OR items without sceneId in personalRoom (original items)
+      const itemsForThisScene = prev.filter((item) =>
+        item.sceneId === sceneId || (item.sceneId === undefined && sceneId === "personalRoom")
+      );
+
+      // For personalRoom, ensure initial items exist
+      if (sceneId === "personalRoom") {
+        const trophyExists = itemsForThisScene.some((i) => i.itemId === "trophy");
+        if (!trophyExists) {
+          return [...itemsForThisScene, ...createInitialPlacedItems(sceneId)];
+        }
       }
-    }
+
+      return itemsForThisScene;
+    });
   }, [sceneId]);
 
   const handleBoundaryHit = useCallback(
@@ -222,7 +231,7 @@ export function useInventoryRuntimeController({
         );
         setPlacedItems((currentPlaced) => [
           ...currentPlaced,
-          decision.placedItem,
+          { ...decision.placedItem, sceneId }, // Add sceneId to track which scene this item belongs to
         ]);
         showSpeechBubble(getRandomPhrase(decision.dialogKey), {
           dialogKey: decision.dialogKey,
@@ -359,11 +368,6 @@ export function useInventoryRuntimeController({
           (currentItem) => currentItem.id !== decision.placedItemId,
         ),
       );
-
-      // 3. Mark trophy as collected if applicable
-      if (placedItem.itemId === "trophy") {
-        usePlacedItemsStore.getState().setTrophyCollected();
-      }
 
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDrop",
