@@ -3,11 +3,10 @@ import type { DialogKey } from "../../../../demo-content/dialogs/types";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type {
   InventorySlotsState,
-  InventoryStackState,
   PlacedSceneItem,
 } from "@pointclick-engine/engine-core";
 
-export type { InventorySlotsState, InventoryStackState, PlacedSceneItem };
+export type { InventorySlotsState, PlacedSceneItem };
 
 type DraggedPayloadState = {
   stack: {
