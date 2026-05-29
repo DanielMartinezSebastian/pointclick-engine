@@ -1,0 +1,29 @@
+
+> dev
+> npm run dev -w apps/web-demo
+
+
+> @pointclick-engine/web-demo@0.1.0 dev
+> next dev
+
+⚠ Port 3000 is in use by process 11816, using available port 3001 instead.
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://100.105.191.78:3001
+✓ Ready in 415ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          11816
+- Dir:          C:\COMPARTIDO\2d-game-test\2d-game-test\apps\web-demo
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 11816 /F to stop it.
+[?25h
+npm error Lifecycle script `dev` failed with error:
+npm error code 1
+npm error path C:\COMPARTIDO\2d-game-test\2d-game-test\apps\web-demo
+npm error workspace @pointclick-engine/web-demo@0.1.0
+npm error location C:\COMPARTIDO\2d-game-test\2d-game-test\apps\web-demo
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev

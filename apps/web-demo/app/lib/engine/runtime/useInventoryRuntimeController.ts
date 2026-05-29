@@ -80,8 +80,7 @@ function createInitialPlacedItems(): PlacedSceneItem[] {
       canPickup: true,
       hasCollision: true,
       collisionHalfSize: [0.5, 0.8, 0.5],
-      pickupSuccessDialogKey: "item.trophy.pickup.town-trophy-pedestal.allowed",
-      pickupBlockedDialogKey: "item.trophy.pickup.town-trophy-pedestal.blocked",
+      // No dialog keys for ground pickup - will use defaults from resolvePickupPlacedItemDecision
     },
   ];
 }
@@ -110,12 +109,7 @@ export function useInventoryRuntimeController({
   const [draggedStack, setDraggedStack] = useState<RuntimeDraggedStack | null>(
     null,
   );
-  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>(() => {
-    if (sceneId === "personalRoom") {
-      return createInitialPlacedItems();
-    }
-    return [];
-  });
+  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
   const pickupLockRef = useRef<Set<string>>(new Set());
   const setPlacedItemsInStore = usePlacedItemsStore((s) => s.setItems);
 
@@ -343,27 +337,34 @@ export function useInventoryRuntimeController({
         return;
       }
 
-      let added = false;
-      setInventorySlots((currentSlots) => {
-        const result = addOneToInventory(currentSlots, decision.stack);
-        added = result.added;
-        return result.added ? result.slots : currentSlots;
-      });
+      // Try to add to inventory first, but don't apply state changes yet
+      const inventoryResult = addOneToInventory(
+        inventorySlots,
+        decision.stack,
+      );
 
-      if (!added) {
+      if (!inventoryResult.added) {
         showSpeechBubble(inventoryRuleMessages.inventoryFull);
         pickupLockRef.current.delete(placedItem.id);
         return;
       }
 
+      // If we get here, inventory has space. Apply both changes atomically:
+      // 1. Update inventory
+      setInventorySlots(inventoryResult.slots);
+
+      // 2. Remove from placed items
       setPlacedItems((currentPlaced) =>
         currentPlaced.filter(
           (currentItem) => currentItem.id !== decision.placedItemId,
         ),
       );
+
+      // 3. Mark trophy as collected if applicable
       if (placedItem.itemId === "trophy") {
         usePlacedItemsStore.getState().setTrophyCollected();
       }
+
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDrop",
         outcome: "pickup-success",

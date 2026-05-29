@@ -158,6 +158,18 @@ export const dialogs: DialogLocales = {
         "No se puede colocar ahí. Lo guardo otra vez.",
       ],
     },
+    "item.trophy.pickup.allowed": {
+      phrases: [
+        "Recogida. El trofeo vuelve al inventario.",
+        "Lo guardo en la mochila otra vez.",
+      ],
+    },
+    "item.trophy.pickup.blocked": {
+      phrases: [
+        "Este trofeo está fijo. No se puede recoger.",
+        "No sale de su sitio, está bloqueado.",
+      ],
+    },
     "item.trophy.pickup.town-trophy-pedestal.allowed": {
       phrases: [
         "Recogida. El trofeo vuelve al inventario.",
@@ -345,6 +357,18 @@ export const dialogs: DialogLocales = {
       phrases: [
         "The trophy goes back to the inventory.",
         "Cannot place it there. Returning it to the bag.",
+      ],
+    },
+    "item.trophy.pickup.allowed": {
+      phrases: [
+        "Picked up. The trophy is back in inventory.",
+        "Got it. Putting the trophy back in the bag.",
+      ],
+    },
+    "item.trophy.pickup.blocked": {
+      phrases: [
+        "This trophy is fixed in place. Cannot pick it up.",
+        "It will not budge. This trophy is stuck here.",
       ],
     },
     "item.trophy.pickup.town-trophy-pedestal.allowed": {
