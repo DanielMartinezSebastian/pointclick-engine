@@ -364,13 +364,13 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
 
   commands.register("inventory:pickup", (cmd) =>
     console.warn(
-      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires full inventory state machine extraction. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires UI context (which interaction was clicked). See docs/phases/phase-9-placed-items-agnóstic/README.md#phase-d`,
     ),
   );
 
   commands.register("inventory:drop", (cmd) =>
     console.warn(
-      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires full inventory state machine extraction. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires UI context (drag coordinates, target interaction). See docs/phases/phase-9-placed-items-agnóstic/README.md#phase-d`,
     ),
   );
 
