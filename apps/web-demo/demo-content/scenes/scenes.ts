@@ -452,8 +452,8 @@ export const SCENES: Record<string, Scene> = {
       {
         id: "transition-1780039538724",
         kind: "collision",
-        position: [-1.8, -0.5, 3.8],
-        halfSize: [2.5, 2.5, 1.5],
+        position: [0, -1, 5],
+        halfSize: [3, 2.5, 2],
         targetSceneId: "dungeon",
       },
     ],
