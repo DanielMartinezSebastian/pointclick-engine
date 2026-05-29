@@ -136,6 +136,18 @@ export function useInventoryRuntimeController({
     setPlacedItemsInStore(placedItems);
   }, [placedItems, setPlacedItemsInStore]);
 
+  useEffect(() => {
+    // When entering personalRoom, ensure trophy is available if not in inventory
+    if (sceneId === "personalRoom") {
+      const hasTrophyInInventory = inventorySlots.some(slot => slot?.id === "trophy");
+      const hasTrophyPlaced = placedItems.some(item => item.itemId === "trophy");
+
+      if (!hasTrophyInInventory && !hasTrophyPlaced) {
+        setPlacedItems(createInitialPlacedItems());
+      }
+    }
+  }, [sceneId, inventorySlots, placedItems]);
+
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
       showDialog(phrase, "boundaryHit");
