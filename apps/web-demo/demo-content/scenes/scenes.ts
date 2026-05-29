@@ -1,4 +1,6 @@
 import type { DialogKey } from "../dialogs/types";
+import type { GameSceneTransition } from "@pointclick-engine/engine-core";
+import { sceneTransitionOnCollision } from "@pointclick-engine/engine-core";
 
 export type SceneWallOpening = {
   id: string;
@@ -131,6 +133,8 @@ export type Scene = {
   interactions: SceneInteraction[];
   /** Optional interactive doors. */
   doors?: SceneDoor[];
+  /** Declarative scene transitions (collision/item-drop/item-consume). */
+  transitions?: GameSceneTransition[];
 };
 
 export const SCENES: Record<string, Scene> = {
@@ -158,6 +162,14 @@ export const SCENES: Record<string, Scene> = {
       },
     ],
     interactions: [],
+    transitions: [
+      sceneTransitionOnCollision({
+        id: "town-to-dungeon",
+        targetSceneId: "dungeon",
+        position: [2, -1, -12],
+        halfSize: [6, 4, 2],
+      }),
+    ],
   },
   dungeon: {
     id: "dungeon",
@@ -221,6 +233,14 @@ export const SCENES: Record<string, Scene> = {
           },
         ],
       },
+    ],
+    transitions: [
+      sceneTransitionOnCollision({
+        id: "dungeon-to-town",
+        targetSceneId: "town",
+        position: [0, -1, 55],
+        halfSize: [8, 4, 2.5],
+      }),
     ],
     interactions: [
       {
