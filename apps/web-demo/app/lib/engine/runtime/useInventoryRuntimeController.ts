@@ -133,6 +133,8 @@ export function useInventoryRuntimeController({
 
   // Manage scene-specific placed items: filter to current scene and create initial items only once
   useEffect(() => {
+    const { initialItemsCreated } = usePlacedItemsStore.getState();
+
     setPlacedItems((prev) => {
       // Keep only items that belong to the current scene
       // Items with matching sceneId OR items without sceneId in personalRoom (original items)
@@ -141,18 +143,20 @@ export function useInventoryRuntimeController({
       );
 
       // For personalRoom, create initial items only once (on first visit)
-      if (sceneId === "personalRoom") {
-        const { initialItemsCreated } = usePlacedItemsStore.getState();
+      if (sceneId === "personalRoom" && !initialItemsCreated) {
         const trophyExists = itemsForThisScene.some((i) => i.itemId === "trophy");
-
-        if (!initialItemsCreated && !trophyExists) {
-          usePlacedItemsStore.getState().markInitialItemsCreated();
+        if (!trophyExists) {
           return [...itemsForThisScene, ...createInitialPlacedItems(sceneId)];
         }
       }
 
       return itemsForThisScene;
     });
+
+    // Mark initial items as created AFTER setState (not inside setter to avoid setState-during-render error)
+    if (sceneId === "personalRoom" && !initialItemsCreated) {
+      usePlacedItemsStore.getState().markInitialItemsCreated();
+    }
   }, [sceneId]);
 
   const handleBoundaryHit = useCallback(
