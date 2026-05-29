@@ -25,7 +25,11 @@ export type GameEvent =
     }
   // Dialog
   | { type: "dialog:triggered"; text: string; dialogKey?: string; source: string }
-  | { type: "dialog:dismissed"; dialogKey?: string };
+  | { type: "dialog:dismissed"; dialogKey?: string }
+  // Transitions
+  | { type: "transition:triggered"; transitionId: string; targetSceneId: string }
+  | { type: "transition:started"; transitionId: string }
+  | { type: "transition:completed"; fromSceneId: string; toSceneId: string };
 
 export type GameEventType = GameEvent["type"];
 

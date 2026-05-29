@@ -4,6 +4,7 @@ import type {
   GameSceneWall,
   GameSceneInteractionFull,
   GameVec3,
+  TransitionState,
 } from "../types";
 import type { GameEvent } from "../events/types";
 
@@ -83,6 +84,9 @@ function cloneScene(scene: GameScene): GameScene {
     ground: { ...scene.ground },
     walls: scene.walls.map(cloneWall),
     interactions: scene.interactions.map(cloneInteraction),
+    transitions: scene.transitions
+      ? scene.transitions.map((t) => ({ ...t, position: [...t.position] as [number, number, number], halfSize: [...t.halfSize] as [number, number, number] }))
+      : undefined,
   };
 }
 
@@ -101,6 +105,7 @@ type SceneStore = {
   scene: GameScene;
   playerPosition: GameVec3;
   respawnSignal: number;
+  transitionStates: Record<string, TransitionState>;
 
   // Runtime actions
   setScene: (id: string, scene: GameScene) => void;
@@ -111,6 +116,8 @@ type SceneStore = {
   resetInteractionsFromSceneConfig: () => void;
   setPlayerPosition: (position: GameVec3) => void;
   requestRespawn: () => void;
+  setTransitionAvailable: (id: string, available: boolean) => void;
+  setTransitionItemOccupying: (id: string, itemId: string | undefined) => void;
 
   // Mutation helpers used by sceneEditorStore (no selection tracking)
   updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
@@ -132,6 +139,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   },
   playerPosition: [0, 0, 0],
   respawnSignal: 0,
+  transitionStates: {},
   setScene: (id: string, scene: GameScene) => {
     const clonedScene = cloneScene(scene);
     logSceneStore("set-scene", {
@@ -200,6 +208,20 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       };
     }),
   setPlayerPosition: (position) => set({ playerPosition: position }),
+  setTransitionAvailable: (id, available) =>
+    set((state) => ({
+      transitionStates: {
+        ...state.transitionStates,
+        [id]: { ...state.transitionStates[id], isAvailable: available },
+      },
+    })),
+  setTransitionItemOccupying: (id, itemId) =>
+    set((state) => ({
+      transitionStates: {
+        ...state.transitionStates,
+        [id]: { ...state.transitionStates[id], itemIdOccupying: itemId },
+      },
+    })),
   requestRespawn: () => {
     const state = get();
     const nextRespawnSignal = state.respawnSignal + 1;

@@ -17,6 +17,9 @@ export type GameCommand =
   | { type: "inventory:drop"; itemId: string; slotIndex: number }
   // Dialog
   | { type: "dialog:trigger"; dialogKey: string }
-  | { type: "dialog:dismiss" };
+  | { type: "dialog:dismiss" }
+  // Transitions
+  | { type: "transition:activate"; transitionId: string }
+  | { type: "transition:cancel"; transitionId: string };
 
 export type GameCommandType = GameCommand["type"];
