@@ -37,6 +37,10 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-3-renderer-abstract/`](phases/phase-3-renderer-abstract/) — ✅ Completed: Abstracción del renderer
 - [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — ✅ Completed: Comunicación web ↔ juego
 - [`phases/phase-5-publish/`](phases/phase-5-publish/) — ✅ Completed: Publicación en npm (v0.1.0 publishable)
+- [`phases/phase-6-walls-with-openings/`](phases/phase-6-walls-with-openings/) — ✅ Completed: Walls with openings & pathfinding
+- [`phases/phase-7-walls-first-class/`](phases/phase-7-walls-first-class/) — ✅ Completed: Walls as first-class scene elements
+- [`phases/phase-8-scene-transitions/`](phases/phase-8-scene-transitions/) — ✅ Completed: Scene transitions (collision + item-drop)
+- [`phases/phase-9-placed-items-agnóstic/`](phases/phase-9-placed-items-agnóstic/) — ✅ Phases A-C: Placed items refactoring to core (types, dialog keys, stores)
 
 ---
 
