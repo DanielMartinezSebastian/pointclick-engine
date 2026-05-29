@@ -90,12 +90,12 @@ export function useTransitionSystem() {
   const wrapRuntimeEventForTransitions = useCallback(
     (passthrough: (event: RuntimeEvent) => void) =>
       (event: RuntimeEvent) => {
-        if (event.type === "onDrop" && event.outcome === "consume" && event.interactionId) {
+        if (event.type === "onDrop" && (event.outcome === "consume" || event.outcome === "place") && event.interactionId) {
           const scene = useSceneStore.getState().scene;
           const gameEvent = {
             type: "item:dropped" as const,
             itemId: event.itemId,
-            outcome: event.outcome as "consume",
+            outcome: event.outcome as "consume" | "place",
             interactionId: event.interactionId,
           };
           const matching = resolveTransitionFromItemDrop(scene, gameEvent);
