@@ -20,13 +20,14 @@ import { FreeCameraController } from "./scene/FreeCameraController";
 import { SceneDoors } from "./scene/SceneDoors";
 import { SCENES } from "../../demo-content/scenes/scenes";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { GameTouchSpriteRuntime } from "@pointclick-engine/engine-renderer-r3f";
+import { GameTouchSpriteRuntime, SceneTransitions } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
+import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
 import { legacyRuntimeEventToGameEvent, type RuntimeEvent, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { useMobileInputStore } from "../store/mobileInputStore";
@@ -125,10 +126,19 @@ export default function GameTouchCanvas({
   // base runtime handler so `onDrop`+`consume` events open matching doors.
   const currentScene = SCENES[sceneId];
   const sceneDoors = currentScene?.doors ?? [];
-  const { handleRuntimeEvent, getEffectiveClickGoal } = useDoorSystem({
+  const { handleTransitionTriggered, wrapRuntimeEventForTransitions } = useTransitionSystem();
+
+  const afterDoorRuntimeEvent = useDoorSystem({
     scene: currentScene,
     passthrough: baseRuntimeEvent,
   });
+
+  // Chain: door system → transition item-drop check
+  const handleRuntimeEvent = useCallback(
+    wrapRuntimeEventForTransitions(afterDoorRuntimeEvent.handleRuntimeEvent),
+    [wrapRuntimeEventForTransitions, afterDoorRuntimeEvent.handleRuntimeEvent],
+  );
+  const { getEffectiveClickGoal } = afterDoorRuntimeEvent;
 
   // Dialog state lives in dialogStore (also writable via dialog:trigger / dialog:dismiss commands)
   const speechText = useDialogStore((s) => s.text);
@@ -268,6 +278,10 @@ export default function GameTouchCanvas({
             canPickup={!isInventoryOpen && !disableClickToMove}
           />
           <SceneDoors doors={sceneDoors} />
+          <SceneTransitions
+            debug={runtimeDebug}
+            onTransitionTriggered={handleTransitionTriggered}
+          />
         </Physics>
       </Canvas>
 
