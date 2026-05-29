@@ -9,7 +9,9 @@ import { useSceneStore } from "@pointclick-engine/engine-core";
 export function SceneBackgroundPlane({ url }: { url: string | null | undefined }) {
   const [texture, setTexture] = useState<import("three").Texture | null>(null);
   const meshRef = useRef<Mesh | null>(null);
+  const groundCenterXRef = useRef<number>(0);
   const ground = useSceneStore((s) => s.scene.ground);
+  const sceneId = useSceneStore((s) => s.sceneId);
 
   useEffect(() => {
     if (!url) return;
@@ -43,6 +45,10 @@ export function SceneBackgroundPlane({ url }: { url: string | null | undefined }
     };
   }, [url]);
 
+  useEffect(() => {
+    groundCenterXRef.current = (ground.minX + ground.maxX) / 2;
+  }, [sceneId]);
+
   let aspect = 16 / 9;
   const textureImage = texture?.image as { width?: number; height?: number } | undefined;
   if (textureImage?.width && textureImage?.height) {
@@ -50,7 +56,7 @@ export function SceneBackgroundPlane({ url }: { url: string | null | undefined }
   }
 
   const height = 19.28;
-  const groundCenterX = (ground.minX + ground.maxX) / 2;
+  const groundCenterX = groundCenterXRef.current;
   const width = height * aspect;
 
   useFrame(({ camera }) => {
