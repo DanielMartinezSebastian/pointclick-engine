@@ -13,6 +13,7 @@ export { SceneWallPlane } from "./scene/SceneWallPlane";
 export { computeWallSegments } from "./scene/wallSegments";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
+export { SceneTransitions } from "./scene/SceneTransitions";
 // Runtime
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";

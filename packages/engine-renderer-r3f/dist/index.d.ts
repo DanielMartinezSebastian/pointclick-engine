@@ -13,6 +13,7 @@ export { computeWallSegments } from "./scene/wallSegments";
 export type { WallSegment } from "./scene/wallSegments";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
+export { SceneTransitions } from "./scene/SceneTransitions";
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
 //# sourceMappingURL=index.d.ts.map
