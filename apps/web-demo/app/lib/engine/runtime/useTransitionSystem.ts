@@ -50,20 +50,21 @@ export function useTransitionSystem() {
       // Find the transition that was used to trigger this scene change
       const usedTransition = fromScene.transitions?.find((t) => t.id === transitionId);
 
-      // Change scene first (playerWalkingState is now preserved during scene change)
-      storeSetScene(targetSceneId, scene as Parameters<typeof storeSetScene>[1]);
+      // Change scene first with optional custom spawn position
+      const spawnPos = usedTransition && "spawnPosition" in usedTransition ? usedTransition.spawnPosition : undefined;
+      storeSetScene(targetSceneId, scene as Parameters<typeof storeSetScene>[1], spawnPos);
 
       // Then emit walk command in the new scene with correct pathfinding context
-      if (usedTransition && "entryPosition" in usedTransition && usedTransition.entryPosition) {
-        const entryPos = usedTransition.entryPosition;
-        console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(entryPos)}`);
+      if (usedTransition && "targetPosition" in usedTransition && usedTransition.targetPosition) {
+        const targetPos = usedTransition.targetPosition;
+        console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(targetPos)}`);
         // Emit walk command via runtime
         getGameRuntime()?.executeCommand({
           type: "player:walkTo",
-          position: entryPos,
+          position: targetPos,
         });
       } else {
-        console.log(`[useTransitionSystem] No entryPosition found on transition`, usedTransition);
+        console.log(`[useTransitionSystem] No targetPosition found on transition`, usedTransition);
       }
 
       getGameRuntime()?.emit({

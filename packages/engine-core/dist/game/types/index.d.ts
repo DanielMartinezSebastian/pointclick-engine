@@ -112,7 +112,9 @@ export interface BaseSceneTransition {
     halfSize: GameVec3;
     rotationY?: number;
     /** Optional spawn position in target scene. If omitted, uses scene's playerSpawn. */
-    entryPosition?: GameVec3;
+    spawnPosition?: GameVec3;
+    /** Optional walk target position after spawning. If omitted, no walk animation. */
+    targetPosition?: GameVec3;
     preTransitionDialogKey?: DialogKey;
     postTransitionDialogKey?: DialogKey;
 }

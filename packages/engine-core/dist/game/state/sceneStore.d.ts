@@ -22,7 +22,7 @@ type SceneStore = {
     respawnSignal: number;
     transitionStates: Record<string, TransitionState>;
     playerWalkingState: PlayerWalkingState | null;
-    setScene: (id: string, scene: GameScene) => void;
+    setScene: (id: string, scene: GameScene, spawnPosition?: GameVec3) => void;
     updateInteraction: (id: string, updater: (interaction: GameSceneInteractionFull) => GameSceneInteractionFull) => void;
     resetInteractionsFromSceneConfig: () => void;
     setPlayerPosition: (position: GameVec3) => void;

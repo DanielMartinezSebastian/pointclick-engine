@@ -179,7 +179,7 @@ export const SCENES: Record<string, Scene> = {
         targetSceneId: "dungeon",
         position: [2, -1, -12],
         halfSize: [6, 4, 2],
-        entryPosition: [0, -1.1, 10], // Enter dungeon at its north entrance
+        targetPosition: [0, -1.1, 10], // Enter dungeon at its north entrance
       }),
       sceneTransitionOnItemDrop({
         id: "town-trophy-pedestal",
@@ -188,7 +188,7 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [0.95, 0.55, 0.95],
         requiresItemId: "trophy",
         consumeItem: false,
-        entryPosition: [8, -1.1, 12], // Enter personal room at entry point
+        targetPosition: [8, -1.1, 12], // Enter personal room at entry point
       }),
     ],
   },
@@ -262,7 +262,7 @@ export const SCENES: Record<string, Scene> = {
         position: [0, -2.2, -9],
         halfSize: [1, 1, 1],
         targetSceneId: "town",
-        entryPosition: [2, 1.05, 25], // Return to town closer to camera
+        targetPosition: [2, 1.05, 25], // Return to town closer to camera
       },
       {
         id: "dungeon-to-personalroom",
@@ -270,7 +270,7 @@ export const SCENES: Record<string, Scene> = {
         position: [0, -1.1, 60],
         halfSize: [2, 2.5, 1.5],
         targetSceneId: "personalRoom",
-        entryPosition: [0, -1.1, 20], // Enter personal room from dungeon
+        targetPosition: [0, -1.1, 20], // Enter personal room from dungeon
       },
     ],
     interactions: [
@@ -466,7 +466,7 @@ export const SCENES: Record<string, Scene> = {
         position: [-1.9, -1, 2.5],
         halfSize: [1.9, 2.5, 2],
         targetSceneId: "dungeon",
-        entryPosition: [0, -1.1, 62], // Enter dungeon from personal room
+        targetPosition: [0, -1.1, 62], // Enter dungeon from personal room
       },
     ],
     interactions: [

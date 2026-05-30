@@ -5,7 +5,8 @@ export declare function sceneTransitionOnCollision(opts: {
     position: GameVec3;
     halfSize: GameVec3;
     rotationY?: number;
-    entryPosition?: GameVec3;
+    spawnPosition?: GameVec3;
+    targetPosition?: GameVec3;
     preTransitionDialogKey?: DialogKey;
     postTransitionDialogKey?: DialogKey;
 }): GameSceneTransitionOnCollision;
@@ -15,7 +16,8 @@ export declare function sceneTransitionOnItemDrop(opts: {
     position: GameVec3;
     halfSize: GameVec3;
     rotationY?: number;
-    entryPosition?: GameVec3;
+    spawnPosition?: GameVec3;
+    targetPosition?: GameVec3;
     requiresItemId?: string;
     consumeItem?: boolean;
     hintDialogKeys?: {
@@ -31,7 +33,8 @@ export declare function sceneTransitionOnItemConsume(opts: {
     position: GameVec3;
     halfSize: GameVec3;
     rotationY?: number;
-    entryPosition?: GameVec3;
+    spawnPosition?: GameVec3;
+    targetPosition?: GameVec3;
     requiresItemId: string;
     preConsumptionDialogKey?: DialogKey;
     preTransitionDialogKey?: DialogKey;

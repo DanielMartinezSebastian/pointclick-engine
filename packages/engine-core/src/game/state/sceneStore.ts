@@ -110,7 +110,7 @@ type SceneStore = {
   playerWalkingState: PlayerWalkingState | null;
 
   // Runtime actions
-  setScene: (id: string, scene: GameScene) => void;
+  setScene: (id: string, scene: GameScene, spawnPosition?: GameVec3) => void;
   updateInteraction: (
     id: string,
     updater: (interaction: GameSceneInteractionFull) => GameSceneInteractionFull
@@ -151,19 +151,20 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   respawnSignal: 0,
   transitionStates: {},
   playerWalkingState: null,
-  setScene: (id: string, scene: GameScene) => {
+  setScene: (id: string, scene: GameScene, spawnPosition?: GameVec3) => {
     const clonedScene = cloneScene(scene);
+    const finalSpawnPosition = spawnPosition ?? clonedScene.playerSpawn;
     logSceneStore("set-scene", {
       fromSceneId: get().sceneId,
       toSceneId: id,
-      spawn: clonedScene.playerSpawn,
+      spawn: finalSpawnPosition,
     });
     // Preserve playerWalkingState during scene changes so walk animation continues
     const prevWalkingState = get().playerWalkingState;
     set({
       sceneId: id,
       scene: clonedScene,
-      playerPosition: [...clonedScene.playerSpawn] as GameVec3,
+      playerPosition: [...finalSpawnPosition] as GameVec3,
       playerWalkingState: prevWalkingState,
     });
     emit({ type: "scene:changed", sceneId: id, scene: clonedScene });
