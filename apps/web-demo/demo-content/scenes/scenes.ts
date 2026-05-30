@@ -262,7 +262,8 @@ export const SCENES: Record<string, Scene> = {
         position: [0, -2.2, -9],
         halfSize: [1, 1, 1],
         targetSceneId: "town",
-        targetPosition: [2, 1.05, 25], // Return to town closer to camera
+        spawnPosition: [10.07, -2.10, 1.33],
+        targetPosition: [1.60, -2.10, 14.93],
       },
       {
         id: "dungeon-to-personalroom",
