@@ -20,6 +20,7 @@ import {
   setSceneStoreEmitter,
   EventBus,
   CommandHandler,
+  findPath,
   type GameVec3,
   type GameSceneGround,
   type GameSceneWall,
@@ -274,6 +275,63 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
 
   commands.register("player:move", (cmd) => {
     useSceneStore.getState().setPlayerPosition(cmd.position);
+  });
+
+  commands.register("player:walkTo", (cmd) => {
+    const state = useSceneStore.getState();
+    const from: [number, number, number] = [
+      state.playerPosition[0],
+      state.playerPosition[1],
+      state.playerPosition[2],
+    ];
+    const to: [number, number, number] = [
+      cmd.position[0],
+      cmd.position[1],
+      cmd.position[2],
+    ];
+
+    // Calculate path using existing pathfinding
+    const pathResult = findPath({
+      start: { x: from[0], z: from[2] },
+      goal: { x: to[0], z: to[2] },
+      bounds: {
+        minX: state.scene.ground.minX,
+        maxX: state.scene.ground.maxX,
+        minZ: state.scene.ground.minZ,
+        maxZ: state.scene.ground.maxZ,
+      },
+      walls: state.scene.walls,
+      interactions: state.scene.interactions,
+    });
+
+    if (pathResult && pathResult.length > 0) {
+      // Convert path points back to GameVec3 format
+      const pathPoints: typeof cmd.position[] = pathResult.map((point) => [
+        point.x,
+        state.scene.ground.y,
+        point.z,
+      ] as typeof cmd.position);
+
+      // Create walk state and activate animation
+      state.setPlayerWalkingState({
+        targetPosition: cmd.position,
+        pathPoints,
+        progress: 0,
+        isActive: true,
+      });
+
+      // Emit event for listeners
+      bus.emit("player:walkStarted", {
+        type: "player:walkStarted",
+        targetPosition: cmd.position,
+      });
+    } else {
+      // Path not found
+      bus.emit("player:walkAborted", {
+        type: "player:walkAborted",
+        reason: "unreachable",
+      });
+    }
   });
 
   // ---------------------------------------------------------------------------
