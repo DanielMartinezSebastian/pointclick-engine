@@ -696,7 +696,9 @@ export function GameTouchSpriteRuntime({
     const { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed } = getKeyboardMovement();
 
     const joystick = getMobileInput();
-    const manualInputActive = anyKeyPressed || joystick.active;
+    // Block input during walk animation
+    const inputBlocked = isWalking;
+    const manualInputActive = (anyKeyPressed || joystick.active) && !inputBlocked;
     const nextInputMode: "auto" | "keyboard" | "joystick" = joystick.active
       ? "joystick"
       : anyKeyPressed
@@ -725,32 +727,35 @@ export function GameTouchSpriteRuntime({
     let horizontal = 0;
     let vertical = 0;
 
-    if (joystick.active) {
-      horizontal = joystick.x;
-      vertical = joystick.z;
-    } else if (anyKeyPressed) {
-      horizontal = Number(moveRight) - Number(moveLeft);
-      vertical = Number(moveDown) - Number(moveUp);
-    } else {
-      const currentPosition = body.translation();
-      const autoMove = resolveDirection(
-        currentPosition.x,
-        currentPosition.z,
-        delta,
-        manualInputActive,
-      );
-      horizontal = autoMove.horizontal;
-      vertical = autoMove.vertical;
-
-      if (autoMove.snapToTarget) {
-        body.setTranslation(
-          {
-            x: autoMove.snapToTarget.x,
-            y: currentPosition.y,
-            z: autoMove.snapToTarget.z,
-          },
-          true,
+    // During walk animation, ignore all input (joystick, keyboard, auto-move)
+    if (!inputBlocked) {
+      if (joystick.active) {
+        horizontal = joystick.x;
+        vertical = joystick.z;
+      } else if (anyKeyPressed) {
+        horizontal = Number(moveRight) - Number(moveLeft);
+        vertical = Number(moveDown) - Number(moveUp);
+      } else {
+        const currentPosition = body.translation();
+        const autoMove = resolveDirection(
+          currentPosition.x,
+          currentPosition.z,
+          delta,
+          manualInputActive,
         );
+        horizontal = autoMove.horizontal;
+        vertical = autoMove.vertical;
+
+        if (autoMove.snapToTarget) {
+          body.setTranslation(
+            {
+              x: autoMove.snapToTarget.x,
+              y: currentPosition.y,
+              z: autoMove.snapToTarget.z,
+            },
+            true,
+          );
+        }
       }
     }
 
