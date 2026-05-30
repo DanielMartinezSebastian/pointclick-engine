@@ -86,6 +86,8 @@ export type ItemInteractionRule = {
   placeCollisionHalfSize?: GameVec3;
   pickupSuccessDialogKey?: DialogKey;
   pickupBlockedDialogKey?: DialogKey;
+  /** Override del SFX por defecto al hacer drop en esta interacción concreta. */
+  dropSoundUrl?: string;
 };
 
 export type ItemDefinition = {
@@ -95,6 +97,10 @@ export type ItemDefinition = {
   descriptionDialogKey?: string;
   interactionRules: Record<string, ItemInteractionRule>;
   defaultRule: ItemInteractionRule;
+  /** Override del SFX por defecto al recoger este ítem. */
+  pickupSoundUrl?: string;
+  /** Override del SFX por defecto al soltar este ítem. */
+  dropSoundUrl?: string;
 };
 
 // Inventory state
@@ -146,6 +152,8 @@ export interface BaseSceneTransition {
   targetPosition?: GameVec3;
   preTransitionDialogKey?: DialogKey;
   postTransitionDialogKey?: DialogKey;
+  /** Override del SFX por defecto al disparar esta transición. */
+  triggerSoundUrl?: string;
 }
 
 export interface GameSceneTransitionOnCollision extends BaseSceneTransition {
@@ -209,11 +217,60 @@ export interface GameScene {
   interactions: GameSceneInteractionFull[];
   /** Declarative scene exit/transition zones. */
   transitions?: GameSceneTransition[];
+  /** Music optional associated to this scene. */
+  music?: SceneMusicConfig;
 }
 
 // Editor/Debug modes
 export type WallToolMode = "manual" | "points";
 export type DebugEditorMode = "walls" | "ground" | "items" | "targets";
+
+// ---------------------------------------------------------------------------
+// Audio
+// ---------------------------------------------------------------------------
+
+export type SoundCategory = "music" | "sfx" | "ui" | "ambient";
+
+export interface SoundDefinition {
+  id: string;
+  url: string;
+  /** 0..1, default 1. */
+  volume?: number;
+  /** Default false para SFX, true implícito para música. */
+  loop?: boolean;
+  category: SoundCategory;
+}
+
+export interface SceneMusicConfig {
+  trackUrl: string;
+  /** Si true, no se reinicia al cambiar de escena hasta entrar a otra con música distinta. */
+  persistAcrossScenes?: boolean;
+  /** 0..1, default 1. */
+  volume?: number;
+  /** Crossfade en ms al entrar/salir. Default 800. */
+  fadeMs?: number;
+}
+
+export interface AudioSettings {
+  masterMuted: boolean;
+  musicMuted: boolean;
+  sfxMuted: boolean;
+  /** 0..1 cada uno. */
+  masterVolume: number;
+  musicVolume: number;
+  sfxVolume: number;
+  /** Track actualmente sonando (para restaurar tras unmute / reload). */
+  currentMusicTrackUrl?: string;
+}
+
+export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
+  masterMuted: false,
+  musicMuted: false,
+  sfxMuted: false,
+  masterVolume: 0.8,
+  musicVolume: 0.6,
+  sfxVolume: 0.8,
+};
 
 // Runtime events
 export type RuntimeMoveEvent = {
