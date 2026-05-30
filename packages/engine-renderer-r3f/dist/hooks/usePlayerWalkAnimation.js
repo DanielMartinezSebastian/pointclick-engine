@@ -38,9 +38,15 @@ export function usePlayerWalkAnimation(playerPosition, walkingState, onWalkAbort
         playerPositionRef.current = playerPosition;
     }, [walkingState, playerPosition]);
     // Detect if user manually moved player (input override)
-    // But ignore the first position change when walk starts (it's the scene change)
+    // But only check when NOT walking (during walk, position changes are from animation)
     const lastWalkStateRef = useRef(null);
     useEffect(() => {
+        // Only detect input when NOT actively walking
+        if (walkingState?.isActive) {
+            lastWalkStateRef.current = walkingState;
+            lastPlayerPositionRef.current = playerPosition;
+            return;
+        }
         const posChanged = playerPosition[0] !== lastPlayerPositionRef.current[0] ||
             playerPosition[2] !== lastPlayerPositionRef.current[2];
         // If walk just started, ignore the position change (it's from scene transition)
