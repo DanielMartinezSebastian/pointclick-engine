@@ -177,6 +177,18 @@ export interface TransitionState {
   isAvailable: boolean;
 }
 
+// Player walking state (for path-based movement)
+export interface PlayerWalkingState {
+  /** Target position to walk towards. */
+  targetPosition: GameVec3;
+  /** Path points to follow (calculated via pathfinding). */
+  pathPoints: GameVec3[];
+  /** Walk progress: 0 = start, 1 = complete. */
+  progress: number;
+  /** Whether walk is currently active. */
+  isActive: boolean;
+}
+
 // Scene (full scene with all interactions)
 export interface GameScene {
   id: string;

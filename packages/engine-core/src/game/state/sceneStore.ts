@@ -5,6 +5,7 @@ import type {
   GameSceneInteractionFull,
   GameVec3,
   TransitionState,
+  PlayerWalkingState,
 } from "../types";
 import type { GameEvent } from "../events/types";
 
@@ -106,6 +107,7 @@ type SceneStore = {
   playerPosition: GameVec3;
   respawnSignal: number;
   transitionStates: Record<string, TransitionState>;
+  playerWalkingState: PlayerWalkingState | null;
 
   // Runtime actions
   setScene: (id: string, scene: GameScene) => void;
@@ -118,6 +120,8 @@ type SceneStore = {
   requestRespawn: () => void;
   setTransitionAvailable: (id: string, available: boolean) => void;
   setTransitionItemOccupying: (id: string, itemId: string | undefined) => void;
+  setPlayerWalkingState: (state: PlayerWalkingState | null) => void;
+  updateWalkProgress: (progress: number) => void;
 
   // Mutation helpers used by sceneEditorStore (no selection tracking)
   updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
@@ -146,6 +150,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   playerPosition: [0, 0, 0],
   respawnSignal: 0,
   transitionStates: {},
+  playerWalkingState: null,
   setScene: (id: string, scene: GameScene) => {
     const clonedScene = cloneScene(scene);
     logSceneStore("set-scene", {
@@ -264,6 +269,17 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
         transitions: (state.scene.transitions || []).filter((t) => t.id !== id),
       },
     })),
+  setPlayerWalkingState: (state) => set({ playerWalkingState: state }),
+  updateWalkProgress: (progress) =>
+    set((state) => {
+      if (!state.playerWalkingState) return state;
+      return {
+        playerWalkingState: {
+          ...state.playerWalkingState,
+          progress,
+        },
+      };
+    }),
 }));
 
 /** Read state without React (for use from other renderers or tests) */
