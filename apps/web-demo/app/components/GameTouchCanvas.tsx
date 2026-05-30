@@ -288,7 +288,11 @@ export default function GameTouchCanvas({
             }}
           />
           <PlacedSceneItems
-            items={placedItems}
+            items={placedItems.filter(
+              (item) =>
+                item.sceneId === sceneId ||
+                (item.sceneId === undefined && sceneId === "personalRoom")
+            )}
             onPickup={handlePickupPlacedItem}
             onInteract={handleItemInteract}
             canPickup={!isInventoryOpen && !disableClickToMove}

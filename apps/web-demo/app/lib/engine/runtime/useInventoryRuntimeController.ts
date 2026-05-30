@@ -105,15 +105,31 @@ export function useInventoryRuntimeController({
   // Inventory visibility now lives in inventoryStore (wirable via inventory:toggle command)
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
 
-  const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() =>
-    createInitialInventorySlots(),
-  );
+  const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() => {
+    // Try to load from localStorage
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("inventory-slots");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // Fall back to initial if parse fails
+        }
+      }
+    }
+    return createInitialInventorySlots();
+  });
   const [draggedStack, setDraggedStack] = useState<RuntimeDraggedStack | null>(
     null,
   );
   const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
   const pickupLockRef = useRef<Set<string>>(new Set());
   const setPlacedItemsInStore = usePlacedItemsStore((s) => s.setItems);
+
+  // Persist inventory slots to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("inventory-slots", JSON.stringify(inventorySlots));
+  }, [inventorySlots]);
 
   useEffect(() => {
     if (pickupLockRef.current.size === 0) {
@@ -128,37 +144,35 @@ export function useInventoryRuntimeController({
     }
   }, [placedItems]);
 
+  // Manage placed items: maintain all items in state (persisted to store)
   useEffect(() => {
-    setPlacedItemsInStore(placedItems);
-  }, [placedItems, setPlacedItemsInStore]);
-
-  // Manage scene-specific placed items: filter to current scene and create initial items only once
-  useEffect(() => {
-    const { initialItemsCreated } = usePlacedItemsStore.getState();
+    const { items: storedItems, initialItemsCreated } = usePlacedItemsStore.getState();
 
     setPlacedItems((prev) => {
-      // Keep only items that belong to the current scene
-      // Items with matching sceneId OR items without sceneId in personalRoom (original items)
-      const itemsForThisScene = prev.filter((item) =>
-        item.sceneId === sceneId || (item.sceneId === undefined && sceneId === "personalRoom")
-      );
+      // Start with all stored items (already persisted in localStorage)
+      const allItems = storedItems.length > 0 ? storedItems : prev;
 
-      // For personalRoom, create initial items only once (on first visit)
+      // For personalRoom, create initial spawn items only once
       if (sceneId === "personalRoom" && !initialItemsCreated) {
-        const trophyExists = itemsForThisScene.some((i) => i.itemId === "trophy");
+        const trophyExists = allItems.some((i) => i.itemId === "trophy");
         if (!trophyExists) {
-          return [...itemsForThisScene, ...createInitialPlacedItems(sceneId)];
+          return [...allItems, ...createInitialPlacedItems(sceneId)];
         }
       }
 
-      return itemsForThisScene;
+      return allItems;
     });
 
-    // Mark initial items as created AFTER setState (not inside setter to avoid setState-during-render error)
+    // Mark initial items as created AFTER setState
     if (sceneId === "personalRoom" && !initialItemsCreated) {
       usePlacedItemsStore.getState().markInitialItemsCreated();
     }
   }, [sceneId]);
+
+  // Sync all placed items to localStorage via store
+  useEffect(() => {
+    setPlacedItemsInStore(placedItems);
+  }, [placedItems, setPlacedItemsInStore]);
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
