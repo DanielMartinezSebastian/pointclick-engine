@@ -1,4 +1,11 @@
-import type { GameScene } from "../../types";
+import type {
+  GameScene,
+  GameVec3,
+  GameSceneTransitionOnCollision,
+  GameSceneTransition,
+  PlacedSceneItem,
+  InventoryStackState,
+} from "../../types";
 import type { GameSceneTransitionOnItemDrop, GameSceneTransitionOnItemInteraction } from "../../types";
 import type { GameEvent } from "../../events/types";
 
@@ -43,4 +50,78 @@ export function resolveTransitionFromItemInteraction(
         (!t.requiresInteractionId || t.requiresInteractionId === interactionId),
     ) ?? null
   );
+}
+
+/**
+ * Pure resolver: detect if a world-space click intersects a collision transition zone.
+ * Returns the collision transition if the point [clickX, clickZ] is inside its bounds.
+ */
+export function resolveTransitionFromClickOnCollider(
+  scene: GameScene,
+  clickX: number,
+  clickZ: number,
+): { transition: GameSceneTransitionOnCollision; position: GameVec3 } | null {
+  if (!scene.transitions) return null;
+
+  const found = scene.transitions.find(
+    (t): t is GameSceneTransitionOnCollision =>
+      t.kind === "collision" &&
+      Math.abs(clickX - t.position[0]) <= t.halfSize[0] &&
+      Math.abs(clickZ - t.position[2]) <= t.halfSize[2],
+  );
+
+  if (!found) return null;
+
+  return {
+    transition: found,
+    position: found.position,
+  };
+}
+
+/**
+ * Validates whether a transition can be triggered based on game state.
+ *
+ * Rules:
+ * - collision: always allowed
+ * - item-drop: allowed if no item required, OR item is NOT still placed in scene
+ *   (if item is placed in scene, user must pick it up first before leaving)
+ * - item-consume: always allowed (item status is handled via game progression)
+ * - item-interaction: allowed if required item exists (in inventory or placed in scene)
+ *
+ * Key insight: if an item is placed in the scene (not taken), it blocks departure.
+ * If the item is in inventory OR gone from the scene, departure is allowed.
+ */
+export function canTransitionBeTriggered(
+  transition: GameSceneTransition,
+  inventoryItems: (InventoryStackState | null)[],
+  sceneItems: PlacedSceneItem[],
+): boolean {
+  if (transition.kind === "collision") {
+    return true;
+  }
+
+  if (transition.kind === "item-drop") {
+    if (!transition.requiresItemId) return true;
+    // Block if the required item is still placed in this scene (not taken)
+    const itemStillInScene = sceneItems.some((item) => item.itemId === transition.requiresItemId);
+    return !itemStillInScene;
+  }
+
+  if (transition.kind === "item-consume") {
+    // Consumption transitions don't block — the item state is managed elsewhere
+    return true;
+  }
+
+  if (transition.kind === "item-interaction") {
+    const requiredItemInInventory = inventoryItems.some(
+      (stack) => stack?.id === transition.requiresItemId,
+    );
+    const requiredItemInScene = sceneItems.some(
+      (item) => item.itemId === transition.requiresItemId,
+    );
+    // Item must be available (in inventory or placed in scene) to interact with it
+    return requiredItemInInventory || requiredItemInScene;
+  }
+
+  return false;
 }

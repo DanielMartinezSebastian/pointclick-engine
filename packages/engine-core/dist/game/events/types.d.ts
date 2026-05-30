@@ -47,6 +47,10 @@ export type GameEvent = {
     fromSceneId: string;
     toSceneId: string;
 } | {
+    type: "transition:colliderClicked";
+    transitionId: string;
+    position: GameVec3;
+} | {
     type: "player:walkStarted";
     targetPosition: GameVec3;
 } | {

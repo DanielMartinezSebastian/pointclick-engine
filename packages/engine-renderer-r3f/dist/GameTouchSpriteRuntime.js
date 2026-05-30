@@ -12,7 +12,7 @@ import { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls } from "./scene/SceneWalls";
-import { findPath, useSceneStore, emitRuntimeEvent } from "@pointclick-engine/engine-core";
+import { findPath, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider } from "@pointclick-engine/engine-core";
 import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 const DEFAULT_CLICK_CONFIG = {
     arrivalThreshold: 0.15,
@@ -292,12 +292,15 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         const body = characterBodyRef.current;
         const scene = useSceneStore.getState().scene;
         const startPosition = body?.translation() ?? { x: playerSpawn[0], z: playerSpawn[2] };
+        // Check if clicked on a transition collider zone
+        const transitionMatch = resolveTransitionFromClickOnCollider(scene, clamped.x, clamped.z);
+        const clickGoal = transitionMatch ? { x: transitionMatch.position[0], z: transitionMatch.position[2] } : clamped;
         // Give the host app a chance to redirect the goal. Typical use: when
         // the click points past a closed door, snap to the door's approach
         // point on the player's side instead of letting A* hunt for a long
         // way around the wall.
-        const redirected = getEffectiveClickGoal?.(clamped.x, clamped.z, startPosition.x, startPosition.z);
-        const effectiveGoal = redirected ?? clamped;
+        const redirected = getEffectiveClickGoal?.(clickGoal.x, clickGoal.z, startPosition.x, startPosition.z);
+        const effectiveGoal = redirected ?? clickGoal;
         const route = findPath({
             start: { x: startPosition.x, z: startPosition.z },
             goal: effectiveGoal,

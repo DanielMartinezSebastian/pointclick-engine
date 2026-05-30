@@ -30,6 +30,7 @@ export type GameEvent =
   | { type: "transition:triggered"; transitionId: string; targetSceneId: string }
   | { type: "transition:started"; transitionId: string }
   | { type: "transition:completed"; fromSceneId: string; toSceneId: string }
+  | { type: "transition:colliderClicked"; transitionId: string; position: GameVec3 }
   // Player walking
   | { type: "player:walkStarted"; targetPosition: GameVec3 }
   | { type: "player:walkCompleted"; position: GameVec3 }

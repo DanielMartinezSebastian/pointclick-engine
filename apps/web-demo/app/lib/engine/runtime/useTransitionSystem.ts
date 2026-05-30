@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useSceneStore } from "@pointclick-engine/engine-core";
-import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } from "@pointclick-engine/engine-core";
+import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction, canTransitionBeTriggered } from "@pointclick-engine/engine-core";
 import { SCENES } from "../../../../demo-content/scenes/scenes";
 import { getGameRuntime } from "../publicApi";
 import { useDialogStore } from "../../../store/dialogStore";
+import { useInventoryStore } from "../../../store/inventoryStore";
 import { usePlacedItemsStore } from "../../../store/placedItemsStore";
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import type { RuntimeEvent } from "@pointclick-engine/engine-core";
@@ -85,14 +86,34 @@ export function useTransitionSystem() {
   const handleTransitionTriggered = useCallback(
     (transitionId: string, targetSceneId: string) => {
       const currentSceneId = useSceneStore.getState().sceneId;
+      const currentScene = useSceneStore.getState().scene;
+      const transition = currentScene.transitions?.find((t) => t.id === transitionId);
 
-      // Check if leaving personalRoom without collecting trophy
-      if (currentSceneId === "personalRoom" && targetSceneId === "dungeon") {
-        const trophyStillPlaced = placedItems.some(item => item.itemId === "trophy");
-        if (trophyStillPlaced) {
-          showDialog("Sería mejor recoger todo lo que pueda del cuarto antes de irme...", "interaction.trophy-pedestal.empty");
-          return;
+      if (!transition) {
+        console.warn(`[transition] transition not found: ${transitionId}`);
+        return;
+      }
+
+      // Use core resolver to check if transition can be triggered.
+      // Filter placedItems to only those in the current scene for accurate validation.
+      const inventoryItems = useInventoryStore.getState().slots;
+      const sceneOnlyItems = placedItems.filter((item) => item.sceneId === currentSceneId);
+      const canTrigger = canTransitionBeTriggered(transition, inventoryItems, sceneOnlyItems);
+
+      if (!canTrigger) {
+        // Transition is blocked — show appropriate dialog based on transition type
+        if (transition.kind === "item-drop" && transition.requiresItemId) {
+          showDialog(
+            "Sería mejor recoger todo lo que pueda del cuarto antes de irme...",
+            "interaction.trophy-pedestal.empty",
+          );
+        } else if (transition.kind === "item-interaction" && transition.requiresItemId) {
+          showDialog(
+            "Necesito algo para interactuar con esto.",
+            "interaction.required-item-missing",
+          );
         }
+        return;
       }
 
       getGameRuntime()?.emit({

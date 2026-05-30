@@ -37,15 +37,24 @@ function CollisionZone({
     }
   });
 
-  if (!debug) return null;
-
   const [x, y, z] = transition.position;
   const [hx, hy, hz] = transition.halfSize;
+
   return (
-    <mesh position={[x, y, z]} raycast={() => null}>
-      <boxGeometry args={[hx * 2, hy * 2, hz * 2]} />
-      <meshBasicMaterial color="#00ff88" wireframe transparent opacity={0.5} depthWrite={false} />
-    </mesh>
+    <>
+      {/* Invisible but clickable collider (always rendered for click detection) */}
+      <mesh position={[x, y, z]} raycast={() => null}>
+        <boxGeometry args={[hx * 2, hy * 2, hz * 2]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {/* Debug visualization */}
+      {debug && (
+        <mesh position={[x, y, z]} raycast={() => null}>
+          <boxGeometry args={[hx * 2, hy * 2, hz * 2]} />
+          <meshBasicMaterial color="#00ff88" wireframe transparent opacity={0.5} depthWrite={false} />
+        </mesh>
+      )}
+    </>
   );
 }
 

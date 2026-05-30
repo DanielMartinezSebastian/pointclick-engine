@@ -20,11 +20,9 @@ function CollisionZone({ transition, onActivate, debug, }) {
             insideRef.current = false;
         }
     });
-    if (!debug)
-        return null;
     const [x, y, z] = transition.position;
     const [hx, hy, hz] = transition.halfSize;
-    return (_jsxs("mesh", { position: [x, y, z], raycast: () => null, children: [_jsx("boxGeometry", { args: [hx * 2, hy * 2, hz * 2] }), _jsx("meshBasicMaterial", { color: "#00ff88", wireframe: true, transparent: true, opacity: 0.5, depthWrite: false })] }));
+    return (_jsxs(_Fragment, { children: [_jsxs("mesh", { position: [x, y, z], raycast: () => null, children: [_jsx("boxGeometry", { args: [hx * 2, hy * 2, hz * 2] }), _jsx("meshBasicMaterial", { transparent: true, opacity: 0, depthWrite: false })] }), debug && (_jsxs("mesh", { position: [x, y, z], raycast: () => null, children: [_jsx("boxGeometry", { args: [hx * 2, hy * 2, hz * 2] }), _jsx("meshBasicMaterial", { color: "#00ff88", wireframe: true, transparent: true, opacity: 0.5, depthWrite: false })] }))] }));
 }
 export function SceneTransitions({ debug = false, onTransitionTriggered, }) {
     const transitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
