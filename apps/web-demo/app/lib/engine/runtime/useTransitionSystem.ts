@@ -55,11 +55,14 @@ export function useTransitionSystem() {
       // If transition has entryPosition, auto-trigger walk animation
       if (usedTransition && "entryPosition" in usedTransition && usedTransition.entryPosition) {
         const entryPos = usedTransition.entryPosition;
+        console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(entryPos)}`);
         // Emit walk command via runtime
         getGameRuntime()?.executeCommand({
           type: "player:walkTo",
           position: entryPos,
         });
+      } else {
+        console.log(`[useTransitionSystem] No entryPosition found on transition`, usedTransition);
       }
 
       getGameRuntime()?.emit({

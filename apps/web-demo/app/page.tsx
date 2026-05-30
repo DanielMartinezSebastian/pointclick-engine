@@ -1,7 +1,26 @@
-import { GameViewport } from "./lib/engine/publicApi";
+"use client";
+
+import { useEffect } from "react";
+import {
+  GameViewport,
+  createGameRuntime,
+  type GameSceneConfig,
+} from "./lib/engine/publicApi";
 import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
+import { SCENES } from "../demo-content/scenes/scenes";
 
 export default function Home() {
+  useEffect(() => {
+    // Initialize game runtime with scenes
+    const runtime = createGameRuntime({
+      scenes: Object.values(SCENES) as GameSceneConfig[],
+    });
+
+    return () => {
+      runtime.dispose();
+    };
+  }, []);
+
   return (
     <CRTEffectWrapper
       preset="atari"

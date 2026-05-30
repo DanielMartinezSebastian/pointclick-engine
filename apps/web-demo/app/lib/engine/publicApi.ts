@@ -290,6 +290,8 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
       cmd.position[2],
     ];
 
+    console.log(`[walkTo] from ${JSON.stringify(from)} to ${JSON.stringify(to)}`);
+
     // Calculate path using existing pathfinding
     const pathResult = findPath({
       start: { x: from[0], z: from[2] },
@@ -304,6 +306,8 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
       interactions: state.scene.interactions,
     });
 
+    console.log(`[walkTo] pathResult length:`, pathResult?.length ?? 0);
+
     if (pathResult && pathResult.length > 0) {
       // Convert path points back to GameVec3 format
       const pathPoints: typeof cmd.position[] = pathResult.map((point) => [
@@ -311,6 +315,8 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
         state.scene.ground.y,
         point.z,
       ] as typeof cmd.position);
+
+      console.log(`[walkTo] setting walk state with ${pathPoints.length} points`);
 
       // Create walk state and activate animation
       state.setPlayerWalkingState({
@@ -326,6 +332,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
         targetPosition: cmd.position,
       });
     } else {
+      console.log(`[walkTo] no path found - aborting`);
       // Path not found
       bus.emit("player:walkAborted", {
         type: "player:walkAborted",
