@@ -103,7 +103,7 @@ export function ConfirmationDialog({
         ref={dialogRef}
         style={{
           position: "relative",
-          backgroundColor: "linear-gradient(180deg, rgb(10 29 45 / 100%) 0%, rgb(4 11 18 / 100%) 100%)",
+          background: "linear-gradient(180deg, rgb(10 29 45 / 100%) 0%, rgb(4 11 18 / 100%) 100%)",
           border: "4px solid rgb(140 227 255 / 88%)",
           borderRadius: "8px",
           padding: "24px",
