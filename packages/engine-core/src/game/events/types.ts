@@ -1,4 +1,4 @@
-import type { GameVec3, GameScene } from "../types";
+import type { GameVec3, GameScene, AudioSettings, SoundCategory } from "../types";
 
 /**
  * Union exhaustiva de todos los eventos que el motor puede emitir.
@@ -37,7 +37,12 @@ export type GameEvent =
   | {
       type: "player:walkAborted";
       reason: "user-input" | "collision" | "unreachable";
-    };
+    }
+  // Audio
+  | { type: "audio:sfxRequested"; soundUrl: string; category: SoundCategory; volume?: number }
+  | { type: "audio:musicRequested"; trackUrl: string; fadeMs?: number; volume?: number; loop?: boolean }
+  | { type: "audio:musicStopped"; fadeMs?: number }
+  | { type: "audio:settingsChanged"; settings: AudioSettings };
 
 export type GameEventType = GameEvent["type"];
 

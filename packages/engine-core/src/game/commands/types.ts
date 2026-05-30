@@ -1,4 +1,7 @@
-import type { GameVec3 } from "../types";
+import type { GameVec3, SoundCategory } from "../types";
+
+// Duplicated from ports/audio.ts to avoid circular imports.
+type AudioMuteTarget = "master" | SoundCategory;
 
 /**
  * Union exhaustiva de todos los comandos que el motor acepta.
@@ -21,6 +24,10 @@ export type GameCommand =
   | { type: "dialog:dismiss" }
   // Transitions
   | { type: "transition:activate"; transitionId: string }
-  | { type: "transition:cancel"; transitionId: string };
+  | { type: "transition:cancel"; transitionId: string }
+  // Audio
+  | { type: "audio:playSfx"; soundUrl: string; category?: SoundCategory; volume?: number }
+  | { type: "audio:setMuted"; target: AudioMuteTarget; muted: boolean }
+  | { type: "audio:setVolume"; target: AudioMuteTarget; volume: number };
 
 export type GameCommandType = GameCommand["type"];
