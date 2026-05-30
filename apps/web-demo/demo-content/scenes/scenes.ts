@@ -188,7 +188,8 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [0.95, 0.55, 0.95],
         requiresItemId: "trophy",
         consumeItem: false,
-        targetPosition: [8, -1.1, 12], // Enter personal room at entry point
+        spawnPosition: [-12.29, -1.00, 19.03],
+        targetPosition: [-4.60, -1.00, 14.14],
       }),
     ],
   },
