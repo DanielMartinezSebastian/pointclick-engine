@@ -154,6 +154,11 @@ export const SCENES: Record<string, Scene> = {
       maxZ: 30,
       y: -3.25,
     },
+    music: {
+      trackUrl: "/assets/audio/music/town-loop.mp3",
+      volume: 0.6,
+      fadeMs: 800,
+    },
     walls: [],
     interactions: [
       {
@@ -215,6 +220,11 @@ export const SCENES: Record<string, Scene> = {
       minZ: -20.6,
       maxZ: 60.6,
       y: -3.15,
+    },
+    music: {
+      trackUrl: "/assets/audio/music/dungeon-loop.mp3",
+      volume: 0.5,
+      fadeMs: 1200,
     },
     walls: [
       {
@@ -362,6 +372,12 @@ export const SCENES: Record<string, Scene> = {
       minZ: 2.9,
       maxZ: 71,
       y: -2.15,
+    },
+    music: {
+      trackUrl: "/assets/audio/music/personal-room.mp3",
+      persistAcrossScenes: false,
+      volume: 0.55,
+      fadeMs: 1000,
     },
     walls: [
       {

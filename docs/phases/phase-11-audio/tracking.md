@@ -24,7 +24,7 @@
 ## Sprint 3 — UI + demo
 
 - [x] [11.9 — UI: mute controls en InventoryUI](tasks/09-inventory-mute-controls.md)
-- [ ] [11.10 — Demo: assets free + wiring](tasks/10-demo-assets-and-wiring.md)
+- [x] [11.10 — Demo: assets free + wiring](tasks/10-demo-assets-and-wiring.md)
 
 ---
 
