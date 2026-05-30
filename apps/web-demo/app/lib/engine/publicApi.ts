@@ -290,7 +290,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
       cmd.position[2],
     ];
 
-    console.log(`[walkTo] from ${JSON.stringify(from)} to ${JSON.stringify(to)}`);
+    // console.log(`[walkTo] from ${JSON.stringify(from)} to ${JSON.stringify(to)}`);
 
     // Calculate path using existing pathfinding
     const pathResult = findPath({
@@ -306,7 +306,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
       interactions: state.scene.interactions,
     });
 
-    console.log(`[walkTo] pathResult length:`, pathResult?.length ?? 0);
+    // console.log(`[walkTo] pathResult length:`, pathResult?.length ?? 0);
 
     if (pathResult && pathResult.length > 0) {
       // Convert path points back to GameVec3 format
@@ -320,7 +320,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
         ] as typeof cmd.position),
       ];
 
-      console.log(`[walkTo] setting walk state with ${pathPoints.length} points`);
+      // console.log(`[walkTo] setting walk state with ${pathPoints.length} points`);
 
       // Create walk state and activate animation
       state.setPlayerWalkingState({

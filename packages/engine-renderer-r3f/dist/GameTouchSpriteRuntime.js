@@ -216,9 +216,9 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
     const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
     const playerPosition = useSceneStore((s) => s.playerPosition);
     const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
-    if (playerWalkingState?.isActive) {
-        console.log(`[GameTouchSpriteRuntime] walk state active, points=${playerWalkingState.pathPoints.length}`);
-    }
+    // if (playerWalkingState?.isActive) {
+    //   console.log(`[GameTouchSpriteRuntime] walk state active, points=${playerWalkingState.pathPoints.length}`);
+    // }
     const sceneId = useSceneStore((s) => s.sceneId);
     const ground = useSceneStore((s) => s.scene.ground);
     const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);

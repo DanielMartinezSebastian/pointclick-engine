@@ -274,7 +274,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       },
     })),
   setPlayerWalkingState: (state) => {
-    console.log(`[sceneStore] setPlayerWalkingState:`, state?.isActive ? `active, pathPoints=${state.pathPoints.length}` : "cleared");
+    // console.log(`[sceneStore] setPlayerWalkingState:`, state?.isActive ? `active, pathPoints=${state.pathPoints.length}` : "cleared");
     set({ playerWalkingState: state });
   },
   updateWalkProgress: (progress) =>

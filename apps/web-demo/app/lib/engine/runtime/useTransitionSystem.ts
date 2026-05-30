@@ -57,14 +57,14 @@ export function useTransitionSystem() {
       // Then emit walk command in the new scene with correct pathfinding context
       if (usedTransition && "targetPosition" in usedTransition && usedTransition.targetPosition) {
         const targetPos = usedTransition.targetPosition;
-        console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(targetPos)}`);
+        // console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(targetPos)}`);
         // Emit walk command via runtime
         getGameRuntime()?.executeCommand({
           type: "player:walkTo",
           position: targetPos,
         });
       } else {
-        console.log(`[useTransitionSystem] No targetPosition found on transition`, usedTransition);
+        // console.log(`[useTransitionSystem] No targetPosition found on transition`, usedTransition);
       }
 
       getGameRuntime()?.emit({

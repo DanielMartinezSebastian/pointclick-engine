@@ -100,7 +100,7 @@ export function usePlayerWalkAnimation(
       return;
     }
 
-    console.log(`[usePlayerWalkAnimation] Walking, progress:`, currentWalkingState.progress);
+    // console.log(`[usePlayerWalkAnimation] Walking, progress:`, currentWalkingState.progress);
     elapsedRef.current += delta * 1000; // Convert to ms
     const progress = Math.min(elapsedRef.current / WALK_DURATION_MS, 1);
 
