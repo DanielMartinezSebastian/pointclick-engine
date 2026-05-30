@@ -401,6 +401,9 @@ export function GameTouchSpriteRuntime({
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const playerPosition = useSceneStore((s) => s.playerPosition);
   const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
+  if (playerWalkingState?.isActive) {
+    console.log(`[GameTouchSpriteRuntime] walk state active, points=${playerWalkingState.pathPoints.length}`);
+  }
   const sceneId = useSceneStore((s) => s.sceneId);
   const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
@@ -762,7 +765,17 @@ export function GameTouchSpriteRuntime({
     horizontal = applyDeadzone(horizontal, MOVEMENT_INPUT_DEADZONE);
     vertical = applyDeadzone(vertical, MOVEMENT_INPUT_DEADZONE);
 
-    const nextAction: MovementAction = resolveAction(horizontal, vertical);
+    // During walk animation, calculate direction from current to target position
+    let nextAction: MovementAction;
+    if (isWalking && playerWalkingState?.targetPosition) {
+      const currentPos = [animatedPosition[0], animatedPosition[2]];
+      const targetPos = [playerWalkingState.targetPosition[0], playerWalkingState.targetPosition[2]];
+      const dx = targetPos[0] - currentPos[0];
+      const dz = targetPos[1] - currentPos[1];
+      nextAction = resolveAction(dx, dz);
+    } else {
+      nextAction = resolveAction(horizontal, vertical);
+    }
 
     if (currentActionRef.current !== nextAction) {
       logRuntimeState("action-change", {
