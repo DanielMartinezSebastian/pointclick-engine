@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 
 import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore, type GameScene } from "@pointclick-engine/engine-core";
+import { getGameRuntime } from "./publicApi";
 
 export function useSceneRuntimeController() {
   const sceneId = useSceneStore((s) => s.sceneId);
@@ -30,7 +31,29 @@ export function useSceneRuntimeController() {
         console.warn(`Scene not found: ${id}`);
         return;
       }
-      storeSetScene(id, scene as GameScene);
+      // When changing scene from debug menu, look for a transition to that scene
+      // and use its spawn/target positions for animated entry
+      const currentScene = useSceneStore.getState().scene;
+      const transitionToTarget = currentScene?.transitions?.find((t) => t.targetSceneId === id);
+
+      if (transitionToTarget && "spawnPosition" in transitionToTarget && transitionToTarget.spawnPosition) {
+        // Use transition's spawn position
+        const spawnPos = transitionToTarget.spawnPosition;
+        storeSetScene(id, scene as GameScene, spawnPos);
+
+        // Execute walk command if target position exists
+        if ("targetPosition" in transitionToTarget && transitionToTarget.targetPosition) {
+          setTimeout(() => {
+            getGameRuntime()?.executeCommand({
+              type: "player:walkTo",
+              position: transitionToTarget.targetPosition,
+            });
+          }, 0);
+        }
+      } else {
+        // No transition found, just change scene normally
+        storeSetScene(id, scene as GameScene);
+      }
     },
     [storeSetScene],
   );
