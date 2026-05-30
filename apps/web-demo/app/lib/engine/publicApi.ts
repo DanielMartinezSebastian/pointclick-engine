@@ -310,11 +310,15 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
 
     if (pathResult && pathResult.length > 0) {
       // Convert path points back to GameVec3 format
-      const pathPoints: typeof cmd.position[] = pathResult.map((point) => [
-        point.x,
-        state.scene.ground.y,
-        point.z,
-      ] as typeof cmd.position);
+      // Always include start point + pathfinding results to ensure ≥2 points for interpolation
+      const pathPoints: typeof cmd.position[] = [
+        from, // Start position
+        ...pathResult.map((point) => [
+          point.x,
+          state.scene.ground.y,
+          point.z,
+        ] as typeof cmd.position),
+      ];
 
       console.log(`[walkTo] setting walk state with ${pathPoints.length} points`);
 
