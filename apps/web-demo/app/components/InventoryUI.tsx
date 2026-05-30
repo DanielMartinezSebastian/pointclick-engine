@@ -397,6 +397,43 @@ export function InventoryUI({
               Inventario
             </strong>
 
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm("¿Reiniciar partida? Se borrarán todos los progresos.")) {
+                  localStorage.clear();
+                  window.location.reload();
+                }
+              }}
+              style={{
+                marginTop: "10px",
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "#fff3f3",
+                backgroundColor: "rgb(173 31 44 / 100%)",
+                border: "2px solid rgb(95 16 20 / 100%)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                textShadow: "0 2px 0 rgb(0 0 0 / 35%)",
+                transition: "all 0.2s ease",
+                boxShadow: "inset 0 0 0 2px rgb(255 255 255 / 8%)",
+              }}
+              onMouseEnter={(e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                target.style.backgroundColor = "rgb(200 40 50 / 100%)";
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                target.style.backgroundColor = "rgb(173 31 44 / 100%)";
+              }}
+            >
+              🔄 Reiniciar
+            </button>
+
             <div
               style={{
                 marginTop: "10px",
