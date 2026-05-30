@@ -18,7 +18,7 @@
 
 ## Sprint 2 — Platform + renderer
 
-- [ ] [11.7 — Platform: webAudioAdapter](tasks/07-web-audio-adapter.md)
+- [x] [11.7 — Platform: webAudioAdapter](tasks/07-web-audio-adapter.md)
 - [ ] [11.8 — R3F: useAudioSystem hook](tasks/08-r3f-audio-hook.md)
 
 ## Sprint 3 — UI + demo

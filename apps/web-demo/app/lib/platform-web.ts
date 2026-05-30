@@ -359,3 +359,13 @@ export const webPlatform = {
 } as const;
 
 export type WebPlatform = typeof webPlatform;
+
+// ---------------------------------------------------------------------------
+// Audio adapters (re-export desde platform-web-audio)
+// ---------------------------------------------------------------------------
+
+export {
+  webAudioAdapter,
+  WebAudioAdapter,
+  bindAudioPersistence,
+} from "./platform-web-audio";
