@@ -88,10 +88,13 @@ export const useSceneStore = create((set, get) => ({
             toSceneId: id,
             spawn: clonedScene.playerSpawn,
         });
+        // Preserve playerWalkingState during scene changes so walk animation continues
+        const prevWalkingState = get().playerWalkingState;
         set({
             sceneId: id,
             scene: clonedScene,
             playerPosition: [...clonedScene.playerSpawn],
+            playerWalkingState: prevWalkingState,
         });
         emit({ type: "scene:changed", sceneId: id, scene: clonedScene });
     },

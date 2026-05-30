@@ -50,8 +50,10 @@ export function useTransitionSystem() {
       // Find the transition that was used to trigger this scene change
       const usedTransition = fromScene.transitions?.find((t) => t.id === transitionId);
 
-      // If transition has entryPosition, emit walk command BEFORE changing scene
-      // (ensures playerWalkingState is set before render)
+      // Change scene first (playerWalkingState is now preserved during scene change)
+      storeSetScene(targetSceneId, scene as Parameters<typeof storeSetScene>[1]);
+
+      // Then emit walk command in the new scene with correct pathfinding context
       if (usedTransition && "entryPosition" in usedTransition && usedTransition.entryPosition) {
         const entryPos = usedTransition.entryPosition;
         console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(entryPos)}`);
@@ -63,9 +65,6 @@ export function useTransitionSystem() {
       } else {
         console.log(`[useTransitionSystem] No entryPosition found on transition`, usedTransition);
       }
-
-      // Change scene AFTER emitting walk command
-      storeSetScene(targetSceneId, scene as Parameters<typeof storeSetScene>[1]);
 
       getGameRuntime()?.emit({
         type: "transition:completed",
