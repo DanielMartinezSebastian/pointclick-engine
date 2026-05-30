@@ -4,6 +4,7 @@ import type {
   GameSceneTransitionOnCollision,
   GameSceneTransitionOnItemDrop,
   GameSceneTransitionOnItemConsume,
+  GameSceneTransitionOnItemInteraction,
 } from "../types";
 
 export function sceneTransitionOnCollision(opts: {
@@ -51,4 +52,20 @@ export function sceneTransitionOnItemConsume(opts: {
   postTransitionDialogKey?: DialogKey;
 }): GameSceneTransitionOnItemConsume {
   return { kind: "item-consume", ...opts };
+}
+
+export function sceneTransitionOnItemInteraction(opts: {
+  id: string;
+  targetSceneId: string;
+  position: GameVec3;
+  halfSize: GameVec3;
+  rotationY?: number;
+  spawnPosition?: GameVec3;
+  targetPosition?: GameVec3;
+  requiresItemId: string;
+  requiresInteractionId?: string;
+  preTransitionDialogKey?: DialogKey;
+  postTransitionDialogKey?: DialogKey;
+}): GameSceneTransitionOnItemInteraction {
+  return { kind: "item-interaction", ...opts };
 }

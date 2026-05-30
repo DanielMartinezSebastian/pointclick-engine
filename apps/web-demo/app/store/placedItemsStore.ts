@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
 
 type PlacedItemsStoreState = {
@@ -8,9 +9,18 @@ type PlacedItemsStoreState = {
   markInitialItemsCreated: () => void;
 };
 
-export const usePlacedItemsStore = create<PlacedItemsStoreState>((set) => ({
-  items: [],
-  setItems: (items: PlacedSceneItem[]) => set({ items }),
-  initialItemsCreated: false,
-  markInitialItemsCreated: () => set({ initialItemsCreated: true }),
-}));
+const STORAGE_KEY = "placed-items-state";
+
+export const usePlacedItemsStore = create<PlacedItemsStoreState>()(
+  persist(
+    (set) => ({
+      items: [],
+      setItems: (items: PlacedSceneItem[]) => set({ items }),
+      initialItemsCreated: false,
+      markInitialItemsCreated: () => set({ initialItemsCreated: true }),
+    }),
+    {
+      name: STORAGE_KEY,
+    },
+  ),
+);

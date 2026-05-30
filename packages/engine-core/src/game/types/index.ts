@@ -165,10 +165,17 @@ export interface GameSceneTransitionOnItemConsume extends BaseSceneTransition {
   preConsumptionDialogKey?: DialogKey;
 }
 
+export interface GameSceneTransitionOnItemInteraction extends BaseSceneTransition {
+  kind: "item-interaction";
+  requiresItemId: string;
+  requiresInteractionId?: string;
+}
+
 export type GameSceneTransition =
   | GameSceneTransitionOnCollision
   | GameSceneTransitionOnItemDrop
-  | GameSceneTransitionOnItemConsume;
+  | GameSceneTransitionOnItemConsume
+  | GameSceneTransitionOnItemInteraction;
 
 export interface TransitionState {
   /** Source scene recorded when the transition was last triggered. */
@@ -231,7 +238,8 @@ export type RuntimeDropEvent = {
     | "unknown-item"
     | "on-player"
     | "pickup-blocked"
-    | "pickup-success";
+    | "pickup-success"
+    | "item-interact";
   itemId: string;
   interactionId?: string;
 };

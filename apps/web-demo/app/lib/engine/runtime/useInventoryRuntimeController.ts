@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
+import { getGameRuntime } from "../publicApi";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
@@ -502,6 +503,20 @@ export function useInventoryRuntimeController({
     };
   }, [sceneId, showSpeechBubble]);
 
+  const handleItemInteract = useCallback(
+    (item: PlacedSceneItem) => {
+      // Emit item interaction event — useTransitionSystem listens for this
+      // to check if there's a matching transition
+      emitRuntimeEvent(onRuntimeEvent, {
+        type: "onDrop",
+        outcome: "item-interact",
+        itemId: item.itemId,
+        interactionId: item.interactionId,
+      });
+    },
+    [onRuntimeEvent],
+  );
+
   return {
     // Note: speechText, speechVisible, speechTrigger are now in dialogStore
     // Note: isInventoryOpen is now in inventoryStore
@@ -521,5 +536,6 @@ export function useInventoryRuntimeController({
     movePlacedItemToPlayer,
     removePlacedItemById,
     handleStartInventoryDrag,
+    handleItemInteract,
   };
 }

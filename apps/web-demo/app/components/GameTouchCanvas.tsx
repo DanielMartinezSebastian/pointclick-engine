@@ -170,6 +170,7 @@ export default function GameTouchCanvas({
     movePlacedItemToPlayer,
     removePlacedItemById,
     handleStartInventoryDrag,
+    handleItemInteract,
   } = useInventoryRuntimeController({
     sceneId,
     sceneInteractions,
@@ -289,6 +290,7 @@ export default function GameTouchCanvas({
           <PlacedSceneItems
             items={placedItems}
             onPickup={handlePickupPlacedItem}
+            onInteract={handleItemInteract}
             canPickup={!isInventoryOpen && !disableClickToMove}
           />
           <SceneDoors doors={sceneDoors} />

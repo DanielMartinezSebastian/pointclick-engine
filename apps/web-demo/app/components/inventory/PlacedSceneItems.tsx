@@ -8,10 +8,12 @@ import type { PlacedSceneItem } from "../../lib/engine/types/gameRuntime";
 function PlacedSceneItemMesh({
   item,
   onPickup,
+  onInteract,
   canPickup,
 }: {
   item: PlacedSceneItem;
   onPickup: (item: PlacedSceneItem) => void;
+  onInteract?: (item: PlacedSceneItem) => void;
   canPickup: boolean;
 }) {
   const [texture, setTexture] = useState<Texture | null>(null);
@@ -58,8 +60,11 @@ function PlacedSceneItemMesh({
       <mesh
         onPointerDown={(event) => {
           event.stopPropagation();
-          if (!canPickup) return;
-          onPickup(item);
+          if (canPickup) {
+            onPickup(item);
+          } else if (onInteract) {
+            onInteract(item);
+          }
         }}
       >
         <boxGeometry args={[1.6, 1.6, 1.6]} />
@@ -77,16 +82,18 @@ function PlacedSceneItemMesh({
 export function PlacedSceneItems({
   items,
   onPickup,
+  onInteract,
   canPickup,
 }: {
   items: PlacedSceneItem[];
   onPickup: (item: PlacedSceneItem) => void;
+  onInteract?: (item: PlacedSceneItem) => void;
   canPickup: boolean;
 }) {
   return (
     <>
       {items.map((item) => (
-        <PlacedSceneItemMesh key={item.id} item={item} onPickup={onPickup} canPickup={canPickup} />
+        <PlacedSceneItemMesh key={item.id} item={item} onPickup={onPickup} onInteract={onInteract} canPickup={canPickup} />
       ))}
     </>
   );

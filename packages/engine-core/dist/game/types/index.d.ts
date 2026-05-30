@@ -135,7 +135,12 @@ export interface GameSceneTransitionOnItemConsume extends BaseSceneTransition {
     requiresItemId: string;
     preConsumptionDialogKey?: DialogKey;
 }
-export type GameSceneTransition = GameSceneTransitionOnCollision | GameSceneTransitionOnItemDrop | GameSceneTransitionOnItemConsume;
+export interface GameSceneTransitionOnItemInteraction extends BaseSceneTransition {
+    kind: "item-interaction";
+    requiresItemId: string;
+    requiresInteractionId?: string;
+}
+export type GameSceneTransition = GameSceneTransitionOnCollision | GameSceneTransitionOnItemDrop | GameSceneTransitionOnItemConsume | GameSceneTransitionOnItemInteraction;
 export interface TransitionState {
     /** Source scene recorded when the transition was last triggered. */
     lastVisitedSceneId?: string;
@@ -179,7 +184,7 @@ export type RuntimeCollideEvent = {
 };
 export type RuntimeDropEvent = {
     type: "onDrop";
-    outcome: "place" | "consume" | "return" | "rule-miss" | "unknown-item" | "on-player" | "pickup-blocked" | "pickup-success";
+    outcome: "place" | "consume" | "return" | "rule-miss" | "unknown-item" | "on-player" | "pickup-blocked" | "pickup-success" | "item-interact";
     itemId: string;
     interactionId?: string;
 };

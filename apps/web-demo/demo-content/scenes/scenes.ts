@@ -3,6 +3,7 @@ import type { GameSceneTransition } from "@pointclick-engine/engine-core";
 import {
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
+  sceneTransitionOnItemInteraction,
 } from "@pointclick-engine/engine-core";
 
 export type SceneWallOpening = {
@@ -188,6 +189,16 @@ export const SCENES: Record<string, Scene> = {
         halfSize: [0.95, 0.55, 0.95],
         requiresItemId: "trophy",
         consumeItem: false,
+        spawnPosition: [-12.29, -1.00, 19.03],
+        targetPosition: [-4.60, -1.00, 14.14],
+      }),
+      sceneTransitionOnItemInteraction({
+        id: "town-trophy-interact-to-personalRoom",
+        targetSceneId: "personalRoom",
+        requiresItemId: "trophy",
+        requiresInteractionId: "town-trophy-pedestal",
+        position: [8.5, -1.65, 20.0],
+        halfSize: [0.95, 0.55, 0.95],
         spawnPosition: [-12.29, -1.00, 19.03],
         targetPosition: [-4.60, -1.00, 14.14],
       }),

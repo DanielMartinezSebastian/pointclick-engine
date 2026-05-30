@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useSceneStore } from "@pointclick-engine/engine-core";
-import { resolveTransitionFromItemDrop } from "@pointclick-engine/engine-core";
+import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } from "@pointclick-engine/engine-core";
 import { SCENES } from "../../../../demo-content/scenes/scenes";
 import { getGameRuntime } from "../publicApi";
 import { useDialogStore } from "../../../store/dialogStore";
@@ -106,15 +106,16 @@ export function useTransitionSystem() {
   );
 
   /**
-   * Handles item-drop events from the inventory system.
-   * Returns a passthrough handler that checks if the drop matches a transition.
+   * Handles item-drop and item-interact events from the inventory system.
+   * Returns a passthrough handler that checks if the drop/interact matches a transition.
    * Defers the scene change until the dialog is dismissed.
    */
   const wrapRuntimeEventForTransitions = useCallback(
     (passthrough: (event: RuntimeEvent) => void) =>
       (event: RuntimeEvent) => {
+        const scene = useSceneStore.getState().scene;
+
         if (event.type === "onDrop" && (event.outcome === "consume" || event.outcome === "place") && event.interactionId) {
-          const scene = useSceneStore.getState().scene;
           const gameEvent = {
             type: "item:dropped" as const,
             itemId: event.itemId,
@@ -132,6 +133,20 @@ export function useTransitionSystem() {
             pendingTransitionRef.current = { id: matching.id, targetSceneId: matching.targetSceneId };
           }
         }
+
+        if (event.type === "onDrop" && event.outcome === "item-interact" && event.interactionId) {
+          const matching = resolveTransitionFromItemInteraction(scene, event.itemId, event.interactionId);
+          if (matching) {
+            getGameRuntime()?.emit({
+              type: "transition:triggered",
+              transitionId: matching.id,
+              targetSceneId: (matching as any).targetSceneId,
+            });
+            // Store transition to trigger after dialog closes
+            pendingTransitionRef.current = { id: matching.id, targetSceneId: (matching as any).targetSceneId };
+          }
+        }
+
         passthrough(event);
       },
     [],

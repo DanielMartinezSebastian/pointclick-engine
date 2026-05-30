@@ -7,4 +7,7 @@ export function sceneTransitionOnItemDrop(opts) {
 export function sceneTransitionOnItemConsume(opts) {
     return { kind: "item-consume", ...opts };
 }
+export function sceneTransitionOnItemInteraction(opts) {
+    return { kind: "item-interaction", ...opts };
+}
 //# sourceMappingURL=transitions.js.map
