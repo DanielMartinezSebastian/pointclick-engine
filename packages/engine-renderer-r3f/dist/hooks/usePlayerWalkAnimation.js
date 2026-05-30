@@ -29,6 +29,14 @@ export function usePlayerWalkAnimation(playerPosition, walkingState, onWalkAbort
     const lastPlayerPositionRef = useRef(playerPosition);
     // Track elapsed time for walk animation
     const elapsedRef = useRef(0);
+    // Keep walkingState in ref so useFrame always sees current value
+    const walkingStateRef = useRef(walkingState);
+    const playerPositionRef = useRef(playerPosition);
+    // Update refs when props change
+    useEffect(() => {
+        walkingStateRef.current = walkingState;
+        playerPositionRef.current = playerPosition;
+    }, [walkingState, playerPosition]);
     // Detect if user manually moved player (input override)
     useEffect(() => {
         const posChanged = playerPosition[0] !== lastPlayerPositionRef.current[0] ||
@@ -42,18 +50,20 @@ export function usePlayerWalkAnimation(playerPosition, walkingState, onWalkAbort
     }, [playerPosition, walkingState?.isActive, onWalkAbort]);
     // Animation frame loop
     useFrame((_, delta) => {
-        if (!walkingState?.isActive) {
+        const currentWalkingState = walkingStateRef.current;
+        const currentPlayerPosition = playerPositionRef.current;
+        if (!currentWalkingState?.isActive) {
             // Not walking, use current position
-            animatedPositionRef.current = playerPosition;
+            animatedPositionRef.current = currentPlayerPosition;
             return;
         }
-        console.log(`[usePlayerWalkAnimation] Walking, progress:`, walkingState.progress);
+        console.log(`[usePlayerWalkAnimation] Walking, progress:`, currentWalkingState.progress);
         elapsedRef.current += delta * 1000; // Convert to ms
         const progress = Math.min(elapsedRef.current / WALK_DURATION_MS, 1);
         // Interpolate position along path
-        if (walkingState.pathPoints.length >= 2) {
-            const startPos = walkingState.pathPoints[0];
-            const endPos = walkingState.pathPoints[walkingState.pathPoints.length - 1];
+        if (currentWalkingState.pathPoints.length >= 2) {
+            const startPos = currentWalkingState.pathPoints[0];
+            const endPos = currentWalkingState.pathPoints[currentWalkingState.pathPoints.length - 1];
             const interpolated = [
                 startPos[0] + (endPos[0] - startPos[0]) * progress,
                 startPos[1], // Y stays at ground level
@@ -80,8 +90,8 @@ export function usePlayerWalkAnimation(playerPosition, walkingState, onWalkAbort
     });
     return {
         animatedPosition: animatedPositionRef.current,
-        isWalking: walkingState?.isActive ?? false,
-        progress: walkingState?.progress ?? 0,
+        isWalking: walkingStateRef.current?.isActive ?? false,
+        progress: walkingStateRef.current?.progress ?? 0,
     };
 }
 /**
