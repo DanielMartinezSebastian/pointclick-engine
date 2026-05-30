@@ -91,7 +91,7 @@ export function EditorTabsBar() {
     transform: "translateX(-50%)",
     zIndex: 10003,
     display: "flex",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
     gap: "6px",
     padding: "6px 8px",
     borderRadius: "3px",
@@ -100,8 +100,9 @@ export function EditorTabsBar() {
     backdropFilter: "blur(4px)",
     boxShadow: "0 0 14px rgba(0, 255, 65, 0.2)",
     pointerEvents: "auto",
-    maxWidth: "calc(100vw - 24px)",
+    maxWidth: "none",
     justifyContent: "center",
+    overflowX: "auto",
   };
 
   const separatorStyle: CSSProperties = {
@@ -122,7 +123,7 @@ export function EditorTabsBar() {
       ))}
       <div style={separatorStyle} />
       <TabChip
-        label={copiedCoord ? "✓ Copiado" : "Copiar Pos"}
+        label={copiedCoord ? "✓ Copiado" : `Pos: [${playerPosition[0].toFixed(2)}, ${playerPosition[1].toFixed(2)}, ${playerPosition[2].toFixed(2)}]`}
         active={copiedCoord}
         onClick={handleCopyCoords}
         variant="primary"
