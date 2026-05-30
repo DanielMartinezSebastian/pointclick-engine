@@ -15,5 +15,13 @@ export type {
 
 export type { ViewportPort } from "./viewport";
 
+export type {
+  AudioMuteTarget,
+  AudioMusicOptions,
+  AudioPlayOptions,
+  AudioPort,
+} from "./audio";
+
 export { HeadlessGameLoop } from "./headlessGameLoop";
 export { HeadlessInput } from "./headlessInput";
+export { HeadlessAudioAdapter, type HeadlessAudioCall } from "./headlessAudio";

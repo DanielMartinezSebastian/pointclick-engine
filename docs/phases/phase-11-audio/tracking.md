@@ -10,7 +10,7 @@
 ## Sprint 1 — Core agnóstico
 
 - [x] [11.1 — Core types: SoundDefinition + audio fields](tasks/01-core-types.md)
-- [ ] [11.2 — Core port: AudioPort + HeadlessAudioAdapter](tasks/02-audio-port.md)
+- [x] [11.2 — Core port: AudioPort + HeadlessAudioAdapter](tasks/02-audio-port.md)
 - [ ] [11.3 — Core state: audioSettingsStore + persistencia](tasks/03-audio-settings-store.md)
 - [ ] [11.4 — Core commands + events de audio](tasks/04-commands-and-events.md)
 - [ ] [11.5 — Core: audioRules processor + defaults](tasks/05-audio-rules-processor.md)
