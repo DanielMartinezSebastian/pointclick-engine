@@ -220,9 +220,9 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
     const ground = useSceneStore((s) => s.scene.ground);
     const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
     const respawnSignal = useSceneStore((s) => s.respawnSignal);
-    // Use walk animation if active, otherwise use raw position
+    // Use walk animation if active, otherwise use current player position
     const { animatedPosition, isWalking } = usePlayerWalkAnimation(playerPosition, playerWalkingState);
-    const renderPosition = isWalking ? animatedPosition : playerSpawn;
+    const renderPosition = isWalking ? animatedPosition : playerPosition;
     const { setTarget, setRoute, cancelTarget, resolveDirection, registerProgress } = useClickToMoveController();
     const { clearPressedKeys, getKeyboardMovement } = useKeyboardMovementInput();
     const playableBounds = useMemo(() => {
