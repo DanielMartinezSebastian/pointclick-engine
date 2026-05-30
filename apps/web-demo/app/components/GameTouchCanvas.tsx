@@ -180,6 +180,21 @@ export default function GameTouchCanvas({
     }
   }, [scene?.music?.trackUrl]);
 
+  // Click sound on canvas for pathfinding
+  const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
+  const prevWalkingRef = useRef<any>(null);
+  useEffect(() => {
+    // Play click sound when walking starts (transition from null to walking state)
+    if (playerWalkingState && !prevWalkingRef.current) {
+      webAudioAdapter.playSound({
+        id: "click-canvas",
+        url: "/assets/audio/sfx/click.ogg",
+        category: "ui",
+      });
+    }
+    prevWalkingRef.current = playerWalkingState;
+  }, [playerWalkingState]);
+
   // Initialize SFX playback via event bus
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
