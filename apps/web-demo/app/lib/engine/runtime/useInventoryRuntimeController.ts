@@ -152,10 +152,13 @@ export function useInventoryRuntimeController({
       // Start with all stored items (already persisted in localStorage)
       const allItems = storedItems.length > 0 ? storedItems : prev;
 
-      // For personalRoom, create initial spawn items only once
+      // For personalRoom, create initial spawn items only once per session
+      // Only create if the item doesn't exist in ANY scene (not just this one)
       if (sceneId === "personalRoom" && !initialItemsCreated) {
-        const trophyExists = allItems.some((i) => i.itemId === "trophy");
-        if (!trophyExists) {
+        const trophyTakenOrMovedElsewhere = allItems.some((i) => i.itemId === "trophy");
+        // Only recreate the trophy if it has never left this room
+        // If it exists anywhere, assume it was taken/moved by the player
+        if (!trophyTakenOrMovedElsewhere) {
           return [...allItems, ...createInitialPlacedItems(sceneId)];
         }
       }

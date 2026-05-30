@@ -99,6 +99,12 @@ export function useTransitionSystem() {
         const trophyStillInRoom = placedItems.some(
           (item) => item.itemId === "trophy" && item.sceneId === "personalRoom",
         );
+
+        console.log("[transition-debug] personalRoom exit check:", {
+          allPlacedItems: placedItems.map((i) => ({ id: i.id, itemId: i.itemId, sceneId: i.sceneId })),
+          trophyStillInRoom,
+        });
+
         if (trophyStillInRoom) {
           showDialog(
             "Sería mejor recoger todo lo que pueda del cuarto antes de irme...",
