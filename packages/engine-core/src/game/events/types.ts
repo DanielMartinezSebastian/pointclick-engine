@@ -29,7 +29,14 @@ export type GameEvent =
   // Transitions
   | { type: "transition:triggered"; transitionId: string; targetSceneId: string }
   | { type: "transition:started"; transitionId: string }
-  | { type: "transition:completed"; fromSceneId: string; toSceneId: string };
+  | { type: "transition:completed"; fromSceneId: string; toSceneId: string }
+  // Player walking
+  | { type: "player:walkStarted"; targetPosition: GameVec3 }
+  | { type: "player:walkCompleted"; position: GameVec3 }
+  | {
+      type: "player:walkAborted";
+      reason: "user-input" | "collision" | "unreachable";
+    };
 
 export type GameEventType = GameEvent["type"];
 
