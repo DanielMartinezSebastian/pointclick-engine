@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { MuteToggle } from "./MuteToggle";
+import { useAudioSettings, audioSettingsStore } from "../store/audio";
 import {
   browserEnvironmentAdapter,
   browserTimerAdapter,
@@ -444,6 +446,8 @@ export function InventoryUI({
               🔄 Reiniciar
             </button>
 
+            <AudioMuteControls />
+
             <div
               style={{
                 marginTop: "10px",
@@ -507,6 +511,35 @@ export function InventoryUI({
         </div>
       )}
     </>
+  );
+}
+
+function AudioMuteControls() {
+  const audio = useAudioSettings();
+
+  return (
+    <div style={{ display: "grid", gap: "6px", marginTop: "10px" }}>
+      <MuteToggle
+        icon={audio.masterMuted ? "🔇" : "🔊"}
+        label={audio.masterMuted ? "Sonido off" : "Sonido"}
+        pressed={audio.masterMuted}
+        onClick={() => audioSettingsStore.setMasterMuted(!audio.masterMuted)}
+      />
+      <MuteToggle
+        icon={audio.musicMuted ? "🔇" : "🎵"}
+        label={audio.musicMuted ? "Música off" : "Música"}
+        pressed={audio.musicMuted}
+        disabled={audio.masterMuted}
+        onClick={() => audioSettingsStore.setMusicMuted(!audio.musicMuted)}
+      />
+      <MuteToggle
+        icon={audio.sfxMuted ? "🔇" : "🔔"}
+        label={audio.sfxMuted ? "Efectos off" : "Efectos"}
+        pressed={audio.sfxMuted}
+        disabled={audio.masterMuted}
+        onClick={() => audioSettingsStore.setSfxMuted(!audio.sfxMuted)}
+      />
+    </div>
   );
 }
 
