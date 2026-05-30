@@ -62,15 +62,34 @@ export function useSceneRuntimeController() {
 
   // Load default scene on mount if the store is empty (engine-core store
   // is agnostic and starts blank — the demo is responsible for seeding it).
+  // Try to load last visited scene from localStorage, fallback to default.
   useEffect(() => {
     if (!useSceneStore.getState().sceneId) {
-      const defaultScene = SCENES[DEFAULT_SCENE_ID];
-      if (defaultScene) {
-        storeSetScene(DEFAULT_SCENE_ID, defaultScene as GameScene);
+      // Try to load from localStorage
+      const savedSceneId =
+        typeof window !== "undefined" ? localStorage.getItem("current-scene-id") : null;
+      const initialSceneId = savedSceneId || DEFAULT_SCENE_ID;
+      const initialScene = SCENES[initialSceneId];
+
+      if (initialScene) {
+        storeSetScene(initialSceneId, initialScene as GameScene);
+      } else {
+        // Fallback to default if saved scene doesn't exist
+        const defaultScene = SCENES[DEFAULT_SCENE_ID];
+        if (defaultScene) {
+          storeSetScene(DEFAULT_SCENE_ID, defaultScene as GameScene);
+        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist current scene to localStorage whenever it changes
+  useEffect(() => {
+    if (sceneId) {
+      localStorage.setItem("current-scene-id", sceneId);
+    }
+  }, [sceneId]);
 
   return {
     sceneId,
