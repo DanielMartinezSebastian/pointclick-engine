@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 
 import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore, type GameScene } from "@pointclick-engine/engine-core";
-import { getGameRuntime } from "./publicApi";
+import { getGameRuntime } from "../publicApi";
 
 export function useSceneRuntimeController() {
   const sceneId = useSceneStore((s) => s.sceneId);
@@ -39,14 +39,16 @@ export function useSceneRuntimeController() {
       if (transitionToTarget && "spawnPosition" in transitionToTarget && transitionToTarget.spawnPosition) {
         // Use transition's spawn position
         const spawnPos = transitionToTarget.spawnPosition;
+        const targetPos = "targetPosition" in transitionToTarget ? transitionToTarget.targetPosition : undefined;
+
         storeSetScene(id, scene as GameScene, spawnPos);
 
         // Execute walk command if target position exists
-        if ("targetPosition" in transitionToTarget && transitionToTarget.targetPosition) {
+        if (targetPos) {
           setTimeout(() => {
             getGameRuntime()?.executeCommand({
               type: "player:walkTo",
-              position: transitionToTarget.targetPosition,
+              position: targetPos,
             });
           }, 0);
         }
