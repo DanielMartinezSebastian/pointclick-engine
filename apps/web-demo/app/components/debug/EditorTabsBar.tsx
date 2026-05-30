@@ -47,15 +47,17 @@ function TabChip({
       ? `${palette.accent}33`
       : "rgb(8 12 32 / 88%)",
     color: palette.accent,
-    padding: "0.45rem 0.75rem",
-    fontSize: "11px",
+    padding: "0.3rem 0.5rem",
+    fontSize: "9px",
     fontFamily: "var(--font-pixel), monospace",
-    letterSpacing: "1px",
+    letterSpacing: "0.5px",
     cursor: "pointer",
     borderRadius: "2px",
     textShadow: `0 0 10px ${palette.glow}`,
     boxShadow: active ? `0 0 12px ${palette.glow}` : "none",
     textTransform: "uppercase",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
   };
 
   return (
@@ -92,8 +94,8 @@ export function EditorTabsBar() {
     zIndex: 10003,
     display: "flex",
     flexWrap: "nowrap",
-    gap: "6px",
-    padding: "6px 8px",
+    gap: "3px",
+    padding: "4px 6px",
     borderRadius: "3px",
     border: "2px solid rgb(0 255 65 / 40%)",
     background: "rgb(12 19 48 / 92%)",
@@ -103,12 +105,13 @@ export function EditorTabsBar() {
     maxWidth: "none",
     justifyContent: "center",
     overflowX: "auto",
+    alignItems: "center",
   };
 
   const separatorStyle: CSSProperties = {
     width: "2px",
     background: "rgb(0 255 65 / 25%)",
-    margin: "2px 4px",
+    margin: "0px 2px",
   };
 
   return (
