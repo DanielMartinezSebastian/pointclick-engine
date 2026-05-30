@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useSceneStore } from "@pointclick-engine/engine-core";
-import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction, canTransitionBeTriggered } from "@pointclick-engine/engine-core";
+import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } from "@pointclick-engine/engine-core";
 import { SCENES } from "../../../../demo-content/scenes/scenes";
 import { getGameRuntime } from "../publicApi";
 import { useDialogStore } from "../../../store/dialogStore";
-import { useInventoryStore } from "../../../store/inventoryStore";
 import { usePlacedItemsStore } from "../../../store/placedItemsStore";
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import type { RuntimeEvent } from "@pointclick-engine/engine-core";
@@ -94,26 +93,19 @@ export function useTransitionSystem() {
         return;
       }
 
-      // Use core resolver to check if transition can be triggered.
-      // Filter placedItems to only those in the current scene for accurate validation.
-      const inventoryItems = useInventoryStore.getState().slots;
-      const sceneOnlyItems = placedItems.filter((item) => item.sceneId === currentSceneId);
-      const canTrigger = canTransitionBeTriggered(transition, inventoryItems, sceneOnlyItems);
-
-      if (!canTrigger) {
-        // Transition is blocked — show appropriate dialog based on transition type
-        if (transition.kind === "item-drop" && transition.requiresItemId) {
+      // Special case: leaving personalRoom requires having taken the trophy
+      // The trophy must not be placed in personalRoom (can be in inventory or another room)
+      if (currentSceneId === "personalRoom" && targetSceneId === "dungeon") {
+        const trophyStillInRoom = placedItems.some(
+          (item) => item.itemId === "trophy" && item.sceneId === "personalRoom",
+        );
+        if (trophyStillInRoom) {
           showDialog(
             "Sería mejor recoger todo lo que pueda del cuarto antes de irme...",
             "interaction.trophy-pedestal.empty",
           );
-        } else if (transition.kind === "item-interaction" && transition.requiresItemId) {
-          showDialog(
-            "Necesito algo para interactuar con esto.",
-            "interaction.required-item-missing",
-          );
+          return;
         }
-        return;
       }
 
       getGameRuntime()?.emit({
