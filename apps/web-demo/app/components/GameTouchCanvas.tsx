@@ -31,6 +31,8 @@ import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
 import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
 import { legacyRuntimeEventToGameEvent, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
+import { webAudioAdapter, bindAudioPersistence } from "../lib/platform-web-audio";
+import { audioSettingsStore } from "../store/audio";
 import { useMobileInputStore } from "../store/mobileInputStore";
 import { useSceneEditorStore } from "../store/sceneEditorStore";
 import { useDialogStore } from "../store/dialogStore";
@@ -135,6 +137,109 @@ export default function GameTouchCanvas({
     passthrough: baseRuntimeEvent,
   });
 
+  // Initialize audio persistence and apply settings to adapter
+  useEffect(() => {
+    bindAudioPersistence(audioSettingsStore);
+
+    // Sync settings changes to webAudioAdapter
+    const unsubscribe = audioSettingsStore.subscribe((state) => {
+      webAudioAdapter.setMuted("master", state.masterMuted);
+      webAudioAdapter.setMuted("music", state.musicMuted);
+      webAudioAdapter.setMuted("sfx", state.sfxMuted);
+      webAudioAdapter.setVolume("master", state.masterVolume);
+      webAudioAdapter.setVolume("music", state.musicVolume);
+      webAudioAdapter.setVolume("sfx", state.sfxVolume);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Click sound for inventory toggle
+  const isInventoryOpen = useInventoryStore((s) => s.isOpen);
+  const toggleInventory = useInventoryStore((s) => s.toggle);
+  useEffect(() => {
+    webAudioAdapter.playSound({
+      id: "click",
+      url: "/assets/audio/sfx/click.ogg",
+      category: "ui",
+    });
+  }, [isInventoryOpen]);
+
+  // Initialize audio system - listen to scene changes
+  const scene = useSceneStore((s) => s.scene);
+  useEffect(() => {
+    console.log("[audio] Scene changed:", scene.id, "music:", scene?.music);
+    if (scene?.music) {
+      console.log("[audio] Playing music:", scene.music.trackUrl);
+      webAudioAdapter.playMusic({
+        id: scene.music.trackUrl,
+        url: scene.music.trackUrl,
+        category: "music",
+        loop: true,
+      }, { fadeMs: scene.music.fadeMs ?? 800 });
+    }
+  }, [scene?.music?.trackUrl]);
+
+  // Initialize SFX playback via event bus
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    const trySubscribe = setInterval(() => {
+      const runtime = getGameRuntime();
+      if (!runtime) return;
+
+      clearInterval(trySubscribe);
+
+      const subs = [
+        runtime.on("item:dropped", (event: any) => {
+          console.log("[audio] item:dropped -", JSON.stringify(event));
+          // Differentiate by outcome: pickup-success = pickup sound, place = drop sound
+          const soundMap: Record<string, { pickup: string; drop: string }> = {
+            gameboy: {
+              pickup: "/assets/audio/sfx/pickup-gameboy.ogg",
+              drop: "/assets/audio/sfx/drop-default.ogg",
+            },
+            default: {
+              pickup: "/assets/audio/sfx/pickup-default.ogg",
+              drop: "/assets/audio/sfx/drop-default.ogg",
+            },
+          };
+
+          const itemSounds = soundMap[event.itemId] || soundMap.default;
+
+          if (event.outcome === "pickup-success") {
+            webAudioAdapter.playSound({
+              id: `pickup-${event.itemId}`,
+              url: itemSounds.pickup,
+              category: "sfx",
+            });
+          } else if (event.outcome === "place") {
+            webAudioAdapter.playSound({
+              id: `drop-${event.itemId}`,
+              url: itemSounds.drop,
+              category: "sfx",
+            });
+          }
+        }),
+        runtime.on("transition:triggered", () => {
+          console.log("[audio] Playing transition sound");
+          webAudioAdapter.playSound({
+            id: "transition-default",
+            url: "/assets/audio/sfx/transition-default.ogg",
+            category: "sfx",
+          });
+        }),
+      ];
+
+      unsubscribe = () => subs.forEach((u) => u?.());
+    }, 50);
+
+    return () => {
+      clearInterval(trySubscribe);
+      unsubscribe?.();
+    };
+  }, []);
+
   // Chain: door system → transition item-drop check
   const handleRuntimeEvent = useCallback(
     wrapRuntimeEventForTransitions(afterDoorRuntimeEvent.handleRuntimeEvent),
@@ -149,10 +254,6 @@ export default function GameTouchCanvas({
 
   // Get transitions from scene
   const sceneTransitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
-
-  // Inventory visibility lives in inventoryStore (also writable via inventory:toggle command)
-  const isInventoryOpen = useInventoryStore((s) => s.isOpen);
-  const toggleInventory = useInventoryStore((s) => s.toggle);
 
   const {
     inventorySlots,

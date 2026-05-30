@@ -1,5 +1,5 @@
 import type { DialogKey } from "../dialogs/types";
-import type { GameSceneTransition } from "@pointclick-engine/engine-core";
+import type { GameSceneTransition, SceneMusicConfig } from "@pointclick-engine/engine-core";
 import {
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
@@ -139,6 +139,8 @@ export type Scene = {
   doors?: SceneDoor[];
   /** Declarative scene transitions (collision/item-drop/item-consume). */
   transitions?: GameSceneTransition[];
+  /** Optional music configuration for this scene. */
+  music?: SceneMusicConfig;
 };
 
 export const SCENES: Record<string, Scene> = {
@@ -374,7 +376,7 @@ export const SCENES: Record<string, Scene> = {
       y: -2.15,
     },
     music: {
-      trackUrl: "/assets/audio/music/personal-room.mp3",
+      trackUrl: "/assets/audio/music/personal-room-loop.mp3",
       persistAcrossScenes: false,
       volume: 0.55,
       fadeMs: 1000,

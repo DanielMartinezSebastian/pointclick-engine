@@ -29,6 +29,7 @@ import {
   type GameEventType,
   type GameEventHandler,
   type GameCommand,
+  type SceneMusicConfig,
 } from "@pointclick-engine/engine-core";
 import GameTouchCanvas from "../../components/GameTouchCanvas";
 import { useInventoryStore } from "../../store/inventoryStore";
@@ -60,6 +61,7 @@ export type GameSceneConfig = {
   ground: GameSceneGround;
   walls: GameSceneWall[];
   interactions: GameSceneInteraction[];
+  music?: SceneMusicConfig;
 };
 
 export type GameItemDropOutcome = "consume" | "place" | "return";

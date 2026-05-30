@@ -191,7 +191,7 @@ function getWallAxes(rotationY) {
 function projectDistance(originX, originZ, pointX, pointZ, axis) {
     return (pointX - originX) * axis.x + (pointZ - originZ) * axis.y;
 }
-export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, showPlayerCollider = false, wallOpacityMode = "wireframe", wallInteractionsEnabled = true, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, 
+export function GameTouchSpriteRuntime({ activeCharacter, debug, showDebugGround, showDebugWalls, showPlayerCollider = false, wallOpacityMode = "wireframe", wallInteractionsEnabled = true, wallToolMode, wallPointResetSignal, speechText, speechVisible, speechTrigger, speechCharsPerSecond, onBoundaryHit, onSpeechDismiss, onRuntimeEvent, onClickWorld, 
 // DI props for demo-specific dependencies
 getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhrase = () => "", selectedWallIndex = null, onSelectWall, updateSelectedWall, disableClickToMove = false, getEffectiveClickGoal, }) {
     const spriteRef = useRef(null);
@@ -310,10 +310,12 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
         });
         if (route && route.length > 0) {
             setRoute(route);
+            onClickWorld?.(x, z);
             return;
         }
         setTarget(effectiveGoal.x, effectiveGoal.z);
-    }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, getEffectiveClickGoal, ground.y, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
+        onClickWorld?.(x, z);
+    }, [addWallWithData, clampToPlayableArea, debug, disableClickToMove, getEffectiveClickGoal, ground.y, onClickWorld, playableBounds, playerSpawn, setRoute, setTarget, wallPointResetSignal, wallToolMode]);
     const stopWallInteraction = useCallback(() => {
         wallInteractionRef.current = null;
     }, []);
