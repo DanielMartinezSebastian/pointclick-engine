@@ -13,6 +13,7 @@ import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls } from "./scene/SceneWalls";
 import { findPath, useSceneStore, emitRuntimeEvent } from "@pointclick-engine/engine-core";
+import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 const DEFAULT_CLICK_CONFIG = {
     arrivalThreshold: 0.15,
     stuckMovementEpsilon: 0.015,
@@ -213,10 +214,15 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
     const lastBoundaryHitRef = useRef(0);
     const lastStuckHitRef = useRef(0);
     const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
+    const playerPosition = useSceneStore((s) => s.playerPosition);
+    const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
     const sceneId = useSceneStore((s) => s.sceneId);
     const ground = useSceneStore((s) => s.scene.ground);
     const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
     const respawnSignal = useSceneStore((s) => s.respawnSignal);
+    // Use walk animation if active, otherwise use raw position
+    const { animatedPosition, isWalking } = usePlayerWalkAnimation(playerPosition, playerWalkingState);
+    const renderPosition = isWalking ? animatedPosition : playerSpawn;
     const { setTarget, setRoute, cancelTarget, resolveDirection, registerProgress } = useClickToMoveController();
     const { clearPressedKeys, getKeyboardMovement } = useKeyboardMovementInput();
     const playableBounds = useMemo(() => {
@@ -623,7 +629,7 @@ getMobileInput = () => ({ active: false, x: 0, z: 0 }), addWallWithData, getPhra
                         handleHoverWorld(x, z);
                         handleHoverPointWallTool(x, z);
                     }
-                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, opacityMode: wallOpacityMode, interactionsEnabled: wallInteractionsEnabled, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: playerSpawn, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { ref: characterColliderRef, args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), debug && showPlayerCollider && (
+                    : undefined, debug: debug && showDebugGround, depthNearZ: DEPTH_NEAR_Z, depthFarZ: DEPTH_FAR_Z }), _jsx(SceneWalls, { debug: debug && showDebugWalls, opacityMode: wallOpacityMode, interactionsEnabled: wallInteractionsEnabled, onStartWallMove: handleStartWallMove, onStartWallResize: handleStartWallResize, selectedWallIndex: selectedWallIndex, onSelectWall: onSelectWall }), debug && wallToolMode === "points" && (_jsx(SceneWallPointPreview, { preview: wallPointPreview, groundY: ground.y })), _jsx(SceneCollisionSphere, {}), _jsxs(RigidBody, { ref: characterBodyRef, type: "dynamic", colliders: false, position: renderPosition, gravityScale: 1.2, linearDamping: 7, angularDamping: 20, ccd: true, enabledRotations: [false, false, false], children: [_jsx(CuboidCollider, { ref: characterColliderRef, args: [0.55, 0.95, 0.18], friction: 2.2, restitution: 0 }), debug && showPlayerCollider && (
                     // box base height = 2; the useFrame above scales Y to `spriteScale`
                     // and offsets Y position so the wireframe exactly mirrors the
                     // physics collider (whose halfY is also set to `spriteScale`).

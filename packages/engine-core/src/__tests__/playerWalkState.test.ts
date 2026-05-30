@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import { useSceneStore } from "../game/state/sceneStore";
-import type { GameScene } from "../game/types";
+import type { GameScene, GameVec3, PlayerWalkingState } from "../game/types";
 
 const makeTestScene = (): GameScene => ({
   id: "test",
@@ -26,9 +26,9 @@ describe("playerWalkingState in sceneStore", () => {
   });
 
   test("setPlayerWalkingState updates state correctly", () => {
-    const walkState = {
-      targetPosition: [5, 0, 10],
-      pathPoints: [[0, 0, 0], [5, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [5, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [5, 0, 10] as GameVec3],
       progress: 0,
       isActive: true,
     };
@@ -41,9 +41,9 @@ describe("playerWalkingState in sceneStore", () => {
 
   test("setPlayerWalkingState can clear state (set to null)", () => {
     // First, set a walking state
-    const walkState = {
-      targetPosition: [5, 0, 10],
-      pathPoints: [[0, 0, 0], [5, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [5, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [5, 0, 10] as GameVec3],
       progress: 0.5,
       isActive: true,
     };
@@ -58,9 +58,9 @@ describe("playerWalkingState in sceneStore", () => {
   });
 
   test("updateWalkProgress increments progress", () => {
-    const walkState = {
-      targetPosition: [5, 0, 10],
-      pathPoints: [[0, 0, 0], [5, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [5, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [5, 0, 10] as GameVec3],
       progress: 0,
       isActive: true,
     };
@@ -74,9 +74,9 @@ describe("playerWalkingState in sceneStore", () => {
   });
 
   test("updateWalkProgress preserves other fields", () => {
-    const walkState = {
-      targetPosition: [5, 0, 10],
-      pathPoints: [[0, 0, 0], [5, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [5, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [5, 0, 10] as GameVec3],
       progress: 0,
       isActive: true,
     };
@@ -105,9 +105,9 @@ describe("playerWalkingState in sceneStore", () => {
 
   test("setScene clears playerWalkingState (implicitly, since it's separate)", () => {
     // Set a walking state
-    const walkState = {
-      targetPosition: [5, 0, 10],
-      pathPoints: [[0, 0, 0], [5, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [5, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [5, 0, 10] as GameVec3],
       progress: 0.5,
       isActive: true,
     };
@@ -126,9 +126,9 @@ describe("playerWalkingState in sceneStore", () => {
   });
 
   test("multiple progress updates work correctly", () => {
-    const walkState = {
-      targetPosition: [10, 0, 10],
-      pathPoints: [[0, 0, 0], [10, 0, 10]],
+    const walkState: PlayerWalkingState = {
+      targetPosition: [10, 0, 10] as GameVec3,
+      pathPoints: [[0, 0, 0] as GameVec3, [10, 0, 10] as GameVec3],
       progress: 0,
       isActive: true,
     };

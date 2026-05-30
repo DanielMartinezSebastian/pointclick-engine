@@ -264,6 +264,14 @@ export const SCENES: Record<string, Scene> = {
         targetSceneId: "town",
         entryPosition: [2, 1.05, -11], // Return to town at dungeon exit
       },
+      {
+        id: "dungeon-to-personalroom",
+        kind: "collision",
+        position: [0, -1.1, 60],
+        halfSize: [2, 2.5, 1.5],
+        targetSceneId: "personalRoom",
+        entryPosition: [0, -1.1, 20], // Enter personal room from dungeon
+      },
     ],
     interactions: [
       {
@@ -458,6 +466,7 @@ export const SCENES: Record<string, Scene> = {
         position: [-1.9, -1, 2.5],
         halfSize: [1.9, 2.5, 2],
         targetSceneId: "dungeon",
+        entryPosition: [0, -1.1, 62], // Enter dungeon from personal room
       },
     ],
     interactions: [

@@ -17,4 +17,6 @@ export { SceneTransitions } from "./scene/SceneTransitions";
 // Runtime
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
+// Hooks
+export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 //# sourceMappingURL=index.js.map

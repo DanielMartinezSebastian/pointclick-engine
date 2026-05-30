@@ -111,6 +111,8 @@ export interface BaseSceneTransition {
     position: GameVec3;
     halfSize: GameVec3;
     rotationY?: number;
+    /** Optional spawn position in target scene. If omitted, uses scene's playerSpawn. */
+    entryPosition?: GameVec3;
     preTransitionDialogKey?: DialogKey;
     postTransitionDialogKey?: DialogKey;
 }
@@ -139,6 +141,16 @@ export interface TransitionState {
     itemIdOccupying?: string;
     /** Whether this transition can be triggered. Default true. */
     isAvailable: boolean;
+}
+export interface PlayerWalkingState {
+    /** Target position to walk towards. */
+    targetPosition: GameVec3;
+    /** Path points to follow (calculated via pathfinding). */
+    pathPoints: GameVec3[];
+    /** Walk progress: 0 = start, 1 = complete. */
+    progress: number;
+    /** Whether walk is currently active. */
+    isActive: boolean;
 }
 export interface GameScene {
     id: string;

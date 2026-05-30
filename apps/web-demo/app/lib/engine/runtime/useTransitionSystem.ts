@@ -45,7 +45,22 @@ export function useTransitionSystem() {
       });
 
       const fromSceneId = useSceneStore.getState().sceneId;
+      const fromScene = useSceneStore.getState().scene;
+
+      // Find the transition that was used to trigger this scene change
+      const usedTransition = fromScene.transitions?.find((t) => t.id === transitionId);
+
       storeSetScene(targetSceneId, scene as Parameters<typeof storeSetScene>[1]);
+
+      // If transition has entryPosition, auto-trigger walk animation
+      if (usedTransition && "entryPosition" in usedTransition && usedTransition.entryPosition) {
+        const entryPos = usedTransition.entryPosition;
+        // Emit walk command via runtime
+        getGameRuntime()?.executeCommand({
+          type: "player:walkTo",
+          position: entryPos,
+        });
+      }
 
       getGameRuntime()?.emit({
         type: "transition:completed",

@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
-import type { GameCommand, GameEvent } from "../game";
+import type { GameCommand } from "../game/commands/types";
+import type { GameEvent } from "../game/events/types";
 
 describe("Player walk commands and events", () => {
   describe("player:walkTo command", () => {

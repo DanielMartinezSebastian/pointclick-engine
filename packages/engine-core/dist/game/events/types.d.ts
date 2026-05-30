@@ -46,6 +46,15 @@ export type GameEvent = {
     type: "transition:completed";
     fromSceneId: string;
     toSceneId: string;
+} | {
+    type: "player:walkStarted";
+    targetPosition: GameVec3;
+} | {
+    type: "player:walkCompleted";
+    position: GameVec3;
+} | {
+    type: "player:walkAborted";
+    reason: "user-input" | "collision" | "unreachable";
 };
 export type GameEventType = GameEvent["type"];
 export type GameEventHandler<T extends GameEventType = GameEventType> = (event: Extract<GameEvent, {

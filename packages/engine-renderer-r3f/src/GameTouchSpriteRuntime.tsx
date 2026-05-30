@@ -21,6 +21,7 @@ import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 
 import { findPath, useSceneStore, emitRuntimeEvent, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
+import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 
 type MovementPoint = { x: number; z: number };
 
@@ -398,10 +399,16 @@ export function GameTouchSpriteRuntime({
   const lastStuckHitRef = useRef<number>(0);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
+  const playerPosition = useSceneStore((s) => s.playerPosition);
+  const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
   const sceneId = useSceneStore((s) => s.sceneId);
   const ground = useSceneStore((s) => s.scene.ground);
   const setPlayerPosition = useSceneStore((s) => s.setPlayerPosition);
   const respawnSignal = useSceneStore((s) => s.respawnSignal);
+
+  // Use walk animation if active, otherwise use raw position
+  const { animatedPosition, isWalking } = usePlayerWalkAnimation(playerPosition, playerWalkingState);
+  const renderPosition = isWalking ? animatedPosition : playerSpawn;
 
   const { setTarget, setRoute, cancelTarget, resolveDirection, registerProgress } = useClickToMoveController();
   const { clearPressedKeys, getKeyboardMovement } = useKeyboardMovementInput();
@@ -921,7 +928,7 @@ export function GameTouchSpriteRuntime({
         ref={characterBodyRef}
         type="dynamic"
         colliders={false}
-        position={playerSpawn}
+        position={renderPosition}
         gravityScale={1.2}
         linearDamping={7}
         angularDamping={20}

@@ -16,4 +16,5 @@ export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 export { SceneTransitions } from "./scene/SceneTransitions";
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
+export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 //# sourceMappingURL=index.d.ts.map

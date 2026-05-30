@@ -1,4 +1,4 @@
-import type { GameScene, GameSceneWall, GameSceneInteractionFull, GameVec3, TransitionState } from "../types";
+import type { GameScene, GameSceneWall, GameSceneInteractionFull, GameVec3, TransitionState, PlayerWalkingState } from "../types";
 import type { GameEvent } from "../events/types";
 type StoreEmitter = (event: GameEvent) => void;
 /**
@@ -21,6 +21,7 @@ type SceneStore = {
     playerPosition: GameVec3;
     respawnSignal: number;
     transitionStates: Record<string, TransitionState>;
+    playerWalkingState: PlayerWalkingState | null;
     setScene: (id: string, scene: GameScene) => void;
     updateInteraction: (id: string, updater: (interaction: GameSceneInteractionFull) => GameSceneInteractionFull) => void;
     resetInteractionsFromSceneConfig: () => void;
@@ -28,6 +29,8 @@ type SceneStore = {
     requestRespawn: () => void;
     setTransitionAvailable: (id: string, available: boolean) => void;
     setTransitionItemOccupying: (id: string, itemId: string | undefined) => void;
+    setPlayerWalkingState: (state: PlayerWalkingState | null) => void;
+    updateWalkProgress: (progress: number) => void;
     updateGround: (updater: (ground: GameScene["ground"]) => GameScene["ground"]) => void;
     appendWall: (wall: GameSceneWall) => void;
     removeWall: (index: number) => void;

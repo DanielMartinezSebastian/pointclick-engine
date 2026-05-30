@@ -187,12 +187,12 @@ describe("usePlayerWalkAnimation", () => {
       // Should not throw if no callbacks provided
       expect(() => {
         // Simulating hook call without callbacks
-        const { isWalking } = {
+        const result = {
           animatedPosition: [0, 0, 0] as GameVec3,
           isWalking: true,
           progress: walkState.progress,
         };
-        expect(isWalking).toBe(true);
+        expect(result.isWalking).toBe(true);
       }).not.toThrow();
     });
   });

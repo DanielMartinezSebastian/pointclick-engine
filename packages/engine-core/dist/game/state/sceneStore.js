@@ -80,6 +80,7 @@ export const useSceneStore = create((set, get) => ({
     playerPosition: [0, 0, 0],
     respawnSignal: 0,
     transitionStates: {},
+    playerWalkingState: null,
     setScene: (id, scene) => {
         const clonedScene = cloneScene(scene);
         logSceneStore("set-scene", {
@@ -187,6 +188,17 @@ export const useSceneStore = create((set, get) => ({
             transitions: (state.scene.transitions || []).filter((t) => t.id !== id),
         },
     })),
+    setPlayerWalkingState: (state) => set({ playerWalkingState: state }),
+    updateWalkProgress: (progress) => set((state) => {
+        if (!state.playerWalkingState)
+            return state;
+        return {
+            playerWalkingState: {
+                ...state.playerWalkingState,
+                progress,
+            },
+        };
+    }),
 }));
 /** Read state without React (for use from other renderers or tests) */
 export function getSceneState() {
