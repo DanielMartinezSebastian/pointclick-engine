@@ -466,7 +466,8 @@ export const SCENES: Record<string, Scene> = {
         position: [-1.9, -1, 2.5],
         halfSize: [1.9, 2.5, 2],
         targetSceneId: "dungeon",
-        targetPosition: [0, -1.1, 62], // Enter dungeon from personal room
+        spawnPosition: [1.56, -2.00, 23.80],
+        targetPosition: [2.21, -2.00, 7.52],
       },
     ],
     interactions: [
