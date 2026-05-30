@@ -14,7 +14,7 @@
 - [x] [11.3 — Core state: audioSettingsStore + persistencia](tasks/03-audio-settings-store.md)
 - [x] [11.4 — Core commands + events de audio](tasks/04-commands-and-events.md)
 - [x] [11.5 — Core: audioRules processor + defaults](tasks/05-audio-rules-processor.md)
-- [ ] [11.6 — Core tests: store + rules + headless](tasks/06-core-tests.md)
+- [x] [11.6 — Core tests: store + rules + headless](tasks/06-core-tests.md)
 
 ## Sprint 2 — Platform + renderer
 
