@@ -11,6 +11,7 @@ export type GameCommand =
   // Player
   | { type: "player:move"; position: GameVec3 }
   | { type: "player:stop" }
+  | { type: "player:walkTo"; position: GameVec3 }
   // Inventory
   | { type: "inventory:toggle" }
   | { type: "inventory:pickup"; itemId: string }
