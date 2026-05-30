@@ -20,7 +20,6 @@ import { FreeCameraController } from "./scene/FreeCameraController";
 import { SceneDoors } from "./scene/SceneDoors";
 import { SCENES } from "../../demo-content/scenes/scenes";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { DebugCoordinatesPanel } from "./debug/DebugCoordinatesPanel";
 import { GameTouchSpriteRuntime, SceneTransitions } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
@@ -353,7 +352,6 @@ export default function GameTouchCanvas({
         addTransition={createTransition}
         removeTransition={deleteTransition}
       />
-      {runtimeDebug && <DebugCoordinatesPanel />}
     </div>
   );
 }

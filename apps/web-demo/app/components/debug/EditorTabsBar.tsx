@@ -1,11 +1,12 @@
 "use client";
 
-import { type CSSProperties } from "react";
+import { type CSSProperties, useState } from "react";
 
 import {
   useEditorModeStore,
   type EditorTabId,
 } from "../../store/editorModeStore";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 
 type TabDescriptor = {
   id: EditorTabId;
@@ -65,12 +66,23 @@ function TabChip({
 }
 
 export function EditorTabsBar() {
+  const [copiedCoord, setCopiedCoord] = useState(false);
+
   const activePanels = useEditorModeStore((s) => s.activePanels);
   const togglePanel = useEditorModeStore((s) => s.togglePanel);
   const interactionMode = useEditorModeStore((s) => s.interactionMode);
   const toggleInteractionMode = useEditorModeStore((s) => s.toggleInteractionMode);
   const cameraMode = useEditorModeStore((s) => s.cameraMode);
   const toggleCameraMode = useEditorModeStore((s) => s.toggleCameraMode);
+
+  const playerPosition = useSceneStore((s) => s.playerPosition);
+
+  const handleCopyCoords = () => {
+    const coordString = `[${playerPosition[0].toFixed(2)}, ${playerPosition[1].toFixed(2)}, ${playerPosition[2].toFixed(2)}]`;
+    navigator.clipboard.writeText(coordString);
+    setCopiedCoord(true);
+    setTimeout(() => setCopiedCoord(false), 1500);
+  };
 
   const barStyle: CSSProperties = {
     position: "fixed",
@@ -108,6 +120,13 @@ export function EditorTabsBar() {
           onClick={() => togglePanel(tab.id)}
         />
       ))}
+      <div style={separatorStyle} />
+      <TabChip
+        label={copiedCoord ? "✓ Copiado" : "Copiar Pos"}
+        active={copiedCoord}
+        onClick={handleCopyCoords}
+        variant="primary"
+      />
       <div style={separatorStyle} />
       <TabChip
         label={interactionMode === "edit" ? "Modo: Edición" : "Modo: Juego"}
