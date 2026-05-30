@@ -4,6 +4,7 @@ import gsap from "gsap";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
+import { ConfirmationDialog } from "./ConfirmationDialog";
 import {
   browserEnvironmentAdapter,
   browserTimerAdapter,
@@ -72,6 +73,7 @@ export function InventoryUI({
   const [isBackpackHoverSpinRunning, setIsBackpackHoverSpinRunning] = useState(false);
   const [isPickupSpinRunning, setIsPickupSpinRunning] = useState(false);
   const [isPanelRendered, setIsPanelRendered] = useState(isOpen);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const previousOpenRef = useRef(isOpen);
   const previousItemCountRef = useRef<number | null>(null);
   const backpackSpinIntervalRef = useRef<TimerHandle | null>(null);
@@ -292,6 +294,19 @@ export function InventoryUI({
 
   return (
     <>
+      <ConfirmationDialog
+        isOpen={isResetConfirmOpen}
+        title="Reiniciar Partida"
+        message="¿Estás seguro? Se borrarán todos los progresos: inventario, ítems colocados, puertas abiertas y escena actual."
+        confirmText="Reiniciar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={() => {
+          localStorage.clear();
+          window.location.reload();
+        }}
+        onCancel={() => setIsResetConfirmOpen(false)}
+      />
       <button
         type="button"
         onClick={onToggle}
@@ -399,12 +414,7 @@ export function InventoryUI({
 
             <button
               type="button"
-              onClick={() => {
-                if (confirm("¿Reiniciar partida? Se borrarán todos los progresos.")) {
-                  localStorage.clear();
-                  window.location.reload();
-                }
-              }}
+              onClick={() => setIsResetConfirmOpen(true)}
               style={{
                 marginTop: "10px",
                 width: "100%",
