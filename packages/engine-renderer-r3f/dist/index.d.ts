@@ -17,4 +17,5 @@ export { SceneTransitions } from "./scene/SceneTransitions";
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
+export { useAudioSystem } from "./hooks/useAudioSystem";
 //# sourceMappingURL=index.d.ts.map

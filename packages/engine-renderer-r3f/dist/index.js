@@ -19,4 +19,5 @@ export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
 // Hooks
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
+export { useAudioSystem } from "./hooks/useAudioSystem";
 //# sourceMappingURL=index.js.map

@@ -27,3 +27,4 @@ export { default as SpeechBubble } from "./SpeechBubble";
 
 // Hooks
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
+export { useAudioSystem } from "./hooks/useAudioSystem";
