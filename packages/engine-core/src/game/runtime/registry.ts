@@ -48,5 +48,7 @@ export function toRuntimeScene(config: GameSceneConfig): GameScene {
     transitions: config.transitions,
     music: config.music,
     hotspots: config.hotspots,
+    initialItems: config.initialItems,
+    onEnter: config.onEnter,
   };
 }

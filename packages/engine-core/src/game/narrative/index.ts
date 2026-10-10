@@ -15,6 +15,15 @@ export {
   type ScriptRun,
 } from "./actions";
 export { pickBranch } from "./branches";
+export {
+  evaluateTransitionGate,
+  getDeclaredScene,
+  getSceneRuleContext,
+  resolveEnterScript,
+  resolveInitialItems,
+  type DeclaredSceneRules,
+  type TransitionGate,
+} from "./sceneRules";
 export { resolveCombine, type CombinableItem } from "./combine";
 export {
   getAvailableVerbs,

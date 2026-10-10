@@ -27,7 +27,7 @@
 - [x] [06-hotspots](tasks/06-hotspots.md) — sonnet
 - [x] [07-dialogue-trees](tasks/07-dialogue-trees.md) — sonnet
 - [x] [08-item-combine](tasks/08-item-combine.md) — haiku
-- [ ] [09-declarative-scene-rules](tasks/09-declarative-scene-rules.md) — sonnet
+- [x] [09-declarative-scene-rules](tasks/09-declarative-scene-rules.md) — sonnet
 
 ## Ola E — en paralelo
 

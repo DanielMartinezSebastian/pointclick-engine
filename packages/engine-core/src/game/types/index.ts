@@ -5,7 +5,7 @@
 export type GameVec3 = [x: number, y: number, z: number];
 export type GameVec2 = [x: number, y: number];
 
-import type { Branch } from "../narrative/actions";
+import type { Branch, Script } from "../narrative/actions";
 import type { Condition } from "../narrative/conditions";
 
 // Scene geometry
@@ -159,6 +159,13 @@ export interface BaseSceneTransition {
   postTransitionDialogKey?: DialogKey;
   /** Override del SFX por defecto al disparar esta transición. */
   triggerSoundUrl?: string;
+  /**
+   * Condicion para que la transicion ocurra (todos los tipos). Sin ella, siempre ocurre.
+   * Si no se cumple no hay cambio de escena y, si existe, corre `blocked`.
+   */
+  when?: Condition;
+  /** Guion que corre al intentar la transicion sin cumplir `when`. */
+  blocked?: Script;
 }
 
 export interface GameSceneTransitionOnCollision extends BaseSceneTransition {
@@ -247,6 +254,22 @@ export interface GameScene {
   music?: SceneMusicConfig;
   /** Hotspots con verbos narrativos. */
   hotspots?: GameSceneHotspot[];
+  /**
+   * Items colocados iniciales, sembrados una vez por escena al entrar. Cada item
+   * se incluye solo si su `when` se cumple en ese momento (sin `when`, siempre).
+   */
+  initialItems?: SceneInitialItem[];
+  /**
+   * Ramas de entrada: en cada entrada a la escena corre el guion de la primera que se cumple.
+   * Al evaluarse, la escena ya cuenta como visitada: para "solo la primera vez" usa un flag
+   * (`not(flag(...))` y `setFlag` en el guion), no `not(visited(...))`.
+   */
+  onEnter?: Branch[];
+}
+
+export interface SceneInitialItem {
+  item: PlacedSceneItem;
+  when?: Condition;
 }
 
 // Editor/Debug modes

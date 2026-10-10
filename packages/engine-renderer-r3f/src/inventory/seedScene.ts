@@ -1,4 +1,10 @@
-import { getPlacedItemsState, type PlacedSceneItem } from "@pointclick-engine/engine-core";
+import {
+  getDeclaredScene,
+  getPlacedItemsState,
+  getSceneRuleContext,
+  resolveInitialItems,
+  type PlacedSceneItem,
+} from "@pointclick-engine/engine-core";
 
 /**
  * Callback de siembra por escena. Devuelve los items a anadir (puede ser `[]`:
@@ -18,22 +24,29 @@ export type SeedStore = Pick<
 >;
 
 /**
- * Siembra los items iniciales de una escena una sola vez. Sin callback, o con
- * la escena ya sembrada, no hace nada. Idempotente. Devuelve true si marco la escena.
+ * Siembra los items iniciales de una escena una sola vez. Idempotente. Devuelve true si marco la escena.
+ * Orden: primero `scene.initialItems` (declarativo, evaluado contra el estado previo a la
+ * siembra); despues `getInitialPlacedItems`, que ve ya los items declarativos y anade los suyos.
+ * Sin ninguno de los dos, o con la escena ya sembrada, no hace nada. Si la escena declara
+ * `initialItems` se marca sembrada aunque el callback devuelva `null`.
  */
 export function seedSceneItems(
   sceneId: string,
   getInitialPlacedItems: GetInitialPlacedItems | undefined,
   state: SeedStore = getPlacedItemsState(),
 ): boolean {
-  if (!getInitialPlacedItems) return false;
+  const declared = getDeclaredScene(sceneId)?.initialItems;
+  if (!getInitialPlacedItems && !Array.isArray(declared)) return false;
   if (state.isSceneSeeded(sceneId)) return false;
-  const added = getInitialPlacedItems(sceneId, state.items);
-  if (added === null) return false;
-  if (added.length > 0) {
-    const owned = added.map((item) => (item.sceneId === undefined ? { ...item, sceneId } : item));
-    state.setItems([...state.items, ...owned]);
-  }
+  const fromScene = resolveInitialItems(sceneId, declared, getSceneRuleContext(sceneId, state.items));
+  const base = fromScene ? [...state.items, ...fromScene] : state.items;
+  const fromCallback = getInitialPlacedItems?.(sceneId, base) ?? null;
+  if (fromScene === null && fromCallback === null) return false;
+  const owned = (fromCallback ?? []).map((item) =>
+    item.sceneId === undefined ? { ...item, sceneId } : item,
+  );
+  const added = [...(fromScene ?? []), ...owned];
+  if (added.length > 0) state.setItems([...state.items, ...added]);
   state.markSceneSeeded(sceneId);
   return true;
 }

@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createInventoryRuleContext,
   emitRuntimeEvent,
+  getDeclaredScene,
   getGameRuntime,
+  getSceneRuleContext,
   getRandomPhrase as engineGetRandomPhrase,
   useDialogStore,
   useInventoryStateStore,
+  resolveEnterScript,
   useInventoryUiStore,
   usePlacedItemsStateStore,
   type GameSceneInteractionFull,
@@ -51,6 +54,8 @@ export type UseInventoryRuntimeOptions = {
   /**
    * Se llama al entrar en una escena (y cuando cambia `showSpeechBubble`), tras dos
    * `requestAnimationFrame` para que R3F haya corrido al menos un `useFrame`.
+   * Corre DESPUES del guion declarativo `scene.onEnter`, que tiene la misma temporizacion
+   * pero se ejecuta una sola vez por entrada.
    */
   onSceneEnter?: (sceneId: string, api: SceneEnterApi) => void;
   /** Contexto de reglas de items. Por defecto, el registro del runtime activo. */
@@ -252,8 +257,14 @@ export function useInventoryRuntime({
     getPhrase,
   });
 
+  // Escena cuyo `onEnter` declarativo ya corrio: evita repetirlo si solo cambia `showSpeechBubble`.
+  const enteredSceneRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!injectedRef.current.onSceneEnter) return;
+    if (!injectedRef.current.onSceneEnter && !getDeclaredScene(sceneId)?.onEnter) {
+      enteredSceneRef.current = null;
+      return;
+    }
 
     // Double-rAF: el dialogo de entrada dispara DESPUÉS de que R3F haya corrido
     // al menos un useFrame. setTimeout(0) se ejecutaba antes del primer
@@ -266,6 +277,14 @@ export function useInventoryRuntime({
       outerHandle = null;
       innerHandle = requestFrame(() => {
         innerHandle = null;
+        if (enteredSceneRef.current !== sceneId) {
+          enteredSceneRef.current = sceneId;
+          const script = resolveEnterScript(
+            getDeclaredScene(sceneId)?.onEnter,
+            getSceneRuleContext(sceneId),
+          );
+          if (script) getGameRuntime()?.runScript(script);
+        }
         injectedRef.current.onSceneEnter?.(sceneId, {
           showDialog: (key) =>
             showSpeechBubble(injectedRef.current.getPhrase(key), { dialogKey: key }),

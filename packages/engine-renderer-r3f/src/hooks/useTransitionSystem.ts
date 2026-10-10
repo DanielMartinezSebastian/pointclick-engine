@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import {
+  evaluateTransitionGate,
   getGameRuntime,
+  getSceneRuleContext,
   useDialogStore,
   useSceneStore,
   resolveTransitionFromItemDrop,
   resolveTransitionFromItemInteraction,
 } from "@pointclick-engine/engine-core";
-import type { RuntimeEvent, GameScene } from "@pointclick-engine/engine-core";
+import type { RuntimeEvent, GameScene, GameSceneTransition } from "@pointclick-engine/engine-core";
 import { preloadSceneBackground } from "../scene/SceneBackgroundPlane";
 import { resolveSceneFromRuntime } from "./useSceneRuntime";
 import {
@@ -31,8 +33,21 @@ export interface UseTransitionSystemOpts {
   /**
    * Regla del juego para permitir salir de la escena. Si devuelve un objeto,
    * se muestra ese dialogo y no se cambia de escena. Se evalua al disparar la transicion.
+   * Se evalua DESPUES de `transition.when` (declarativo): si `when` no se cumple corre
+   * `transition.blocked` y esta regla no se llama; si se cumple, esta regla puede vetar.
    */
   canLeaveScene?: CanLeaveScene;
+}
+
+/**
+ * Aplica `when`/`blocked` de la transicion. Si no se cumple `when`, corre `blocked`
+ * y devuelve false (no hay cambio de escena). Aplica a todos los tipos de transicion.
+ */
+function passesDeclarativeGate(transition: GameSceneTransition): boolean {
+  const gate = evaluateTransitionGate(transition, getSceneRuleContext(useSceneStore.getState().sceneId));
+  if (gate.allowed) return true;
+  if (gate.blocked.length > 0) getGameRuntime()?.runScript(gate.blocked);
+  return false;
 }
 
 export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
@@ -108,6 +123,8 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
         return;
       }
 
+      if (!passesDeclarativeGate(transition)) return;
+
       const decision = decideLeaveScene(optsRef.current?.canLeaveScene, {
         transitionId,
         fromSceneId: currentSceneId,
@@ -151,7 +168,7 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
             interactionId: event.interactionId,
           };
           const matching = resolveTransitionFromItemDrop(scene, gameEvent);
-          if (matching) {
+          if (matching && passesDeclarativeGate(matching)) {
             getGameRuntime()?.emit({
               type: "transition:triggered",
               transitionId: matching.id,
@@ -164,7 +181,7 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
 
         if (event.type === "onDrop" && event.outcome === "item-interact" && event.interactionId) {
           const matching = resolveTransitionFromItemInteraction(scene, event.itemId, event.interactionId);
-          if (matching) {
+          if (matching && passesDeclarativeGate(matching)) {
             getGameRuntime()?.emit({
               type: "transition:triggered",
               transitionId: matching.id,
