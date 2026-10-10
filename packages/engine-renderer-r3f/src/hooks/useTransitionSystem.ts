@@ -1,33 +1,42 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useSceneStore } from "@pointclick-engine/engine-core";
-import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } from "@pointclick-engine/engine-core";
-import { getGameRuntime } from "../publicApi";
-import { useDialogStore } from "../../../store/dialogStore";
-import { usePlacedItemsStore } from "../../../store/placedItemsStore";
-import { preloadSceneBackground } from "@pointclick-engine/engine-renderer-r3f";
+import {
+  getGameRuntime,
+  useDialogStore,
+  useSceneStore,
+  resolveTransitionFromItemDrop,
+  resolveTransitionFromItemInteraction,
+} from "@pointclick-engine/engine-core";
 import type { RuntimeEvent, GameScene } from "@pointclick-engine/engine-core";
+import { preloadSceneBackground } from "../scene/SceneBackgroundPlane";
+import { resolveSceneFromRuntime } from "./useSceneRuntime";
+import {
+  decideLeaveScene,
+  resolveUsedTransition,
+  type CanLeaveScene,
+} from "./transitionRules";
+
+export type { CanLeaveScene, LeaveSceneTransition, LeaveSceneBlock } from "./transitionRules";
 
 /**
- * Wires scene transitions into the demo.
- *
- * Handles:
- * - Collision-based transitions (via `handleTransitionTriggered` callback)
- * - Item-drop-based transitions (by watching `item:dropped` events)
- *
- * Scene changes are applied directly via sceneStore for demo compatibility
- * (scenes are defined in SCENES, not registered via createGameRuntime).
+ * Cablea las transiciones de escena:
+ * - Por colision (via el callback `handleTransitionTriggered`)
+ * - Por soltar/interactuar con un item (via `wrapRuntimeEventForTransitions`)
  */
 export interface UseTransitionSystemOpts {
   onBeforeChange?: () => void;
-  /** Resuelve el objeto de escena completo por ID. Usado para validación y precarga de fondo. */
+  /** Resuelve el objeto de escena completo por ID. Por defecto, el registro del runtime. */
   resolveScene?: (sceneId: string) => GameScene | null;
+  /**
+   * Regla del juego para permitir salir de la escena. Si devuelve un objeto,
+   * se muestra ese dialogo y no se cambia de escena. Se evalua al disparar la transicion.
+   */
+  canLeaveScene?: CanLeaveScene;
 }
 
 export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
   const storeSetScene = useSceneStore((s) => s.setScene);
-  const placedItems = usePlacedItemsStore((s) => s.items);
   const isTransitioningRef = useRef(false);
   const showDialog = useDialogStore((s) => s.show);
   const dialogVisible = useDialogStore((s) => s.visible);
@@ -38,9 +47,16 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
   const changeScene = useCallback(
     (targetSceneId: string, transitionId: string) => {
       if (isTransitioningRef.current) return;
+
+      const resolvedScene = (optsRef.current?.resolveScene ?? resolveSceneFromRuntime)(targetSceneId);
+      if (!resolvedScene) {
+        // Sin escena destino no se cambia nada; la guarda no llega a tomarse.
+        console.warn(`[transition] target scene could not be resolved: ${targetSceneId}`);
+        return;
+      }
+
       isTransitioningRef.current = true;
 
-      // Emit transition:started via runtime bus (if runtime is active)
       getGameRuntime()?.emit({
         type: "transition:started",
         transitionId,
@@ -53,25 +69,17 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
       const fromSceneId = useSceneStore.getState().sceneId;
       const fromScene = useSceneStore.getState().scene;
 
-      // Find the transition that was used to trigger this scene change
-      const usedTransition = fromScene.transitions?.find((t) => t.id === transitionId);
+      const { spawnPosition, walkTarget } = resolveUsedTransition(fromScene, transitionId);
 
       // Change scene first with optional custom spawn position
-      const spawnPos = usedTransition && "spawnPosition" in usedTransition ? usedTransition.spawnPosition : undefined;
-      const resolvedScene = optsRef.current?.resolveScene?.(targetSceneId) ?? null;
-      storeSetScene(targetSceneId, resolvedScene as Parameters<typeof storeSetScene>[1], spawnPos);
+      storeSetScene(targetSceneId, resolvedScene, spawnPosition);
 
       // Then emit walk command in the new scene with correct pathfinding context
-      if (usedTransition && "targetPosition" in usedTransition && usedTransition.targetPosition) {
-        const targetPos = usedTransition.targetPosition;
-        // console.log(`[useTransitionSystem] Emitting walkTo to ${JSON.stringify(targetPos)}`);
-        // Emit walk command via runtime
+      if (walkTarget) {
         getGameRuntime()?.executeCommand({
           type: "player:walkTo",
-          position: targetPos,
+          position: walkTarget,
         });
-      } else {
-        // console.log(`[useTransitionSystem] No targetPosition found on transition`, usedTransition);
       }
 
       getGameRuntime()?.emit({
@@ -100,29 +108,19 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
         return;
       }
 
-      // Special case: leaving personalRoom requires having taken the trophy
-      // The trophy must not be placed in personalRoom (can be in inventory or another room)
-      if (currentSceneId === "personalRoom" && targetSceneId === "dungeon") {
-        const trophyStillInRoom = placedItems.some(
-          (item) => item.itemId === "trophy" && item.sceneId === "personalRoom",
-        );
-
-        console.log("[transition-debug] personalRoom exit check:", {
-          allPlacedItems: placedItems.map((i) => ({ id: i.id, itemId: i.itemId, sceneId: i.sceneId })),
-          trophyStillInRoom,
-        });
-
-        if (trophyStillInRoom) {
-          showDialog(
-            "Sería mejor recoger todo lo que pueda del cuarto antes de irme...",
-            "interaction.trophy-pedestal.empty",
-          );
-          return;
-        }
+      const decision = decideLeaveScene(optsRef.current?.canLeaveScene, {
+        transitionId,
+        fromSceneId: currentSceneId,
+        targetSceneId,
+      });
+      if (!decision.allowed) {
+        showDialog(decision.text, decision.dialogKey);
+        return;
       }
 
       // Preload the target scene background so it's in browser cache when we switch.
-      const targetBg = optsRef.current?.resolveScene?.(targetSceneId)?.background;
+      const resolveScene = optsRef.current?.resolveScene ?? resolveSceneFromRuntime;
+      const targetBg = resolveScene(targetSceneId)?.background;
       if (targetBg) preloadSceneBackground(targetBg);
 
       getGameRuntime()?.emit({
@@ -132,7 +130,7 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
       });
       changeScene(targetSceneId, transitionId);
     },
-    [changeScene, showDialog, placedItems],
+    [changeScene, showDialog],
   );
 
   /**

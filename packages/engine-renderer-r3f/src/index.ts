@@ -80,6 +80,17 @@ export {
   type SceneProgressStorage,
   type UseSceneRuntimeOptions,
 } from "./hooks/useSceneRuntime";
+export {
+  useTransitionSystem,
+  type UseTransitionSystemOpts,
+} from "./hooks/useTransitionSystem";
+export {
+  decideLeaveScene,
+  resolveUsedTransition,
+  type CanLeaveScene,
+  type LeaveSceneTransition,
+  type LeaveSceneBlock,
+} from "./hooks/transitionRules";
 export { useClickToMoveController } from "./hooks/useClickToMoveController";
 export { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 export type { KeyboardMovementState } from "./adapters/useKeyboardMovementInput";

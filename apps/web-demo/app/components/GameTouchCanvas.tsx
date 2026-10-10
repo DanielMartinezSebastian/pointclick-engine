@@ -24,14 +24,14 @@ import { ITEMS } from "../../demo-content/items";
 import { DAVID } from "../../demo-content/characters/david";
 import { DEMO_AUDIO_DEFAULTS } from "../lib/engine/runtime/useDemoAudio";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { GameTouchSpriteRuntime, SceneTransitions, useAudioSystem } from "@pointclick-engine/engine-renderer-r3f";
+import { GameTouchSpriteRuntime, SceneTransitions, useAudioSystem, useTransitionSystem } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
 import { useDebugModeEffects } from "../lib/engine/runtime/useDebugModeEffects";
 import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntimeController";
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
-import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
+import { canLeaveSceneDemo } from "../lib/engine/runtime/demoSceneRules";
 import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
 import { legacyRuntimeEventToGameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime, type GameRuntime } from "../lib/engine/publicApi";
@@ -185,6 +185,7 @@ export default function GameTouchCanvas({
   const { handleTransitionTriggered, wrapRuntimeEventForTransitions } = useTransitionSystem({
     onBeforeChange: handleBeforeSceneChange,
     resolveScene: (id) => SCENES[id] ?? null,
+    canLeaveScene: canLeaveSceneDemo,
   });
 
   const afterDoorRuntimeEvent = useDoorSystem({
