@@ -9,9 +9,9 @@
 
 ## Ola A — en paralelo
 
-- [ ] [02-core-runtime-factory](tasks/02-core-runtime-factory.md) — sonnet
-- [ ] [05-delete-render-duplicates](tasks/05-delete-render-duplicates.md) — haiku
-- [ ] [08-storage-port-persistence](tasks/08-storage-port-persistence.md) — haiku
+- [x] [02-core-runtime-factory](tasks/02-core-runtime-factory.md) — sonnet
+- [x] [05-delete-render-duplicates](tasks/05-delete-render-duplicates.md) — haiku
+- [x] [08-storage-port-persistence](tasks/08-storage-port-persistence.md) — haiku
 
 ## Ola B — en paralelo
 

@@ -7,9 +7,7 @@ import { Physics } from "@react-three/rapier";
 
 import { PixelLoader } from "./PixelLoader";
 
-import {
-  type GameCharacterName,
-} from "./sprite/clips";
+import { type GameCharacterName } from "@pointclick-engine/engine-renderer-r3f";
 import dynamic from "next/dynamic";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
 import { SceneDropTargets } from "./inventory/SceneDropTargets";
