@@ -30,3 +30,26 @@ export {
   getInventoryUiState,
   type InventoryUiStoreState,
 } from "./inventoryUiStore";
+export {
+  DEFAULT_INVENTORY_SLOT_COUNT,
+  createEmptySlots,
+  useInventoryStateStore,
+  getInventoryState,
+  type InventoryStateStoreState,
+} from "./inventoryStore";
+export {
+  selectPlacedItemsForScene,
+  usePlacedItemsStateStore,
+  getPlacedItemsState,
+  type PlacedItemsStateStoreState,
+} from "./placedItemsReactiveStore";
+export {
+  INVENTORY_SLOTS_STORAGE_KEY,
+  PLACED_ITEMS_STORAGE_KEY,
+  loadInventorySlotsState,
+  saveInventorySlotsState,
+  loadPlacedItemsState,
+  savePlacedItemsState,
+  type KeyValueStoragePort,
+  type PersistedPlacedItems,
+} from "./gameStatePersistence";
