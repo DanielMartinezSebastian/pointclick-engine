@@ -1,84 +1,27 @@
-# API Pública (`publicApi.ts`)
+# API Pública
 
-**Ubicación actual**: `app/lib/engine/publicApi.ts`
-**Ubicación post-Fase 2**: `packages/engine-core/src/index.ts` (parte agnóstica) + `apps/web-demo/.../publicApi.ts` (parte R3F)
-
-> ⚠️ **Desfase conocido (2026-10-10)**: `createGameRuntime`, `GameViewport`, `useGameState`, `useGameActions` y `registerRule` viven hoy en `apps/web-demo/app/lib/engine/publicApi.ts`; `@pointclick-engine/engine-renderer-r3f` **no** los exporta todavía. Se corrige en `docs/phases/phase-16-runtime-in-library/`.
+**Ubicación**: el runtime agnóstico vive en `packages/engine-core/src/game/runtime/` y el viewport/hooks R3F en `packages/engine-renderer-r3f/src/index.ts`. `apps/web-demo/app/lib/engine/publicApi.ts` es un **barrel de compatibilidad** que re-exporta ambos con los nombres del contrato v1.
 
 ## Contrato Estable (v1)
 
-Estos exports **NO se rompen sin issue + migración + bump semver**.
+Estos exports **NO se rompen sin issue + migración + bump semver**. La lista completa y separada por paquete está en [`../LIBRARY_API_CONTRACT_V1.md`](../LIBRARY_API_CONTRACT_V1.md) (fuente única; no se duplica aquí).
 
-### Tipos
+Resumen:
 
-```ts
-GameVec3
-GameSceneGround, GameSceneWall, GameSceneConfig
-GameSceneInteraction, GameSceneInteractionDialogKeys
-GameItemDropOutcome, GameItemRule, GameItemConfig
-GameRuleConfig
-GameRuntimeConfig, GameRuntime
-GameState, GameActions
-GameRuntimeEvent, GameRuntimeEventHandler
-GameViewportProps
-```
+| Paquete | Contenido |
+|---------|-----------|
+| `@pointclick-engine/engine-core` | `createGameRuntime`, `getGameRuntime`, `registerScene/Item/Rule`, `getGameState`, `getGameActions`, tipos `Game*Config`, `GameRuntime`, `GameState`, `GameActions`, `GameCommand`, `GameEvent` |
+| `@pointclick-engine/engine-renderer-r3f` | `GameViewport`, `GameViewportView`, `useGameViewportController`, `useGameState`, `useGameActions`, `CharacterSprite`, `attachAudioSystem` |
 
-### Funciones / Componentes
+Cómo se usa, paso a paso: [`../LIBRARY_CONSUMPTION_GUIDE.md`](../LIBRARY_CONSUMPTION_GUIDE.md).
 
-```ts
-createGameRuntime(config?: GameRuntimeConfig): GameRuntime
-registerScene(config: GameSceneConfig): void
-registerItem(config: GameItemConfig): void
-registerRule(config: GameRuleConfig): void
-getGameState(): GameState
-getGameActions(): GameActions
-useGameState<T>(selector: (s: GameState) => T): T
-useGameActions(): GameActions
-GameViewport(props: GameViewportProps): ReactNode
-```
+## i18n (v0.4.0+, Phase 13)
 
-### i18n (v0.4.0+, Phase 13)
+Core (`@pointclick-engine/engine-core`): `registerDictionary`, `registerDictionaries`, `getDictionary`, `translate`, `getRandomPhrase`, `matchLocale`, `createI18nStore`, `getI18nStore`, `resetI18nStore`, `subscribeI18n`, `setI18nStoreEmitter`, `HeadlessI18nAdapter`, `registerI18nExecutors`; tipos `Locale`, `DialogEntry`, `DialogDictionary`, `LocaleDictionaries`, `I18nConfig`, `I18nState`, `I18nPort`, `I18nStore`.
 
-Tipos:
+Renderer (`@pointclick-engine/engine-renderer-r3f`): `useI18n`, `useLocaleDetection`, `I18nProvider`, `LocaleSwitcher`; tipos `UseI18nResult`, `UseLocaleDetectionOptions`, `LocaleSwitcherProps`, `LocaleSwitcherRenderOption`, `I18nProviderProps`.
 
-```ts
-Locale, DialogEntry, DialogDictionary, LocaleDictionaries
-I18nConfig, I18nState, I18nPort, I18nStore
-UseI18nResult, UseLocaleDetectionOptions
-LocaleSwitcherProps, LocaleSwitcherRenderOption, I18nProviderProps
-```
-
-Funciones / componentes:
-
-```ts
-// Core
-registerDictionary(locale, dict): void
-registerDictionaries(all): void
-getDictionary(locale): DialogDictionary | undefined
-translate(key, opts?): string
-getRandomPhrase(key, opts?): string
-matchLocale(candidate, available): Locale | null
-createI18nStore(config): I18nStore
-getI18nStore(): I18nStore
-resetI18nStore(config?): void
-subscribeI18n(listener): () => void
-setI18nStoreEmitter(emitter): void
-HeadlessI18nAdapter // class implements I18nPort
-registerI18nExecutors(handler, emit?): () => void
-
-// R3F
-useI18n(): UseI18nResult
-useLocaleDetection({ port, config? }): void
-<I18nProvider config={...}>...</I18nProvider>
-<LocaleSwitcher as|labels|renderOption|className|ariaLabel />
-```
-
-Adapter web (no es parte del package; vive en `apps/web-demo/app/lib/`):
-
-```ts
-createWebI18nAdapter({ availableLocales, storageKey? }): WebI18nAdapter
-bindI18nPersistence(store, port): () => void
-```
+Adapter web (no es parte de los paquetes; vive en `apps/web-demo/app/lib/platform-web-i18n.ts`): `createWebI18nAdapter`, `bindI18nPersistence`.
 
 Recetas Next.js: ver [`../integrations/nextjs-i18n.md`](../integrations/nextjs-i18n.md).
 
@@ -92,7 +35,7 @@ Recetas Next.js: ver [`../integrations/nextjs-i18n.md`](../integrations/nextjs-i
 
 - ❌ Renombrar / remover exports
 - ❌ Cambiar firmas (parámetros, return)
-- ❌ Cambiar semántica de eventos / acciones
+- ❌ Cambiar semántica de eventos / acciones (p. ej. 0.5.0: recoger un ítem pasó de `item:dropped` con `outcome: "pickup-success"` a `item:pickedUp`)
 
 ## Si necesitas cambiar la API pública
 
@@ -103,13 +46,13 @@ Recetas Next.js: ver [`../integrations/nextjs-i18n.md`](../integrations/nextjs-i
 
 ## Commands & Events (Phase 4)
 
-`createGameRuntime()` ahora devuelve también `executeCommand`, `on`, `emit`, `dispose`:
+`createGameRuntime()` devuelve un handle con `executeCommand`, `on`, `emit`, `dispose`, además de `getScenes`, `getItems`, `getRules`:
 
 ```ts
 const runtime = createGameRuntime({ scenes });
 runtime.on("scene:changed", handler);      // suscribirse a eventos
 runtime.executeCommand({ type: "scene:set", sceneId: "town" }); // enviar comandos
-const rt = getGameRuntime();               // acceso al singleton desde cualquier sitio
+const rt = getGameRuntime();               // handle activo (null antes de crearlo o tras dispose)
 ```
 
 Ver catálogo completo en [`05-bidirectional-communication.md`](05-bidirectional-communication.md).

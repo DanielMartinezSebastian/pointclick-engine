@@ -1,6 +1,6 @@
 # @pointclick-engine/engine-renderer-r3f
 
-React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick-engine/engine-core).
+React Three Fiber renderer for the [Point & Click Game Engine](https://www.npmjs.com/package/@pointclick-engine/engine-core). Provides `GameViewport`: a playable game in one component.
 
 ## Install
 
@@ -18,17 +18,20 @@ Supported ranges: React 18/19 · Three ≥0.150 · R3F 8/9 · Drei 9/10 · Rapie
 
 ## Quick start
 
-```tsx
-import {
-  GameCanvasCore,
-  GameTouchSpriteRuntime,
-  SceneGround,
-  SceneWalls,
-} from "@pointclick-engine/engine-renderer-r3f";
-import { useSceneStore } from "@pointclick-engine/engine-core/state";
-import type { GameScene } from "@pointclick-engine/engine-core/types";
+The runtime comes from `engine-core`; the viewport from this package. Create the runtime once, mount the viewport when it exists (`GameViewport` is client-only).
 
-const scene: GameScene = {
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  createGameRuntime,
+  type GameRuntime,
+  type GameSceneConfig,
+} from "@pointclick-engine/engine-core";
+import { GameViewport } from "@pointclick-engine/engine-renderer-r3f";
+
+const TOWN: GameSceneConfig = {
   id: "town",
   label: "Town",
   background: "/assets/background/town.jpg",
@@ -36,54 +39,32 @@ const scene: GameScene = {
   ground: { minX: -15, maxX: 15, minZ: -10, maxZ: 30, y: -3 },
   walls: [],
   interactions: [],
-  transitions: [],
 };
 
-// Register before first render
-useSceneStore.getState().setScenes([scene]);
-useSceneStore.getState().setCurrentScene("town");
+export default function Game() {
+  const [runtime, setRuntime] = useState<GameRuntime | null>(null);
 
-function App() {
-  return (
-    <GameCanvasCore>
-      <SceneGround />
-      <SceneWalls />
-      <GameTouchSpriteRuntime />
-    </GameCanvasCore>
-  );
+  useEffect(() => {
+    const created = createGameRuntime({ scenes: [TOWN] });
+    setRuntime(created);
+    return () => {
+      created.dispose();
+      setRuntime(null);
+    };
+  }, []);
+
+  if (!runtime) return null;
+  return <GameViewport runtime={runtime} initialSceneId="town" />;
 }
 ```
+
+With the defaults the game is playable: built-in character, inventory, item pick-up/placing and scene transitions. No persistence and no audio unless you pass `storage` / `audio`. A complete example that imports only from the packages: `apps/web-demo/app/example-minimal/page.tsx` in the monorepo. Option groups: [consumption guide](https://github.com/DanielMartinezSebastian/pointclick-engine/blob/main/docs/LIBRARY_CONSUMPTION_GUIDE.md).
+
+Need your own UI around the game state? Use `useGameViewportController` + `GameViewportView` instead of `GameViewport`.
 
 ## i18n / Localization
 
-```tsx
-import {
-  I18nProvider,
-  LocaleSwitcher,
-  useI18n,
-} from "@pointclick-engine/engine-renderer-r3f";
-import { registerDictionary } from "@pointclick-engine/engine-core";
-
-registerDictionary("en", { "ui.start": ["Start game"] });
-registerDictionary("es", { "ui.start": ["Iniciar juego"] });
-
-function HUD() {
-  const { t, locale } = useI18n();
-  return <p>{t("ui.start")}</p>;
-}
-
-function App() {
-  return (
-    <I18nProvider defaultLocale="en">
-      <LocaleSwitcher locales={["en", "es"]} />
-      <HUD />
-      <GameCanvasCore>…</GameCanvasCore>
-    </I18nProvider>
-  );
-}
-```
-
-Locale is auto-detected from `navigator.language` (via `useLocaleDetection`) and persisted through the `I18nPort`.
+`useI18n`, `useLocaleDetection`, `I18nProvider` and `LocaleSwitcher` are exported from the root entry point. Dictionaries are registered with `registerDictionary` from `engine-core`. Next.js recipes: [`docs/integrations/nextjs-i18n.md`](https://github.com/DanielMartinezSebastian/pointclick-engine/blob/main/docs/integrations/nextjs-i18n.md).
 
 ## Subpath exports
 
@@ -91,65 +72,66 @@ Locale is auto-detected from `navigator.language` (via `useLocaleDetection`) and
 // Port adapters (implement engine-core interfaces for R3F / browser)
 import { useR3FGameLoop, WebKeyboardInput } from "@pointclick-engine/engine-renderer-r3f/adapters";
 
-// React components (canvas, i18n UI)
-import { GameCanvasCore, I18nProvider, LocaleSwitcher } from "@pointclick-engine/engine-renderer-r3f/components";
+// React components (canvas, sprites, a subset of scene primitives)
+import { GameCanvasCore, CharacterSprite, SceneGround } from "@pointclick-engine/engine-renderer-r3f/components";
 ```
 
-Everything is also re-exported from the root entry point.
+`GameViewport`, the hooks and the i18n components are only in the root entry point.
 
 ## What this package provides
 
-### Canvas & runtime
+### Viewport
 
 | Export | Description |
 |--------|-------------|
-| `GameCanvasCore` | R3F `Canvas` shell with physics world and game loop wired up |
-| `GameTouchSpriteRuntime` | Player movement controller — click-to-move, touch, keyboard |
+| `GameViewport` | Playable game: controller + view with sensible defaults |
+| `useGameViewportController` | Hook (no JSX) that runs the generic game hooks and returns what the view and your UI need |
+| `GameViewportView` | Presentational view: Canvas, scene, character, items, fade curtain. Extend with `children`, `canvasChildren`, `overlay` |
+| `GameCanvasCore` | Minimal R3F `Canvas` shell |
+| `GameTouchSpriteRuntime` | Player movement runtime: click-to-move, touch, keyboard |
 
 ### Scene primitives
 
 | Export | Description |
 |--------|-------------|
-| `SceneGround` | Invisible ground plane with physics collider |
-| `SceneWalls` | Renders `GameSceneWall[]` as collidable wall segments |
-| `SceneWallPlane` | Single wall plane primitive |
-| `SceneCollisionSphere` | Invisible collision sphere for interaction zones |
-| `SceneWallPointPreview` | Editor helper: visualises wall boundary points |
-| `SceneTransitions` | Renders scene exit/entry portals from `GameSceneTransition[]` |
-| `computeWallSegments` | Pure function: converts wall points → `WallSegment[]` |
+| `SceneGround`, `SceneWalls`, `SceneWallPlane` | Ground and collidable walls |
+| `SceneBackgroundPlane`, `CameraController`, `CameraFitHeight` | Background and fixed camera |
+| `SceneTransitions` | Renders transition zones from `GameSceneTransition[]` |
+| `SceneDropTargets`, `PlacedSceneItems` | Inventory drop targets and items placed in the scene |
+| `computeWallSegments` | Pure function: converts walls → `WallSegment[]` |
 
 ### Sprite
 
 | Export | Description |
 |--------|-------------|
-| `DavidSprite` | Billboarded 2D sprite with depth-based scale and animation clips |
-| `buildSpeakingAnimation` | Utility: builds lip-sync animation from a dialog entry |
-| `SpeechBubble` | In-world speech bubble anchored to a 3D position |
+| `CharacterSprite` | Billboarded sprite driven by a `CharacterDefinition` (clips per direction, optional speaking clip) |
+| `DavidSprite` | **Deprecated** — use `CharacterSprite` (also the `clips.ts` exports) |
+| `SpeechBubble` | In-world speech bubble |
 
 ### Hooks
 
 | Export | Description |
 |--------|-------------|
-| `usePlayerWalkAnimation` | Drives walk/idle animation clips on `DavidSprite` |
-| `useClickToMoveController` | Ground-click → pathfinding → movement commands |
+| `useGameState`, `useGameActions` | Read `GameState` / get `GameActions` from React |
+| `useSceneRuntime` | Scene seeding and optional scene-id persistence |
+| `useTransitionSystem` | Scene transitions with fade and an optional `canLeaveScene` rule |
+| `useInventoryRuntime` | Inventory drag/drop, pick-up, initial placed items, `onSceneEnter` |
+| `useAudioSystem`, `attachAudioSystem` | Connect an `AudioPort` to runtime events (`attachAudioSystem` has no React) |
+| `usePlayerWalkAnimation`, `useClickToMoveController` | Walk animation and ground-click movement |
 | `useKeyboardMovementInput` | WASD / arrow-key input state |
-| `useAudioSystem` | Connects `IAudioPort` to Web Audio API |
-| `useI18n` | Access `t()` translator and current locale from a component |
-| `useLocaleDetection` | Detects browser locale and writes it to the i18n store |
+| `useI18n`, `useLocaleDetection` | Translator access and locale detection |
 
 ### Port adapters
 
 | Export | Description |
 |--------|-------------|
-| `useR3FGameLoop` | `IGameLoopPort` implementation — delegates to R3F `useFrame` |
-| `WebKeyboardInput` | `IInputPort` implementation — browser `KeyboardEvent` listener |
+| `useR3FGameLoop` | `GameLoopPort` implementation — delegates to R3F `useFrame` |
+| `WebKeyboardInput` | `InputPort` implementation — browser `KeyboardEvent` listener |
 
-### i18n components
+## Known limitations
 
-| Export | Description |
-|--------|-------------|
-| `I18nProvider` | Context provider that initialises the i18n store |
-| `LocaleSwitcher` | Headless locale picker (bring your own styles) |
+- Doors are not part of the engine (the monorepo demo implements them).
+- The scene/item registries live in `engine-core` and are module-global.
 
 ## License
 
@@ -157,4 +139,4 @@ MIT © Daniel Martínez Sebastián
 
 ## Status
 
-`v0.4.0` — active development. R3F is currently the only supported renderer; the engine is renderer-agnostic by design.
+`v0.5.0` — active development. R3F is currently the only supported renderer; the engine is renderer-agnostic by design.

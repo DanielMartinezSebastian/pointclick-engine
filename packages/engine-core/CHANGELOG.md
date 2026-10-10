@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — Unreleased
+
+Phase 16: the game runtime moves into this package. `createGameRuntime` and
+the content registries no longer live in the demo app.
+
+### Added — Agnostic runtime (`src/game/runtime/`)
+
+- `createGameRuntime`, `getGameRuntime`, `getGameState`, `getGameActions`,
+  `registerScene`, `registerItem`, `registerRule`, `toRuntimeScene`,
+  `createInventoryRuleContext`, plus the config types (`GameSceneConfig`,
+  `GameItemConfig`, `GameRuntimeConfig`, `GameRuntime`, `GameState`,
+  `GameActions`, `InventoryUIAdapter`, `DialogUIAdapter`, ...).
+- `GameSceneConfig` keeps `transitions` and `music` through registration
+  and `scene:set`.
+- `scene:set` accepts `spawnPosition?`.
+- `player:stop` executor: aborts route walks (emits `player:walkAborted`);
+  it does not stop manual keyboard/joystick movement.
+
+### Added — Stores and persistence
+
+- `useDialogStore`, `useInventoryUiStore` (used by `dialog:*` and
+  `inventory:toggle` when no host adapter is passed), `useInventoryStateStore`
+  and `usePlacedItemsStateStore` (reactive slots and placed items).
+- Port-based persistence in `gameStatePersistence.ts`: `KeyValueStoragePort`,
+  `loadInventorySlotsState` / `saveInventorySlotsState`,
+  `loadPlacedItemsState` / `savePlacedItemsState`.
+- Declarative audio: item `pickupSoundUrl` / `dropSoundUrl` and scene
+  `music` are resolved by `audioRules` from `item:pickedUp` / `item:dropped`.
+- Test `coreAgnosticism.test.ts`; `process.env` access is guarded.
+
+### Changed
+
+- `transition:activate` respects the transition's `spawnPosition`.
+- Default dialog-key fallbacks in the core inventory rules use `??`
+  instead of `||`: an explicit empty key is now respected.
+- `GameActions.setScene` is `(sceneId: string) => void`.
+- Audio rules play the drop sound only for `outcome: "place"`.
+
+### Breaking
+
+- Picking up an item travels on the bus as `item:pickedUp`; it used to
+  arrive as `item:dropped` with `outcome: "pickup-success"`. Listeners that
+  detected pick-ups on `item:dropped` must listen to `item:pickedUp`. The
+  legacy `onRuntimeEvent` callback is unchanged.
+
+### Fixed
+
+- Test files are no longer shipped in the published package.
+
+### Known limitations
+
+- `inventory:pickup` and `inventory:drop` have no executor (they only warn).
+- Scene/item/rule registries are module-global.
+- Other legacy outcomes (`rule-miss`, `on-player`, `pickup-blocked`,
+  `item-interact`, `unknown-item`) still travel as `item:dropped` with an
+  `outcome` outside the declared type.
+
 ## [0.4.0] — 2026-05-31
 
 This release folds in everything between v0.1.x and v0.4.0 (phases 6, 8, 9,

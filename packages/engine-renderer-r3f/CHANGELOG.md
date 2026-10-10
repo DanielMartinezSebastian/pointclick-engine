@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — Unreleased
+
+Phase 16: the playable game composition moves into this package. The demo
+becomes a consumer. Requires `@pointclick-engine/engine-core` ^0.5.0.
+
+### Added — Playable `GameViewport`
+
+- `GameViewport` works with defaults: uses the active runtime
+  (`getGameRuntime()`), built-in character, inventory and transitions.
+  Optional props: `initialSceneId`, `storage`, `resolveScene`,
+  `canLeaveScene`, `getPhrase`, `getInitialPlacedItems`, `onSceneEnter`,
+  `itemContext`, `audio`, `filterPlacedItems`, `startPersistence`,
+  `character`, `cameraMode`, `spriteRuntimeProps`, `canPickupItems`,
+  `canvasChildren`, `children`, `overlay`, `onSceneReady`, `debug`,
+  `onRuntimeEvent`.
+- `useGameViewportController` + `GameViewportView`: the two halves of
+  `GameViewport`, for hosts that need the controller in their own UI.
+- Hooks: `useSceneRuntime`, `useTransitionSystem`, `useInventoryRuntime`,
+  `useGameState`, `useGameActions`; `attachAudioSystem` (no React) behind
+  `useAudioSystem`.
+- `CharacterSprite`, `CharacterDefinition`, `CharacterClip`,
+  `CharacterDirection` and helpers (`buildFrameUrls`, `selectClip`,
+  `resolveCharacterSprites`, `listCharacterAnimations`, `toSpriteAnimation`).
+- Scene components moved from the demo:
+  `SceneBackgroundPlane`, `CameraController`, `CameraFitHeight`,
+  `SceneDropTargets`, `PlacedSceneItems`.
+
+### Changed
+
+- `useGameState` / `useGameActions` are implemented here and re-exported by
+  the demo's `publicApi.ts`.
+- Picking up an item is emitted as `item:pickedUp` (see Breaking); the audio
+  bridge plays the drop sound only for `outcome: "place"`.
+
+- The loose physics test sphere is no longer rendered by default. Enable it
+  with the `collisionSphere` prop of `GameTouchSpriteRuntime` (or
+  `spriteRuntimeProps.collisionSphere` on the viewport) and pass your own
+  `textureUrl`; the package no longer requests `/globe.svg` from the host.
+- Items returned by `getInitialPlacedItems` without `sceneId` are assigned to
+  the scene being seeded.
+
+### Fixed
+
+- Peer range for `three` was `^0.150.0`, which only matched 0.150.x and made
+  the package uninstallable next to current three releases. Now `>=0.150.0`.
+- Test files are no longer shipped in the published package.
+
+### Deprecated
+
+- `DavidSprite` / `DavidSpriteHandle`: use `CharacterSprite` /
+  `CharacterSpriteHandle`.
+- The exports of `sprite/clips.ts`: pass a `CharacterDefinition` via the
+  `character` prop (speaking clip: `CharacterDefinition.speaking`).
+
+### Breaking
+
+- Behavior (from `engine-core` 0.5.0): pick-ups arrive as `item:pickedUp`,
+  no longer as `item:dropped` with `outcome: "pickup-success"`. Listeners on
+  the runtime bus must be updated.
+
+### Known limitations
+
+- Doors are not an engine primitive (the demo implements them).
+- Registries are module-global (one game per page).
+- The default character has no bundled assets: without a `character` prop the
+  host must serve the frames under `/assets/sprites/david/`.
+
 ## [0.4.0] — 2026-05-31
 
 This release folds in everything between v0.1.x and v0.4.0 (phases 6, 8, 9,
