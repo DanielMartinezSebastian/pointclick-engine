@@ -3,6 +3,8 @@
 **Ubicación actual**: `app/lib/engine/publicApi.ts`
 **Ubicación post-Fase 2**: `packages/engine-core/src/index.ts` (parte agnóstica) + `apps/web-demo/.../publicApi.ts` (parte R3F)
 
+> ⚠️ **Desfase conocido (2026-10-10)**: `createGameRuntime`, `GameViewport`, `useGameState`, `useGameActions` y `registerRule` viven hoy en `apps/web-demo/app/lib/engine/publicApi.ts`; `@pointclick-engine/engine-renderer-r3f` **no** los exporta todavía. Se corrige en `docs/phases/phase-16-runtime-in-library/`.
+
 ## Contrato Estable (v1)
 
 Estos exports **NO se rompen sin issue + migración + bump semver**.

@@ -2,6 +2,8 @@
 
 Este documento define qué superficie está soportada oficialmente para consumidores externos del engine.
 
+> ⚠️ **Desfase conocido (2026-10-10)**: `createGameRuntime`, `GameViewport`, `useGameState`, `useGameActions` y `registerRule` viven hoy en `apps/web-demo/app/lib/engine/publicApi.ts`; `@pointclick-engine/engine-renderer-r3f` **no** los exporta todavía. Se corrige en `docs/phases/phase-16-runtime-in-library/`.
+
 ## 1. Objetivo
 
 - Congelar una frontera pública estable.

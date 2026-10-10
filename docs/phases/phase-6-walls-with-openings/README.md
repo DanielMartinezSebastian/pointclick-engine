@@ -1,6 +1,6 @@
 # Phase 6: Walls with Openings (Doors/Windows)
 
-**Status**: Planning | **Owner**: Feature development | **Version target**: v0.2.0
+**Status**: completed | **Owner**: Feature development | **Version target**: v0.2.0
 
 ---
 
@@ -168,7 +168,7 @@ app/lib/engine/types/gameRuntime.ts
 docs/architecture/07-walls-with-openings.md
   └─ CREATED: Design doc (✅ done)
 
-docs/DEBUG_MODE_REVIEW.md
+docs/_archive/DEBUG_MODE_REVIEW.md
   └─ CREATED: Status del debug mode (✅ done)
 
 docs/phases/phase-6-walls-with-openings/
@@ -246,7 +246,7 @@ docs/phases/phase-6-walls-with-openings/
 - `docs/architecture/01-layers.md` — arquitectura general
 - `docs/architecture/03-rules-core-vs-render.md` — core vs renderer
 - `docs/architecture/07-walls-with-openings.md` — design doc detallado
-- `docs/DEBUG_MODE_REVIEW.md` — estado del debug mode
+- `docs/_archive/DEBUG_MODE_REVIEW.md` — estado del debug mode
 - `docs/workflow/commit-convention.md` — formato de commits
 - `docs/workflow/pre-commit-checklist.md` — checks antes de commit
 

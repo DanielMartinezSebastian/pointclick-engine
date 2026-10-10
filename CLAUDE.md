@@ -1,6 +1,6 @@
 # Point & Click Game Engine
 
-**Versión**: 2.0-dev | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
+**Versión**: 0.4.0 | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
 
 Librería agnóstica al framework para juegos point-and-click 2D/2.5D, con primera implementación en R3F. La demo R3F vive en `apps/web-demo/` dentro del monorepo para evaluar engine y demo en paralelo.
 
@@ -107,10 +107,10 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 
 ## Versionado
 
-- **v0.1.x**: Demo R3F funcional (actual)
+- **v0.1.x**: Demo R3F funcional
 - **v0.2.x**: `engine-core` extraído del monorepo
 - **v0.3.x**: Renderer abstraction (interfaces agnósticas)
-- **v0.4.x**: Bidireccionalidad web ↔ juego
+- **v0.4.x**: Bidireccionalidad web ↔ juego (actual)
 - **v1.0.0**: Publicación en npm
 
 ---
@@ -137,8 +137,6 @@ Ver: `docs/workflow/pre-commit-checklist.md`
     └── decisions/                     # ADRs ligeros
 ```
 
-**Nota**: la estructura monorepo se materializa en Fase 2. Estado actual: app Next.js plana.
-
 ---
 
 ## Documentos Clave
@@ -153,7 +151,7 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 | Delegar subagentes | `docs/workflow/how-to-spawn-subagent.md` |
 | Hacer commit | `docs/workflow/commit-convention.md` |
 | Decisiones tomadas | `docs/decisions/` (ADRs) |
-| Fase activa | `docs/phases/phase-4-bidirectional-web-game/` |
+| Fase activa | `docs/phases/phase-15-green-baseline/` |
 
 ---
 

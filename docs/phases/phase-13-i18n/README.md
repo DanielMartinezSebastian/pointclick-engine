@@ -1,6 +1,6 @@
 # Phase 13 — i18n / Localization System (core + R3F + demo)
 
-**Status**: Planned | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.4.0
+**Status**: Completed — gate de validación pendiente (ver Phase 15) | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.4.0
 
 **Planned**: 2026-05-31
 

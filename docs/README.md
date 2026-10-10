@@ -14,6 +14,8 @@ Diseño del sistema. Lee antes de tocar arquitectura.
 - [`architecture/04-platform-ports.md`](architecture/04-platform-ports.md) — Adapters web (storage, clipboard, timer)
 - [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Commands & Events API (web ↔ juego)
 - [`architecture/06-renderer-implementation-guide.md`](architecture/06-renderer-implementation-guide.md) — Cómo escribir un renderer alternativo
+- [`architecture/07-walls-with-openings.md`](architecture/07-walls-with-openings.md) — Walls with openings: pathfinding & rendering
+- [`architecture/08-scene-transitions.md`](architecture/08-scene-transitions.md) — Scene transitions as first-class primitives
 - [`architecture/09-multiplayer.md`](architecture/09-multiplayer.md) — Multijugador agnóstico (port + partición world/presence/private)
 
 ---
@@ -39,10 +41,16 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-4-bidirectional-web-game/`](phases/phase-4-bidirectional-web-game/) — ✅ Completed: Comunicación web ↔ juego
 - [`phases/phase-5-publish/`](phases/phase-5-publish/) — ✅ Completed: Publicación en npm (v0.1.0 publishable)
 - [`phases/phase-6-walls-with-openings/`](phases/phase-6-walls-with-openings/) — ✅ Completed: Walls with openings & pathfinding
-- [`phases/phase-7-walls-first-class/`](phases/phase-7-walls-first-class/) — ✅ Completed: Walls as first-class scene elements
+- [`phases/phase-7-walls-first-class/`](phases/phase-7-walls-first-class/) — 📋 Planned (not started)
 - [`phases/phase-8-scene-transitions/`](phases/phase-8-scene-transitions/) — ✅ Completed: Scene transitions (collision + item-drop)
 - [`phases/phase-9-placed-items-agnóstic/`](phases/phase-9-placed-items-agnóstic/) — ✅ Phases A-C: Placed items refactoring to core (types, dialog keys, stores)
+- [`phases/phase-10-scene-entry-positions-and-pathwalking/`](phases/phase-10-scene-entry-positions-and-pathwalking/) — ✅ Completed: Player spawn positions and pathwalking
+- [`phases/phase-11-audio/`](phases/phase-11-audio/) — ✅ Completed: Audio system (música + SFX + mute)
+- [`phases/phase-12-architecture-cleanup/`](phases/phase-12-architecture-cleanup/) — ✅ Completed: Core agnosticism & library boundaries
+- [`phases/phase-13-i18n/`](phases/phase-13-i18n/) — ✅ Completed: Localization system (i18n)
 - [`phases/phase-14-multiplayer/`](phases/phase-14-multiplayer/) — 📋 Planning: Multijugador en tiempo real, agnóstico de transporte
+- [`phases/phase-15-green-baseline/`](phases/phase-15-green-baseline/) — 🚧 Active: Base verde (tests, tipos, lint, CI) y docs resincronizadas
+- [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — 📋 Planning: Runtime en los paquetes (core + renderer); la demo pasa a consumidora
 
 ---
 
@@ -72,6 +80,11 @@ Decisiones arquitectónicas registradas.
 - [`decisions/0002-useframe-for-loop.md`](decisions/0002-useframe-for-loop.md)
 - [`decisions/0003-monorepo-with-demo.md`](decisions/0003-monorepo-with-demo.md)
 - [`decisions/0004-modular-docs-strategy.md`](decisions/0004-modular-docs-strategy.md)
+- [`decisions/0005-renderer-ports-design.md`](decisions/0005-renderer-ports-design.md)
+- [`decisions/0006-command-event-architecture.md`](decisions/0006-command-event-architecture.md)
+- [`decisions/0007-release-strategy.md`](decisions/0007-release-strategy.md)
+- [`decisions/0008-multiplayer-architecture.md`](decisions/0008-multiplayer-architecture.md)
+- [`decisions/0009-runtime-lives-in-packages.md`](decisions/0009-runtime-lives-in-packages.md)
 
 ---
 

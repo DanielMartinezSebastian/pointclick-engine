@@ -1,6 +1,6 @@
 # Phase 10 — Scene Entry Positions & Player Pathwalking
 
-**Status**: In Progress | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.2.0
+**Status**: completed | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.2.0
 
 **Started**: 2026-05-30
 
