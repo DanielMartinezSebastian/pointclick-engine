@@ -1,6 +1,8 @@
 # Phase 18 — Arte: packs candidatos
 
-Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature"). Uso previsto: demo no comercial, de momento solo en local. **Nada descargado todavía.**
+Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature"). Uso previsto: demo no comercial, de momento solo en local.
+
+**Estado (2026-10-10)**: el owner aprobó la recomendación. Los dos packs CC0 de ítems están descargados sin modificar en `apps/web-demo/assets-src/items/` (fuera de `public/`, no se sirven), con su tabla de origen y licencia en `apps/web-demo/assets-src/README.md`. Los NPCs no llevan arte nuevo.
 
 ## Qué arte hace falta
 
@@ -40,4 +42,4 @@ Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature")
 
 ## Siguiente paso
 
-Con el visto bueno del owner: descargar los dos packs CC0 de ítems, elegir los iconos en el documento de diseño de la Fase 18 y añadirlos a `apps/web-demo/public/assets/items/` con su entrada en un `LICENSES.md` de arte.
+En el documento de diseño de la Fase 18: elegir los iconos concretos de entre los descargados, copiarlos escalados ×2 a `apps/web-demo/public/assets/items/` y anotarlos en un `LICENSES.md` de arte junto al de audio.

@@ -23,7 +23,7 @@ La demo actual enseña mecánicas sueltas: mover, recoger, una puerta, tres esce
 ## Decisiones del owner (2026-10-10)
 
 1. **Premisa**: B, "No es un bug, es una feature".
-2. **Arte**: un pack con licencia que permita uso no comercial. De momento la demo solo se ejecuta en local, para pruebas. Antes de enseñarla fuera hay que revisar la licencia de cada asset, incluidos los fondos actuales.
+2. **Arte**: ítems de dos packs CC0 ya descargados; los NPCs no llevan arte nuevo (el NPC atascado es una copia con glitch de David y el Programador es una voz sin sprite). Detalle en [assets.md](assets.md). De momento la demo solo se ejecuta en local, para pruebas. Antes de enseñarla fuera hay que revisar la licencia de cada asset, incluidos los fondos actuales.
 3. **Ruta**: convive con la demo actual en una ruta propia (`/adventure`), para poder enseñarla en beta cerrada a colaboradores y revisores sin tocar `/`.
 
 ## Propuestas de premisa
