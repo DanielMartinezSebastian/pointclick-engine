@@ -6,7 +6,7 @@ import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } f
 import { getGameRuntime } from "../publicApi";
 import { useDialogStore } from "../../../store/dialogStore";
 import { usePlacedItemsStore } from "../../../store/placedItemsStore";
-import { preloadSceneBackground } from "../../../components/scene/SceneBackgroundPlane";
+import { preloadSceneBackground } from "@pointclick-engine/engine-renderer-r3f";
 import type { RuntimeEvent, GameScene } from "@pointclick-engine/engine-core";
 
 /**

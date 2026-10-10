@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { DoubleSide, Mesh, TextureLoader, Vector3 } from "three";
 
 import { useSceneStore } from "@pointclick-engine/engine-core";
+import { WORLD_VIEW_HEIGHT } from "./cameraConstants";
 
 /** Precarga el fondo de una escena en el caché del navegador. */
 export function preloadSceneBackground(url: string): void {
@@ -71,7 +72,7 @@ export function SceneBackgroundPlane({
     aspect = textureImage.width / textureImage.height;
   }
 
-  const height = 19.28;
+  const height = WORLD_VIEW_HEIGHT;
   const groundCenterX = groundCenterXRef.current;
   const width = height * aspect;
 

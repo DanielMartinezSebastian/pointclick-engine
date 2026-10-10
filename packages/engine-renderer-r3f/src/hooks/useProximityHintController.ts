@@ -1,8 +1,14 @@
 import { useEffect, useRef } from "react";
 
-import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
-import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
-import type { PlacedSceneItem } from "../types/gameRuntime";
+import { getRandomPhrase as engineGetRandomPhrase } from "@pointclick-engine/engine-core";
+import type {
+  GameSceneInteractionFull,
+  PlacedSceneItem,
+} from "@pointclick-engine/engine-core";
+
+type SceneInteraction = GameSceneInteractionFull;
+
+const defaultGetPhrase = (key: string): string => engineGetRandomPhrase(key);
 
 /**
  * Radio máximo (en unidades de mundo, XZ) para activar el hint de proximidad.
@@ -34,11 +40,13 @@ export function useProximityHintController({
   interactions,
   placedItems,
   showSpeechBubble,
+  getPhrase = defaultGetPhrase,
 }: {
   playerPosition: [number, number, number];
   interactions: SceneInteraction[];
   placedItems: PlacedSceneItem[];
   showSpeechBubble: ShowSpeechBubble;
+  getPhrase?: (key: string) => string;
 }) {
   // Tracks si el jugador ESTABA dentro de cada zona en el tick anterior
   const wasInsideRef = useRef<Record<string, boolean>>({});
@@ -71,7 +79,7 @@ export function useProximityHintController({
             ? interaction.hintDialogKeys.occupied
             : interaction.hintDialogKeys.empty;
 
-          showSpeechBubble(getRandomPhrase(dialogKey), { dialogKey });
+          showSpeechBubble(getPhrase(dialogKey), { dialogKey });
           lastHintAtRef.current[interaction.id] = now;
         }
       }

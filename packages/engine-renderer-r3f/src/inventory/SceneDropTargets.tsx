@@ -3,16 +3,23 @@
 import { useEffect, useRef } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 
-import type { SceneInteraction } from "../../../demo-content/scenes/scenes";
-import { browserEnvironmentAdapter } from "../../lib/platform-web";
-import type { InventoryStack } from "../InventoryUI";
+import type {
+  GameSceneInteractionFull,
+  InventoryStackState,
+} from "@pointclick-engine/engine-core";
+
+/** Target de drop: interaccion del core mas el flag visual `invisible`. */
+export type SceneDropTargetInteraction = GameSceneInteractionFull & {
+  invisible?: boolean;
+};
+type SceneInteraction = SceneDropTargetInteraction;
 
 export type DraggedInventoryPayload = {
-  stack: InventoryStack;
+  stack: InventoryStackState;
   fromSlotIndex: number;
 };
 
-type SceneDropTargetsProps = {
+export type SceneDropTargetsProps = {
   targets: SceneInteraction[];
   draggedStack: DraggedInventoryPayload | null;
   onDropHit: (interaction: SceneInteraction, payload: DraggedInventoryPayload) => void;
@@ -112,10 +119,11 @@ export function SceneDropTargets({
       onDropMiss(draggedStack);
     };
 
-    return browserEnvironmentAdapter.addWindowEventListener(
-      "pointerup",
-      handleWindowPointerUp,
-    );
+    if (typeof window === "undefined") return;
+    window.addEventListener("pointerup", handleWindowPointerUp, undefined);
+    return () => {
+      window.removeEventListener("pointerup", handleWindowPointerUp, undefined);
+    };
   }, [draggedStack, onDropMiss]);
 
   if (targets.length === 0 && !playerDropTarget) {

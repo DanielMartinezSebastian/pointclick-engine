@@ -10,10 +10,13 @@ import { PixelLoader } from "./PixelLoader";
 import { type GameCharacterName } from "@pointclick-engine/engine-renderer-r3f";
 import dynamic from "next/dynamic";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
-import { SceneDropTargets } from "./inventory/SceneDropTargets";
-import { PlacedSceneItems } from "./inventory/PlacedSceneItems";
-import { SceneBackgroundPlane } from "./scene/SceneBackgroundPlane";
-import { CameraController, CameraFitHeight } from "./scene/SceneCameraControllers";
+import {
+  SceneDropTargets,
+  PlacedSceneItems,
+  SceneBackgroundPlane,
+  CameraController,
+  CameraFitHeight,
+} from "@pointclick-engine/engine-renderer-r3f";
 import { FreeCameraController } from "./scene/FreeCameraController";
 import { SceneDoors } from "./scene/SceneDoors";
 import { SCENES } from "../../demo-content/scenes/scenes";

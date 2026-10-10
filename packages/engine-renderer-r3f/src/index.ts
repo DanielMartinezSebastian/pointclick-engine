@@ -38,6 +38,28 @@ export type { WallSegment } from "./scene/wallSegments";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 export { SceneTransitions } from "./scene/SceneTransitions";
+export {
+  SceneBackgroundPlane,
+  preloadSceneBackground,
+} from "./scene/SceneBackgroundPlane";
+export {
+  CameraController,
+  CameraFitHeight,
+} from "./scene/SceneCameraControllers";
+export {
+  WORLD_VIEW_HEIGHT,
+  CAMERA_POSITION,
+  CAMERA_ROTATION,
+} from "./scene/cameraConstants";
+
+// Inventory (scene-side)
+export { PlacedSceneItems } from "./inventory/PlacedSceneItems";
+export {
+  SceneDropTargets,
+  type SceneDropTargetsProps,
+  type SceneDropTargetInteraction,
+  type DraggedInventoryPayload,
+} from "./inventory/SceneDropTargets";
 
 // Runtime
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
@@ -50,6 +72,7 @@ export {
   attachAudioSystem,
   type AttachAudioSystemOpts,
 } from "./hooks/attachAudioSystem";
+export { useProximityHintController } from "./hooks/useProximityHintController";
 export { useClickToMoveController } from "./hooks/useClickToMoveController";
 export { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 export type { KeyboardMovementState } from "./adapters/useKeyboardMovementInput";

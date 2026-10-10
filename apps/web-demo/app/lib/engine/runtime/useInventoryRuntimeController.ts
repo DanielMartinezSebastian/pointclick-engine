@@ -7,7 +7,7 @@ import { getItemDefinition, resolveItemRule } from "../../../../demo-content/ite
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
-import { useProximityHintController } from "./useProximityHintController";
+import { useProximityHintController } from "@pointclick-engine/engine-renderer-r3f";
 import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
@@ -500,6 +500,7 @@ export function useInventoryRuntimeController({
     interactions: sceneInteractions,
     placedItems,
     showSpeechBubble,
+    getPhrase: getRandomPhrase,
   });
 
   useEffect(() => {

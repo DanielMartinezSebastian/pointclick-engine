@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Texture, TextureLoader } from "three";
-import type { PlacedSceneItem } from "../../lib/engine/types/gameRuntime";
+import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
 
 function PlacedSceneItemMesh({
   item,
