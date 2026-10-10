@@ -1,7 +1,6 @@
 import { DAVE_IDLE_SPEAKING, type SpriteAnimation } from "./clips";
 
-const BASE_FRAMES = DAVE_IDLE_SPEAKING.frames;
-const FRAME_COUNT = BASE_FRAMES.length;
+const DEFAULT_BASE_FRAMES = DAVE_IDLE_SPEAKING.frames;
 
 /**
  * Builds a varied speaking animation from the base idle-speaking frames.
@@ -14,11 +13,16 @@ const FRAME_COUNT = BASE_FRAMES.length;
  * @param seed      speechTrigger value — stabilises the pattern for one
  *                  speech event; different dialogues get different patterns.
  * @param charsPerSecond  text reveal speed → drives fps so mouth matches pace.
+ * @param baseFrames  frames of the character's speaking clip (defaults to
+ *                  David's, so existing callers behave exactly as before).
  */
 export function buildSpeakingAnimation(
   seed: number,
   charsPerSecond: number,
+  baseFrames: readonly string[] = DEFAULT_BASE_FRAMES,
 ): SpriteAnimation {
+  const BASE_FRAMES = baseFrames;
+  const FRAME_COUNT = BASE_FRAMES.length;
   const result: string[] = [];
   let pos = seed % FRAME_COUNT;
 

@@ -7,7 +7,14 @@ import type { Collider as RapierCollider } from "@dimforge/rapier3d-compat";
 import { MathUtils, Mesh, Vector2, Vector3 } from "three";
 
 import SpeechBubble from "./SpeechBubble";
-import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
+import CharacterSprite, { type CharacterSpriteHandle } from "./sprite/CharacterSprite";
+import {
+  DEFAULT_CHARACTER_SIZE,
+  listCharacterAnimations,
+  resolveCharacterSprites,
+  speakingBaseFrames,
+  type CharacterDefinition,
+} from "./sprite/character";
 import {
   DAVE_IDLE_SPEAKING,
   GAME_CHARACTER_SPRITES,
@@ -38,8 +45,6 @@ type WallInteraction =
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
 const DEPTH_FAR_Z = -16;
 const DEPTH_NEAR_Z = 8;
-const SPRITE_MIN_SCALE = 1.4;
-const SPRITE_MAX_SCALE = 2.94;
 const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
@@ -94,6 +99,7 @@ function projectDistance(originX: number, originZ: number, pointX: number, point
 
 export function GameTouchSpriteRuntime({
   activeCharacter,
+  character,
   debug,
   showDebugGround,
   showDebugWalls,
@@ -121,6 +127,11 @@ export function GameTouchSpriteRuntime({
   getEffectiveClickGoal,
 }: {
   activeCharacter: GameCharacterName;
+  /**
+   * Custom character definition. When omitted, the embedded David character
+   * selected by `activeCharacter` is used (legacy behaviour).
+   */
+  character?: CharacterDefinition;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
@@ -200,7 +211,7 @@ export function GameTouchSpriteRuntime({
     playerZ: number,
   ) => { x: number; z: number } | null | undefined;
 }) {
-  const spriteRef = useRef<DavidSpriteHandle | null>(null);
+  const spriteRef = useRef<CharacterSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
   const characterColliderRef = useRef<RapierCollider | null>(null);
@@ -469,19 +480,30 @@ export function GameTouchSpriteRuntime({
   }, [clampToPlayableArea, debug, wallPointResetSignal, wallToolMode]);
 
   const characterClips = useMemo(
-    () => GAME_CHARACTER_SPRITES[activeCharacter],
-    [activeCharacter],
+    () =>
+      character
+        ? resolveCharacterSprites(character)
+        : GAME_CHARACTER_SPRITES[activeCharacter],
+    [character, activeCharacter],
   );
   const characterAnimations = useMemo(
-    () => [...Object.values(characterClips), DAVE_IDLE_SPEAKING],
-    [characterClips],
+    () =>
+      character
+        ? listCharacterAnimations(character)
+        : [...Object.values(characterClips), DAVE_IDLE_SPEAKING],
+    [character, characterClips],
   );
+  const speakingFrames = useMemo(
+    () => (character ? speakingBaseFrames(character) : undefined),
+    [character],
+  );
+  const [spriteMinScale, spriteMaxScale] = character?.size ?? DEFAULT_CHARACTER_SIZE;
   const activeAnimation = useMemo(
     () =>
       speechVisible && action === "idle"
-        ? buildSpeakingAnimation(speechTrigger, speechCharsPerSecond)
+        ? buildSpeakingAnimation(speechTrigger, speechCharsPerSecond, speakingFrames)
         : characterClips[action],
-    [speechVisible, action, characterClips, speechTrigger, speechCharsPerSecond],
+    [speechVisible, action, characterClips, speechTrigger, speechCharsPerSecond, speakingFrames],
   );
 
   useEffect(() => {
@@ -768,9 +790,9 @@ export function GameTouchSpriteRuntime({
       });
     }
 
-    const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
+    const spriteScale = MathUtils.lerp(spriteMinScale, spriteMaxScale, depthFactor);
     if (meshRef.current) {
-      const flipX = action === "west" ? -1 : 1;
+      const flipX = characterClips[action]?.flipX ? -1 : 1;
       meshRef.current.scale.set(spriteScale * flipX, spriteScale, 1);
       meshRef.current.position.y = spriteScale - 0.95;
     }
@@ -863,12 +885,12 @@ export function GameTouchSpriteRuntime({
             <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.85} />
           </mesh>
         )}
-        <DavidSprite
+        <CharacterSprite
           ref={spriteRef}
           meshRef={meshRef}
           animation={activeAnimation}
           preloadAnimations={characterAnimations}
-          scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
+          scale={[spriteMinScale, spriteMinScale, 1]}
           isPaused={false}
         />
         <SpeechBubble

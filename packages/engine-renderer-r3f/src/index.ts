@@ -11,6 +11,20 @@ export { WebKeyboardInput } from "./adapters/keyboardInput";
 // Sprite
 export { default as DavidSprite } from "./sprite/DavidSprite";
 export type { DavidSpriteHandle } from "./sprite/DavidSprite";
+export { default as CharacterSprite } from "./sprite/CharacterSprite";
+export type { CharacterSpriteHandle } from "./sprite/CharacterSprite";
+export type {
+  CharacterClip,
+  CharacterDefinition,
+  CharacterDirection,
+} from "./sprite/character";
+export {
+  buildFrameUrls,
+  selectClip,
+  resolveCharacterSprites,
+  listCharacterAnimations,
+  toSpriteAnimation,
+} from "./sprite/character";
 export * from "./sprite/clips";
 export { buildSpeakingAnimation } from "./sprite/speakingAnimation";
 
