@@ -41,6 +41,12 @@ Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature")
 - **Decisión del owner (2026-10-10)**: `town.jpg` se mantiene tal cual, con la marca de agua visible. No recortarla, taparla ni retocarla. La firma acredita al autor pero no es una licencia: revisar si la demo sale de la beta cerrada.
 - Los packs sin documento de licencia (Danger Goose) son de bajo riesgo para pruebas, pero no equivalen a CC0.
 
+## Escenario aportado por el owner (2026-10-11)
+
+*Sci Fi Level*, de Jeremy Gooch — https://opengameart.org/content/sci-fi-level. CC-BY 3.0: exige acreditar "Jeremy Gooch (jeremygooch.blogspot.com)". Nivel lateral de ciencia ficción de 5121×841 en dos capas (fondo y primer plano), oscurecido a propósito para que destaquen los personajes. Descargado sin modificar en `apps/web-demo/assets-src/backgrounds/sci-fi-level/`.
+
+Uso previsto: escena candidata para la aventura (encaja con la premisa B como "el interior del motor") y escena de pruebas seleccionable en el modo debug. Es mucho más ancho que los fondos actuales: hay que trocearlo en varias pantallas o usarlo con cámara que siga al personaje.
+
 ## Siguiente paso
 
 En el documento de diseño de la Fase 18: elegir los iconos concretos de entre los descargados, copiarlos escalados ×2 a `apps/web-demo/public/assets/items/` y anotarlos en un `LICENSES.md` de arte junto al de audio.
