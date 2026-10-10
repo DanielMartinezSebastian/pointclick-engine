@@ -2,7 +2,7 @@
 
 **Objetivo**: una aventura corta, completa y con historia, jugable de principio a fin en la demo.
 **Duración estimada**: 2 semanas de contenido, más el tiempo del arte
-**Estado**: outline (bloqueada por la Fase 17 y por tres decisiones del owner)
+**Estado**: outline (bloqueada por la Fase 17; premisa, arte y ruta decididos el 2026-10-10)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: demo 1.0 sobre los paquetes 0.6.x
 
@@ -20,11 +20,11 @@ La demo actual enseña mecánicas sueltas: mover, recoger, una puerta, tres esce
 - Un test headless la resuelve entera (`createPlaythrough`), y el smoke recorre su camino principal en el navegador.
 - Todo el contenido es dato: ningún callback propio del juego fuera de `call`.
 
-## Decisiones del owner que bloquean
+## Decisiones del owner (2026-10-10)
 
-1. **Premisa** — tres propuestas abajo; o la tuya.
-2. **Arte** — de dónde salen fondos y sprites nuevos: propio, generado, o un pack con licencia. Condiciona cuántas escenas y NPCs caben. Claude no genera imágenes ni audio.
-3. **Alcance** — si la demo sustituye a la actual en `/` o convive en otra ruta.
+1. **Premisa**: B, "No es un bug, es una feature".
+2. **Arte**: un pack con licencia que permita uso no comercial. De momento la demo solo se ejecuta en local, para pruebas. Antes de enseñarla fuera hay que revisar la licencia de cada asset, incluidos los fondos actuales.
+3. **Ruta**: convive con la demo actual en una ruta propia (`/adventure`), para poder enseñarla en beta cerrada a colaboradores y revisores sin tocar `/`.
 
 ## Propuestas de premisa
 
@@ -35,7 +35,7 @@ Las tres reutilizan los fondos que ya existen (`personalRoom`, `town`, `mazmorra
 David está a un jefe de terminar su juego cuando el cartucho del gameboy desaparece dentro de la pantalla. Entra tras él. El pueblo, la mazmorra y el volcán son los niveles del juego, y sus habitantes saben que son personajes. Para recuperar el cartucho hay que resolver lo que el juego dejó a medias.
 *Arte nuevo*: 2 NPCs, unos 6 ítems. *A favor*: encaja con el gameboy y el trofeo actuales; objetivo claro desde el minuto uno.
 
-### B. "No es un bug, es una feature" *(recomendada)*
+### B. "No es un bug, es una feature" *(elegida)*
 
 La demo del motor está rota y David lo sabe: paredes invisibles, una puerta sin llave, un NPC atascado repitiendo una frase. El Programador, agotado, le pide ayuda desde fuera de la pantalla. Cada puzzle es arreglar un fallo con las herramientas del propio mundo, y el final es conseguir que la demo "compile".
 *Arte nuevo*: 1–2 NPCs, unos 6 ítems; el Programador puede ser solo una voz. *A favor*: continúa el humor que ya tienen los textos ("El programador fue muy vago", "Esto no es un bug, es una feature"), necesita el mínimo de arte y enseña el motor hablando de sí mismo.

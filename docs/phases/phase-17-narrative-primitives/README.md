@@ -2,7 +2,7 @@
 
 **Objetivo**: que una aventura completa se pueda describir con datos y jugarse de principio a fin, también en headless.
 **Duración estimada**: 2–3 semanas
-**Estado**: planning (pendiente de visto bueno de ADR-0010)
+**Estado**: active (ADR-0010 aceptado el 2026-10-10)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: v0.6.0 (solo adiciones sobre 0.5.0)
 

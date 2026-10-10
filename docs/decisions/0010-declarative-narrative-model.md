@@ -1,6 +1,6 @@
 # ADR-0010: Modelo narrativo declarativo (flags, condiciones, acciones)
 
-**Status**: proposed (pendiente de visto bueno del owner)
+**Status**: accepted (aprobado por el owner el 2026-10-10)
 **Date**: 2026-10-10
 
 ## Context

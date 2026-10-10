@@ -4,7 +4,7 @@
 
 ## Previo
 
-- [ ] [01-adr-approval](tasks/01-adr-approval.md) — opus
+- [x] [01-adr-approval](tasks/01-adr-approval.md) — opus
 
 ## Ola A — en paralelo
 
