@@ -1,3 +1,4 @@
+import type { Script } from "../narrative/actions";
 import type { DialogDictionary, GameVec3, Locale, SoundCategory } from "../types";
 
 // Duplicated from ports/audio.ts to avoid circular imports.
@@ -20,7 +21,7 @@ export type GameCommand =
   | { type: "inventory:pickup"; itemId: string }
   | { type: "inventory:drop"; itemId: string; slotIndex: number }
   // Dialog
-  | { type: "dialog:trigger"; dialogKey: string }
+  | { type: "dialog:trigger"; dialogKey: string; speaker?: string }
   | { type: "dialog:dismiss" }
   // Transitions
   | { type: "transition:activate"; transitionId: string }
@@ -38,6 +39,9 @@ export type GameCommand =
   // Save / load
   | { type: "game:save"; extra?: Record<string, unknown> }
   | { type: "game:load" }
-  | { type: "game:reset" };
+  | { type: "game:reset" }
+  // Narrative scripts
+  | { type: "script:run"; script: Script; interrupt?: boolean }
+  | { type: "script:cancelAll" };
 
 export type GameCommandType = GameCommand["type"];

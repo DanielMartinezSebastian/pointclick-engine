@@ -29,6 +29,7 @@ Ver [ADR-0010](../../decisions/0010-declarative-narrative-model.md). El motor ya
 | 03 | [Core: estado de mundo (flags)](tasks/03-world-state.md) | sonnet | 01 |
 | 04 | [Core: condiciones](tasks/04-conditions.md) | sonnet | 03 |
 | 05 | [Core: acciones y secuenciador](tasks/05-actions-and-sequencer.md) | sonnet | 02, 04 |
+| 05b | [Renderer: avisar del fin de una caminata](tasks/05b-renderer-walk-completed.md) | sonnet | 05 |
 | 06 | [Core: hotspots con verbos](tasks/06-hotspots.md) | sonnet | 05 |
 | 07 | [Core: árboles de diálogo](tasks/07-dialogue-trees.md) | sonnet | 05 |
 | 08 | [Core: combinar ítems](tasks/08-item-combine.md) | haiku | 05 |

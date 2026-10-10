@@ -19,9 +19,10 @@
 
 ## Ola C
 
-- [ ] [05-actions-and-sequencer](tasks/05-actions-and-sequencer.md) — sonnet
+- [x] [05-actions-and-sequencer](tasks/05-actions-and-sequencer.md) — sonnet
+- [ ] [05b-renderer-walk-completed](tasks/05b-renderer-walk-completed.md) — sonnet — _añadida al integrar la 05: nadie emitía `player:walkCompleted`_
 
-## Ola D — en paralelo
+## Ola D — en secuencia (las cuatro amplían los mismos archivos de tipos y executors)
 
 - [ ] [06-hotspots](tasks/06-hotspots.md) — sonnet
 - [ ] [07-dialogue-trees](tasks/07-dialogue-trees.md) — sonnet

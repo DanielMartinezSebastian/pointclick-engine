@@ -19,6 +19,8 @@ import {
   toRuntimeScene,
 } from "./registry";
 import { registerRuntimeExecutors } from "./executors";
+import { createSequencer } from "../narrative/sequencer";
+import { systemClock } from "../../ports/clock";
 
 /**
  * Cablea el estado de mundo con el bus (los stores no se conocen entre sí ni al bus):
@@ -74,6 +76,20 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
   registerRuntimeExecutors(commands, bus, config);
   const unwireWorldState = wireWorldState(bus);
 
+  // Secuenciador narrativo: despacha comandos por el handle y espera eventos del bus.
+  const sequencer = createSequencer({
+    execute: (cmd) => runtime.executeCommand(cmd),
+    emit: (event) => bus.emit(event.type, event),
+    on: (type, handler) => bus.on(type, handler as (data: unknown) => void),
+    clock: config.clock ?? systemClock,
+    instantWalk: config.instantWalk ?? false,
+    getItem: (id) => itemRegistry.get(id),
+  });
+  commands.register("script:run", (cmd) => {
+    sequencer.run(cmd.script, { interrupt: cmd.interrupt });
+  });
+  commands.register("script:cancelAll", () => sequencer.cancelAll());
+
   const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(sceneRegistry),
     getItems: () => Object.fromEntries(itemRegistry),
@@ -82,7 +98,10 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) =>
       bus.on(type, handler as (data: unknown) => void),
     emit: (event: GameEvent) => bus.emit(event.type, event),
+    runScript: (script, opts) => sequencer.run(script, opts),
+    registerHandler: (name, fn) => sequencer.registerHandler(name, fn),
     dispose: () => {
+      sequencer.dispose();
       unwireWorldState();
       bus.clear();
       commands.clear();

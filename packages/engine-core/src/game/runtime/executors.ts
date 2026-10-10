@@ -100,13 +100,18 @@ export function registerRuntimeExecutors(
         ? phrases[Math.floor(Math.random() * phrases.length)]!
         : cmd.dialogKey;
     activeDialogKey = cmd.dialogKey;
-    if (config.dialogAdapter) config.dialogAdapter.show(text, cmd.dialogKey);
+    const speaker = cmd.speaker;
+    if (config.dialogAdapter) {
+      if (speaker !== undefined) config.dialogAdapter.show(text, cmd.dialogKey, speaker);
+      else config.dialogAdapter.show(text, cmd.dialogKey);
+    } else if (speaker !== undefined) useDialogStore.getState().show(text, cmd.dialogKey, speaker);
     else useDialogStore.getState().show(text, cmd.dialogKey);
     bus.emit("dialog:triggered", {
       type: "dialog:triggered",
       text,
       dialogKey: cmd.dialogKey,
       source: "command",
+      ...(speaker !== undefined ? { speaker } : {}),
     });
   });
 

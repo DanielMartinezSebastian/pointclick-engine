@@ -23,8 +23,10 @@ export type GameEvent =
       outcome: "consume" | "place" | "return";
       interactionId?: string;
     }
+  | { type: "item:removed"; itemId: string }
+  | { type: "inventory:full"; itemId: string }
   // Dialog
-  | { type: "dialog:triggered"; text: string; dialogKey?: string; source: string }
+  | { type: "dialog:triggered"; text: string; dialogKey?: string; source: string; speaker?: string }
   | { type: "dialog:dismissed"; dialogKey?: string }
   // Transitions
   | { type: "transition:triggered"; transitionId: string; targetSceneId: string }
@@ -63,7 +65,12 @@ export type GameEvent =
       /** Estado propio del host guardado en la instantánea. Solo con found. */
       extra?: Record<string, unknown>;
     }
-  | { type: "game:reset" };
+  | { type: "game:reset" }
+  // Narrative scripts
+  | { type: "script:started"; id: number }
+  | { type: "script:finished"; id: number; result: "finished" | "cancelled" }
+  | { type: "input:lockChanged"; locked: boolean }
+  | { type: "custom"; name: string; payload?: unknown };
 
 export type GameEventType = GameEvent["type"];
 

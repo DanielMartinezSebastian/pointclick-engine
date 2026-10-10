@@ -12,6 +12,7 @@ export type {
   GameActions,
   InventoryUIAdapter,
   DialogUIAdapter,
+  ScriptHandler,
 } from "./types";
 export { registerScene, registerItem, registerRule, toRuntimeScene } from "./registry";
 export {

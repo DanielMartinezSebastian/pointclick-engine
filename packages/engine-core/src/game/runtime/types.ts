@@ -12,6 +12,8 @@ import type {
   GameEventHandler,
 } from "../events/types";
 import type { GameCommand } from "../commands/types";
+import type { Script, ScriptRun } from "../narrative/actions";
+import type { ClockPort } from "../../ports/clock";
 import type { useSceneStore, KeyValueStoragePort } from "../state";
 
 /** Configuración de escena registrable via API pública. */
@@ -81,6 +83,8 @@ export type GameRuntimeEvent =
 
 export type GameRuntimeEventHandler = (event: GameRuntimeEvent) => void;
 
+export type ScriptHandler = (args: unknown) => void | Promise<void>;
+
 /** Handle de runtime devuelto por createGameRuntime. */
 export type GameRuntime = {
   getScenes: () => Record<string, GameSceneConfig>;
@@ -95,6 +99,10 @@ export type GameRuntime = {
   on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) => () => void;
   /** Emite un evento al bus del runtime. */
   emit: (event: GameEvent) => void;
+  /** Ejecuta un guion narrativo (cola FIFO; `interrupt` cancela el actual y vacía la cola). */
+  runScript: (script: Script, opts?: { interrupt?: boolean }) => ScriptRun;
+  /** Registra un manejador para la acción `call`. Devuelve la función que lo quita. */
+  registerHandler: (name: string, fn: ScriptHandler) => () => void;
   /** Libera el bus, los comandos y desactiva las emisiones del store. */
   dispose: () => void;
 };
@@ -120,7 +128,7 @@ export interface InventoryUIAdapter {
 
 /** Adapter para conectar el engine con el sistema de diálogos del host. */
 export interface DialogUIAdapter {
-  show(text: string, dialogKey?: string): void;
+  show(text: string, dialogKey?: string, speaker?: string): void;
   hide(): void;
 }
 
@@ -136,4 +144,8 @@ export type GameRuntimeConfig = {
   storage?: KeyValueStoragePort;
   /** Clave de guardado dentro de `storage` (por defecto `pointclick-save`). */
   saveKey?: string;
+  /** Reloj para esperas del secuenciador (por defecto `systemClock`). */
+  clock?: ClockPort;
+  /** Si true, `walkTo` de un guion teletransporta y emite `player:walkCompleted` (headless). */
+  instantWalk?: boolean;
 };

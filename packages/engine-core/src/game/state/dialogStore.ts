@@ -9,10 +9,12 @@ import { create } from "zustand";
 export type DialogStoreState = {
   text: string;
   key: string | undefined;
+  /** Quien habla (opcional; solo lo fija el secuenciador de guiones). */
+  speaker?: string;
   visible: boolean;
   /** Incrementado en cada `show()` para forzar re-animación del speech bubble. */
   triggerCount: number;
-  show: (text: string, key?: string) => void;
+  show: (text: string, key?: string, speaker?: string) => void;
   dismiss: () => void;
 };
 
@@ -21,10 +23,11 @@ export const useDialogStore = create<DialogStoreState>((set) => ({
   key: undefined,
   visible: false,
   triggerCount: 0,
-  show: (text, key) =>
+  show: (text, key, speaker) =>
     set((s) => ({
       text,
       key,
+      speaker,
       visible: true,
       triggerCount: s.triggerCount + 1,
     })),
