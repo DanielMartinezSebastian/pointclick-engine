@@ -20,7 +20,7 @@
 ## Ola C
 
 - [x] [05-actions-and-sequencer](tasks/05-actions-and-sequencer.md) — sonnet
-- [ ] [05b-renderer-walk-completed](tasks/05b-renderer-walk-completed.md) — sonnet — _añadida al integrar la 05: nadie emitía `player:walkCompleted`_
+- [x] [05b-renderer-walk-completed](tasks/05b-renderer-walk-completed.md) — sonnet — _añadida al integrar la 05: nadie emitía `player:walkCompleted`_
 
 ## Ola D — en secuencia (las cuatro amplían los mismos archivos de tipos y executors)
 
