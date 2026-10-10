@@ -43,7 +43,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "zustand": "^5.0.13"

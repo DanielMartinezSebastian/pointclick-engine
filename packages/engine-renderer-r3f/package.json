@@ -30,7 +30,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@pointclick-engine/engine-core": "^0.4.0"
