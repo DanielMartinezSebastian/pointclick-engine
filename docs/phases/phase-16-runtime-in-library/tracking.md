@@ -34,15 +34,24 @@
 
 ## Ola E
 
-- [ ] [12-rewrite-consumption-docs](tasks/12-rewrite-consumption-docs.md) — haiku
-- [ ] [13-validation-gate](tasks/13-validation-gate.md) — opus
+- [x] [12-rewrite-consumption-docs](tasks/12-rewrite-consumption-docs.md) — haiku
+- [x] [13-validation-gate](tasks/13-validation-gate.md) — opus
 
 ## Gate final
 
-- [ ] Gate técnico verde (`build:packages`, `test`, `typecheck`, `lint`, `build`)
-- [ ] `coreAgnosticism.test.ts` verde
-- [ ] Contrato v1: todos los nombres siguen exportándose desde `publicApi.ts`
+- [x] Gate técnico verde (`build:packages`, `test`, `typecheck`, `lint`, `build`)
+- [x] `coreAgnosticism.test.ts` verde
+- [x] Contrato v1: todos los nombres siguen exportándose desde `publicApi.ts`
 - [x] `apps/web-demo/app/lib/engine/render/` y `app/lib/core/` no existen
 - [x] Ejemplo mínimo de consumo (solo imports de paquetes) arranca en navegador — _`/example-minimal`, smoke 5/5_
-- [ ] Smoke completo de la demo sin regresiones
-- [ ] CHANGELOG y versión 0.5.0 en ambos paquetes
+- [x] Smoke completo de la demo sin regresiones
+- [x] CHANGELOG y versión 0.5.0 en ambos paquetes
+
+## Evidencia del gate final (2026-10-10)
+
+- Desde `dist/` borrado: `build:packages`, `test` (503: core 348, renderer 109, demo 46), `typecheck` (0 errores), `lint` (0 errores, 1 warning de `<img>`), `build` (5 rutas).
+- `npm run smoke`: 40/40 en la demo y 5/5 en `/example-minimal`.
+- Contrato v1: 64 nombres exportados por `publicApi.ts` en `main`, 64 ahora, 0 perdidos.
+- Fronteras: ningún archivo de `packages/*/src` referencia la demo.
+- Consumo real: los dos `.tgz` de `npm pack` instalados en un proyecto Next.js vacío fuera del monorepo; compila y pasa el smoke del ejemplo mínimo 5/5 en producción.
+- Sin verificar: modo debug con sus paneles de editor, cámara libre, cambio de idioma en vivo, Safari/iOS.

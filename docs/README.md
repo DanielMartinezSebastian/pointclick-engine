@@ -9,7 +9,7 @@
 Diseño del sistema. Lee antes de tocar arquitectura.
 
 - [`architecture/01-layers.md`](architecture/01-layers.md) — Las 4 capas y su responsabilidad
-- [`architecture/02-public-api.md`](architecture/02-public-api.md) — Contrato de `publicApi.ts` (estable v1)
+- [`architecture/02-public-api.md`](architecture/02-public-api.md) — API pública (contrato v1; `publicApi.ts` es barrel de los paquetes)
 - [`architecture/03-rules-core-vs-render.md`](architecture/03-rules-core-vs-render.md) — Decisión: ¿este código va en core o renderer?
 - [`architecture/04-platform-ports.md`](architecture/04-platform-ports.md) — Adapters web (storage, clipboard, timer)
 - [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Commands & Events API (web ↔ juego)
@@ -29,6 +29,7 @@ Cómo trabajar en este repo.
 - [`workflow/how-to-spawn-subagent.md`](workflow/how-to-spawn-subagent.md) — Delegar tareas autocontenidas
 - [`workflow/pre-commit-checklist.md`](workflow/pre-commit-checklist.md) — Validación antes de commit
 - [`workflow/commit-convention.md`](workflow/commit-convention.md) — Formato de commits
+- Smoke headless: `npm run smoke` (`e2e/smoke.mjs` + `e2e/smoke-minimal.mjs`; requiere la demo en marcha)
 
 ---
 
@@ -50,7 +51,7 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-13-i18n/`](phases/phase-13-i18n/) — ✅ Completed: Localization system (i18n)
 - [`phases/phase-14-multiplayer/`](phases/phase-14-multiplayer/) — 📋 Planning: Multijugador en tiempo real, agnóstico de transporte
 - [`phases/phase-15-green-baseline/`](phases/phase-15-green-baseline/) — ✅ Completed: Base verde (tests, tipos, lint, CI) y docs resincronizadas
-- [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — 🚧 Active: Runtime en los paquetes (core + renderer); la demo pasa a consumidora
+- [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — ✅ Completed: Runtime en los paquetes (core + renderer); la demo es consumidora (0.5.0)
 
 ---
 

@@ -1,6 +1,6 @@
 # Point & Click Game Engine
 
-**Versión**: 0.4.0 | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
+**Versión**: 0.5.0 | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
 
 Librería agnóstica al framework para juegos point-and-click 2D/2.5D, con primera implementación en R3F. La demo R3F vive en `apps/web-demo/` dentro del monorepo para evaluar engine y demo en paralelo.
 
@@ -23,9 +23,9 @@ Dos objetivos concurrentes que NO deben sabotearse mutuamente:
 ┌────────────────────────────────────────────┐
 │ Presentación / UI (apps/web-demo)         │  ← InventoryUI, Joystick, DebugOverlay
 ├────────────────────────────────────────────┤
-│ Renderer R3F (apps/web-demo)              │  ← GameTouchCanvas, useFrame, Three.js
+│ Renderer R3F (engine-renderer-r3f)        │  ← GameViewport, hooks, useFrame, Three.js
 ├────────────────────────────────────────────┤
-│ Core (packages/engine-core) AGNÓSTICO     │  ← state, rules, pathfinding, events
+│ Core (packages/engine-core) AGNÓSTICO     │  ← runtime, state, rules, pathfinding, events
 ├────────────────────────────────────────────┤
 │ Platform Adapters (apps/web-demo)         │  ← storage, clipboard, timer (web)
 └────────────────────────────────────────────┘
@@ -46,9 +46,10 @@ Dos objetivos concurrentes que NO deben sabotearse mutuamente:
 
 | Tipo | Ubicación | Ejemplos |
 |------|-----------|----------|
-| **Core** (agnóstico) | `packages/engine-core/` | rules, sceneStore, findPath, types |
-| **Renderer** (R3F) | `apps/web-demo/app/lib/engine/runtime/` y `/render/` | useFrame loops, Canvas, sprites |
+| **Core** (agnóstico) | `packages/engine-core/src/` (runtime en `game/runtime/`) | createGameRuntime, rules, sceneStore, findPath, types |
+| **Renderer** (R3F) | `packages/engine-renderer-r3f/src/` (`viewport/`, `hooks/`, `scene/`, `sprite/`) | GameViewport, useFrame loops, Canvas, sprites |
 | **UI** (React) | `apps/web-demo/app/components/` | Joystick, InventoryUI, panels |
+| **Contenido y composición** (demo) | `apps/web-demo/demo-content/`, `apps/web-demo/app/lib/engine/runtime/` | escenas, ítems, opciones del viewport, puertas, editores |
 | **Platform** (web) | `apps/web-demo/app/lib/platform-web.ts` | localStorage, clipboard adapters |
 
 **Detalles**: `docs/architecture/03-rules-core-vs-render.md`
@@ -57,11 +58,13 @@ Dos objetivos concurrentes que NO deben sabotearse mutuamente:
 
 ## API Pública (Contrato Estable)
 
-Frontera pública en `apps/web-demo/app/lib/engine/publicApi.ts`. **No romper sin issue + migración**.
+Vive en los paquetes: runtime en `packages/engine-core/src/game/runtime/`, viewport y hooks en `packages/engine-renderer-r3f/src/index.ts`. `apps/web-demo/app/lib/engine/publicApi.ts` es un barrel de compatibilidad que re-exporta ambos. **No romper sin issue + migración**.
 
-Exporta: `createGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `getGameState`, `getGameActions`, `getGameRuntime`, `useGameState`, `useGameActions`, `GameViewport`.
+- `engine-core` exporta: `createGameRuntime`, `getGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `getGameState`, `getGameActions`.
+- `engine-renderer-r3f` exporta: `GameViewport`, `useGameViewportController`, `GameViewportView`, `useGameState`, `useGameActions`.
+- El handle de `createGameRuntime` trae `executeCommand`, `on`, `emit`, `dispose`.
 
-**Phase 4 añade** (via handle devuelto por `createGameRuntime`): `executeCommand`, `on`, `emit`, `dispose`.
+Lista completa: `docs/LIBRARY_API_CONTRACT_V1.md`.
 
 **Detalles**: `docs/architecture/02-public-api.md`
 
@@ -110,7 +113,8 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 - **v0.1.x**: Demo R3F funcional
 - **v0.2.x**: `engine-core` extraído del monorepo
 - **v0.3.x**: Renderer abstraction (interfaces agnósticas)
-- **v0.4.x**: Bidireccionalidad web ↔ juego (actual)
+- **v0.4.x**: Bidireccionalidad web ↔ juego
+- **v0.5.x**: Runtime en los paquetes, `GameViewport` jugable (actual)
 - **v1.0.0**: Publicación en npm
 
 ---
@@ -151,7 +155,7 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 | Delegar subagentes | `docs/workflow/how-to-spawn-subagent.md` |
 | Hacer commit | `docs/workflow/commit-convention.md` |
 | Decisiones tomadas | `docs/decisions/` (ADRs) |
-| Fase activa | `docs/phases/phase-16-runtime-in-library/` |
+| Fase activa | Ninguna en curso. Última cerrada: `docs/phases/phase-16-runtime-in-library/`. Siguiente: fase narrativa (por planificar) |
 
 ---
 

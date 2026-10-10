@@ -34,6 +34,10 @@
 - La demo adelgaza: pasa a ser consumidora, que es lo que `CLAUDE.md` exige.
 - Riesgo: es un refactor transversal. Se mitiga con la base verde de la Fase 15, tests headless del runtime en core y smoke en navegador en cada ola.
 
+## Resultado (2026-10-10)
+
+Implementado en la Fase 16. Dos puntos de la decisión no se aplicaron tal cual: los registros siguen siendo globales de módulo (punto 1) y la demo conserva en el store su escena completa mediante `resolveScene` (punto 4). Ver la retrospectiva de la fase.
+
 ## Requisito de proceso
 
 `CLAUDE.md` exige issue + migración para tocar `publicApi.ts`. Borrador del issue:

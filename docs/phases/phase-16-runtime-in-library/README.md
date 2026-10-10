@@ -2,7 +2,7 @@
 
 **Objetivo**: que el juego se pueda montar importando solo los paquetes; la demo pasa de orquestadora a consumidora.
 **Duración estimada**: 1.5–2 semanas
-**Estado**: active (issue #21; smoke en navegador de la Fase 15 aún parcial)
+**Estado**: completed (2026-10-10) — 0.5.0 lista para publicar; la publicación en npm requiere orden del owner
 **Owner**: Daniel Martínez Sebastián
 **Version target**: v0.5.0 (lockstep, solo adiciones)
 
@@ -57,3 +57,27 @@ Olas: **A** = 02, 05, 08 en paralelo · **B** = 03, 04, 10 · **C** = 06, 07, 09
 - Flags, condiciones, hotspots con verbos, NPCs, diálogos con opciones, guardado → fase narrativa (por planificar, tras esta).
 - Trocear `GameTouchSpriteRuntime.tsx` (886 líneas) → se evalúa al cerrar la tarea 11.
 - Multijugador → Fase 14, después de la fase narrativa.
+
+## Retrospectiva
+
+**Qué cambió respecto al plan**
+
+- La tarea 11 se troceó en 9 pasos tras un inventario de dependencias ([11-steps](tasks/11-steps.md)); la 07 necesitó una 07b y una decisión del owner sobre el evento de recogida (`item:pickedUp`, breaking).
+- La validación en navegador pasó de manual a automática: `npm run smoke` juega la demo y el ejemplo mínimo en headless y comprueba estado y sonidos.
+- La prueba de instalación fuera del monorepo encontró dos fallos que ningún test veía: el rango de `three` del renderer (`^0.150.0` solo admitía 0.150.x) y un asset de la demo (`/globe.svg`) pedido desde el paquete.
+
+**Desviaciones aceptadas respecto a ADR-0009**
+
+- Los registros de escenas, ítems y reglas siguen siendo globales de módulo, no por instancia de runtime: un juego por página.
+- La demo sigue poniendo en el store su escena completa (con `doors`) mediante `resolveScene`, en vez de la proyección del registro.
+
+**Pasa a la fase narrativa**
+
+- `inventory:pickup` e `inventory:drop` siguen sin executor (dependen de hotspots con verbos).
+- Puertas como primitiva del motor (hoy en la demo; Fase 7).
+- Outcomes legacy (`rule-miss`, `on-player`, `pickup-blocked`, `item-interact`, `unknown-item`) viajan como `item:dropped` fuera del tipo.
+- `player:stop` no detiene el movimiento por teclado o joystick; `player:walkAborted` casi nunca se emite porque el pathfinding devuelve rutas parciales.
+- El personaje por defecto no trae assets: el host debe servir `/assets/sprites/david/` o pasar su `character`.
+- `zustand` `create` en el core arrastra el binding de React; valorar `zustand/vanilla` antes de 1.0.
+- `GameTouchSpriteRuntime.tsx` (~900 líneas) sigue mezclando jugador, editor de muros y bocadillo.
+- `/debug` no registra diccionarios de i18n (claves en crudo y aviso de hidratación), previo a esta fase.
