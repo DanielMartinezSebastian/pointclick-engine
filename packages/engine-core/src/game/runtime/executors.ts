@@ -134,10 +134,21 @@ export function registerRuntimeExecutors(
     useSceneStore.getState().setTransitionItemOccupying(cmd.transitionId, undefined);
   });
 
+  commands.register("player:stop", () => {
+    const state = useSceneStore.getState();
+    if (state.playerWalkingState?.isActive) {
+      state.setPlayerWalkingState(null);
+      bus.emit("player:walkAborted", {
+        type: "player:walkAborted",
+        reason: "user-input",
+      });
+    }
+  });
+
   // Formalmente aplazados (v0.2.0): solo avisan.
-  commands.register("player:stop", (cmd) =>
+  commands.register("inventory:pickup", (cmd) =>
     console.warn(
-      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires renderer-r3f DI prop for cancelTarget. See docs/phases/phase-5-publish/tasks/02-wire-pending-commands.md#aplazados`,
+      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires UI context (which interaction was clicked). See docs/phases/phase-9-placed-items-agnóstic/README.md#phase-d`,
     ),
   );
   commands.register("inventory:pickup", (cmd) =>
