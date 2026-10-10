@@ -28,11 +28,11 @@ const DOOR_APPROACH_GAP = 1.2;
  * inside the demo layer, free to evolve into a first-class engine
  * primitive later without breaking the existing rule wiring.
  *
- * Returns a handler you can plug into `useInventoryRuntimeController`'s
- * `onRuntimeEvent` prop. Composable: chain it with other handlers if you
+ * Returns a handler you can pass as the viewport controller's
+ * `onRuntimeEvent` option. Composable: chain it with other handlers if you
  * already have one.
  */
-export function useDoorSystem({
+export function useDoorEventBridge({
   scene,
   passthrough,
 }: {
@@ -63,21 +63,25 @@ export function useDoorSystem({
     [scene, setOpen, passthrough],
   );
 
-  /**
-   * Click-goal preprocessor for the runtime's click-to-move pipeline.
-   *
-   * Behavior: for each closed door in the active scene, check whether the
-   * click point is past the door's wall from the player's perspective.
-   * If so, replace the goal with an "approach point" — a position on the
-   * player's side of the wall, aligned with the door, offset by the
-   * wall depth + a small gap. This stops the player in front of the
-   * locked door instead of routing them around the entire wall.
-   *
-   * Limitation: assumes axis-aligned walls (rotationY ≈ 0). For rotated
-   * walls we currently bail out and return null (use the original goal),
-   * so the path may still route around. Generalizing this is a future task.
-   */
-  const getEffectiveClickGoal = useCallback(
+  return handleRuntimeEvent;
+}
+
+/**
+ * Click-goal preprocessor for the runtime's click-to-move pipeline.
+ *
+ * Behavior: for each closed door in the active scene, check whether the
+ * click point is past the door's wall from the player's perspective.
+ * If so, replace the goal with an "approach point" — a position on the
+ * player's side of the wall, aligned with the door, offset by the
+ * wall depth + a small gap. This stops the player in front of the
+ * locked door instead of routing them around the entire wall.
+ *
+ * Limitation: assumes axis-aligned walls (rotationY ≈ 0). For rotated
+ * walls we currently bail out and return null (use the original goal),
+ * so the path may still route around. Generalizing this is a future task.
+ */
+export function useDoorClickGoal(scene: Scene | undefined) {
+  return useCallback(
     (clickX: number, clickZ: number, playerX: number, playerZ: number) => {
       const doors = scene?.doors;
       const walls = scene?.walls;
@@ -116,6 +120,17 @@ export function useDoorSystem({
     },
     [scene],
   );
+}
 
+/** Puente de eventos + preprocesador de click en un solo hook (uso conjunto). */
+export function useDoorSystem({
+  scene,
+  passthrough,
+}: {
+  scene: Scene | undefined;
+  passthrough?: (event: RuntimeEvent) => void;
+}) {
+  const handleRuntimeEvent = useDoorEventBridge({ scene, passthrough });
+  const getEffectiveClickGoal = useDoorClickGoal(scene);
   return { handleRuntimeEvent, getEffectiveClickGoal };
 }

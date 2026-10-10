@@ -61,6 +61,20 @@ export {
   type DraggedInventoryPayload,
 } from "./inventory/SceneDropTargets";
 
+// Viewport (juego jugable completo)
+export { GameViewport, type GameViewportProps } from "./viewport/GameViewport";
+export {
+  GameViewportView,
+  type GameViewportViewProps,
+  type GameViewportSpriteRuntimeProps,
+} from "./viewport/GameViewportView";
+export {
+  useGameViewportController,
+  type GameViewportController,
+  type GameViewportControllerOptions,
+  type GameViewportAudioOptions,
+} from "./viewport/useGameViewportController";
+
 // Runtime
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";

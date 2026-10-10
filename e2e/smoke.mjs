@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 // Coordenadas para viewport 1280x720 en la escena personalRoom.
-const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640], confirmReset: [779, 423] };
+const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640], confirmReset: [779, 423], dungeonGate: [615, 330] };
 // El bocadillo se cierra solo tras escribir el texto y un tiempo de lectura;
 // mientras está visible no se puede recoger ni interactuar.
 const DIALOG_MS = 10000;
@@ -151,16 +151,27 @@ try {
   check("suena la transición", count(s.plays, "transition-default") >= 1, `audio=${music(s.plays)}`);
   check("cambia la música a la de la mazmorra", count(s.plays, "dungeon-loop") >= 1);
 
-  // 6. Persistencia tras recargar.
+  // 6. Abrir la verja de la mazmorra con la llave.
+  await page.waitForTimeout(7000); // el personaje entra caminando
+  const dropsBeforeKey = count(s.plays, "drop-default");
+  await dragFromInventory(/Llave/i, POS.dungeonGate);
+  s = await waitFor((x) => x.doors["dungeon-gate-door"] === true, 8000);
+  check("la llave abre la verja", s.doors["dungeon-gate-door"] === true, JSON.stringify(s.doors));
+  check("la llave se consume", !s.inventory.includes("gold-key"), s.inventory.join());
+  check("consumir la llave no suena como soltar", count(s.plays, "drop-default") === dropsBeforeKey);
+  await page.waitForTimeout(DIALOG_MS);
+
+  // 7. Persistencia tras recargar.
   check("tras recargar pasa la pantalla de carga", await enterGame());
   await page.waitForTimeout(3000);
   s = await state();
   check("la escena guardada se restaura", s.scene === "dungeon", `scene=${s.scene}`);
-  check("el inventario guardado se restaura", s.inventory.slice().sort().join() === "gameboy,gold-key,trophy", s.inventory.join());
+  check("el inventario guardado se restaura", s.inventory.slice().sort().join() === "gameboy,trophy", s.inventory.join());
   check("no reaparecen ítems ya recogidos", s.placed.length === 0, s.placed.join());
+  check("la verja sigue abierta tras recargar", s.doors["dungeon-gate-door"] === true, JSON.stringify(s.doors));
   check("tras recargar suena la música de la mazmorra", count(s.plays, "dungeon-loop") === 1, `audio=${music(s.plays)}`);
 
-  // 7. Reiniciar partida: borra el progreso y conserva lo demás.
+  // 8. Reiniciar partida: borra el progreso y conserva lo demás.
   const keptBefore = await page.evaluate(() => {
     localStorage.setItem("smoke-foreign-key", "keep");
     return JSON.stringify([localStorage.getItem("i18n-locale"), localStorage.getItem("audio-settings")]);

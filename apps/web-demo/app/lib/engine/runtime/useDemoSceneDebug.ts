@@ -2,44 +2,18 @@
 
 import { useMemo } from "react";
 
-import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
+import { SCENES } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore } from "@pointclick-engine/engine-core";
-import {
-  useSceneRuntime,
-  type SceneProgressStorage,
-} from "@pointclick-engine/engine-renderer-r3f";
 import { getGameRuntime } from "../publicApi";
-import {
-  loadCurrentSceneId,
-  saveCurrentSceneId,
-} from "../../gamePersistence";
 
-const SCENE_STORAGE: SceneProgressStorage = {
-  loadSceneId: loadCurrentSceneId,
-  saveSceneId: saveCurrentSceneId,
-};
+type StoreSetScene = ReturnType<typeof useSceneStore.getState>["setScene"];
 
-const resolveDemoScene = (id: string) => SCENES[id] ?? null;
-
-export function useSceneRuntimeController() {
-  const {
-    sceneId,
-    sceneBackground,
-    storeSetScene,
-    sceneInteractions,
-    requestRespawn,
-    playerPosition,
-    scenePlayerSpawn,
-    updateInteraction,
-    resetInteractionsFromSceneConfig,
-  } = useSceneRuntime({
-    initialSceneId: DEFAULT_SCENE_ID,
-    storage: SCENE_STORAGE,
-    // La demo mantiene en el store su escena completa (SCENES), no la
-    // proyeccion del registro del core.
-    resolveScene: resolveDemoScene,
-  });
-
+/**
+ * Selector de escena del panel de debug: opciones y `setScene` con entrada animada.
+ * El estado de escena, la siembra y la persistencia viven en `useGameViewportController`
+ * (renderer); este hook solo recibe su `storeSetScene`.
+ */
+export function useDemoSceneDebug(storeSetScene: StoreSetScene) {
   const sceneOptions = useMemo(
     () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
     [],
@@ -81,16 +55,5 @@ export function useSceneRuntimeController() {
     [storeSetScene],
   );
 
-  return {
-    sceneId,
-    sceneBackground,
-    setScene,
-    sceneInteractions,
-    requestRespawn,
-    playerPosition,
-    scenePlayerSpawn,
-    updateInteraction,
-    resetInteractionsFromSceneConfig,
-    sceneOptions,
-  };
+  return { sceneOptions, setScene };
 }

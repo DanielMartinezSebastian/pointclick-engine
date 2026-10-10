@@ -8,14 +8,7 @@
  * el contrato v1 estable re-exportando ambos.
  */
 
-import { createElement } from "react";
-import type { ComponentType } from "react";
-
-import {
-  type GameSceneInteractionFull,
-  type GameRuntimeEventHandler,
-} from "@pointclick-engine/engine-core";
-import { GameCanvasCore } from "@pointclick-engine/engine-renderer-r3f";
+import { type GameSceneInteractionFull } from "@pointclick-engine/engine-core";
 
 // Re-exports from renderer (stable public API)
 export {
@@ -114,16 +107,7 @@ export {
   getGameActions,
 } from "@pointclick-engine/engine-core";
 
-/** Props del punto de integración GameViewport (canvas + runtime). */
-export type GameViewportProps = {
-  debug?: boolean;
-  onRuntimeEvent?: GameRuntimeEventHandler;
-};
-
-/** Integración pública de viewport/canvas para consumir el runtime. */
-export function GameViewport({ debug, onRuntimeEvent }: GameViewportProps) {
-  return createElement(GameCanvasCore as ComponentType<GameViewportProps>, {
-    debug,
-    onRuntimeEvent,
-  });
-}
+// Viewport jugable (vive en el renderer). Mantiene el contrato v1: `GameViewport`
+// y `GameViewportProps` con `debug` y `onRuntimeEvent`.
+export { GameViewport } from "@pointclick-engine/engine-renderer-r3f";
+export type { GameViewportProps } from "@pointclick-engine/engine-renderer-r3f";

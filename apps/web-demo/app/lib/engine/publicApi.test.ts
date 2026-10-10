@@ -2,6 +2,9 @@ import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
+import { useGameViewportController } from "@pointclick-engine/engine-renderer-r3f";
+import type { RuntimeEvent } from "@pointclick-engine/engine-core";
+
 import { DEFAULT_SCENE_ID, SCENES } from "../../../demo-content/scenes/scenes";
 import { useInventoryStore } from "../../store/inventoryStore";
 import { useDialogStore } from "../../store/dialogStore";
@@ -16,6 +19,7 @@ import {
   registerScene,
   useGameActions,
   type GameActions,
+  type GameViewportProps,
   type GameItemConfig,
   type GameRuleConfig,
   type GameSceneConfig,
@@ -139,15 +143,34 @@ describe("publicApi", () => {
     expect(afterSetScene.sceneId).toBe(sceneIds[0]);
   });
 
-  it("GameViewport reenvia debug y onRuntimeEvent al componente base", () => {
-    const onRuntimeEvent = () => {};
-    const element = GameViewport({
-      debug: true,
-      onRuntimeEvent,
-    });
+  it("GameViewport reenvia debug y onRuntimeEvent a su destino", () => {
+    // GameViewport ya no es un envoltorio sin hooks sobre GameCanvasCore: vive en el
+    // renderer y delega en useGameViewportController (+ GameViewportView). Las dos props
+    // del contrato llegan al controlador, que es quien las consume: `onRuntimeEvent`
+    // recibe cada evento (ademas del bus) y `debug` activa el log de eventos.
+    expect(typeof GameViewport).toBe("function");
+    const runtime = createGameRuntime();
+    const busSpy = vi.fn();
+    runtime.on("player:moved", busSpy);
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+    const onRuntimeEvent = vi.fn();
+    const props = { debug: true, onRuntimeEvent } satisfies GameViewportProps;
+    const holder: { handle: ((event: RuntimeEvent) => void) | null } = { handle: null };
 
-    expect(element.props.debug).toBe(true);
-    expect(element.props.onRuntimeEvent).toBe(onRuntimeEvent);
+    function Probe() {
+      holder.handle = useGameViewportController(props).handleRuntimeEvent;
+      return null;
+    }
+    renderToString(createElement(Probe));
+
+    const event: RuntimeEvent = { type: "onMove", position: [1, 0, 2], action: "idle" };
+    holder.handle?.(event);
+
+    expect(onRuntimeEvent).toHaveBeenCalledWith(event);
+    expect(busSpy).toHaveBeenCalledOnce();
+    expect(debugSpy).toHaveBeenCalledWith("[runtime-event]", event);
+    debugSpy.mockRestore();
+    runtime.dispose();
   });
 });
 
