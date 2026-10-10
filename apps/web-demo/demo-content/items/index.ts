@@ -8,6 +8,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     name: "Gameboy",
     spriteUrl: "/assets/gameboy/gameboy.png",
     descriptionDialogKey: "item.gameboy.description",
+    pickupSoundUrl: "/assets/audio/sfx/pickup-gameboy.ogg",
     interactionRules: {
       "personal-room-gameboy-drop-target": {
         outcome: "place",

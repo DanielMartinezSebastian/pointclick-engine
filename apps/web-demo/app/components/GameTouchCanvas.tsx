@@ -17,6 +17,9 @@ import { CameraController, CameraFitHeight } from "./scene/SceneCameraController
 import { FreeCameraController } from "./scene/FreeCameraController";
 import { SceneDoors } from "./scene/SceneDoors";
 import { SCENES } from "../../demo-content/scenes/scenes";
+import { ITEMS } from "../../demo-content/items";
+import { DAVID } from "../../demo-content/characters/david";
+import { DEMO_AUDIO_DEFAULTS } from "../lib/engine/runtime/useDemoAudio";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { GameTouchSpriteRuntime, SceneTransitions } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
@@ -190,12 +193,11 @@ export default function GameTouchCanvas({
     });
   }, [isInventoryOpen]);
 
-  // Initialize audio system - listen to scene changes
+  // Scene music (the initial scene is seeded before the runtime exists, so no
+  // `scene:changed` reaches the bus for it; see audio notes in task 16.07).
   const scene = useSceneStore((s) => s.scene);
   useEffect(() => {
-    console.log("[audio] Scene changed:", scene.id, "music:", scene?.music);
     if (scene?.music) {
-      console.log("[audio] Playing music:", scene.music.trackUrl);
       webAudioAdapter.playMusic({
         id: scene.music.trackUrl,
         url: scene.music.trackUrl,
@@ -235,40 +237,27 @@ export default function GameTouchCanvas({
           // The core type declares outcome as "consume" | "place" | "return", but
           // legacy emitters also send "pickup-success"; widen locally (core untouched).
           const outcome: string = event.outcome;
-          console.log("[audio] item:dropped -", JSON.stringify(event));
-          // Differentiate by outcome: pickup-success = pickup sound, place = drop sound
-          const soundMap: Record<string, { pickup: string; drop: string }> = {
-            gameboy: {
-              pickup: "/assets/audio/sfx/pickup-gameboy.ogg",
-              drop: "/assets/audio/sfx/drop-default.ogg",
-            },
-            default: {
-              pickup: "/assets/audio/sfx/pickup-default.ogg",
-              drop: "/assets/audio/sfx/drop-default.ogg",
-            },
-          };
-
-          const itemSounds = soundMap[event.itemId] || soundMap.default;
-
+          // pickup-success = pickup sound, place = drop sound. Sound URLs come
+          // from item data (ITEMS) with the demo defaults as fallback.
+          const item = ITEMS[event.itemId];
           if (outcome === "pickup-success") {
             webAudioAdapter.playSound({
               id: `pickup-${event.itemId}`,
-              url: itemSounds.pickup,
+              url: item?.pickupSoundUrl ?? DEMO_AUDIO_DEFAULTS.pickupSoundUrl!,
               category: "sfx",
             });
           } else if (outcome === "place") {
             webAudioAdapter.playSound({
               id: `drop-${event.itemId}`,
-              url: itemSounds.drop,
+              url: item?.dropSoundUrl ?? DEMO_AUDIO_DEFAULTS.dropSoundUrl!,
               category: "sfx",
             });
           }
         }),
         runtime.on("transition:triggered", () => {
-          console.log("[audio] Playing transition sound");
           webAudioAdapter.playSound({
             id: "transition-default",
-            url: "/assets/audio/sfx/transition-default.ogg",
+            url: DEMO_AUDIO_DEFAULTS.transitionSoundUrl!,
             category: "sfx",
           });
         }),
@@ -400,6 +389,7 @@ export default function GameTouchCanvas({
           <Suspense fallback={null}>
             <GameTouchSpriteRuntime
               activeCharacter={selectedCharacter}
+              character={DAVID}
               debug={runtimeDebug}
               showDebugGround={isDebugGroundVisible}
               showDebugWalls={isDebugWallsVisible}

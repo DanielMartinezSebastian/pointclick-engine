@@ -21,9 +21,10 @@
 
 ## Ola C — en paralelo
 
-- [ ] [06-unify-inventory-rules](tasks/06-unify-inventory-rules.md) — sonnet
-- [ ] [07-declarative-audio-wiring](tasks/07-declarative-audio-wiring.md) — sonnet
-- [ ] [09-generic-character-sprite](tasks/09-generic-character-sprite.md) — sonnet
+- [x] [06-unify-inventory-rules](tasks/06-unify-inventory-rules.md) — sonnet
+- [ ] [07-declarative-audio-wiring](tasks/07-declarative-audio-wiring.md) — sonnet — _parcial: sonidos en datos y sin mapa manual; el sistema declarativo no es equivalente todavía_
+- [ ] [07b-enable-declarative-audio](tasks/07b-enable-declarative-audio.md) — sonnet — _bloqueada: decisión del owner sobre el evento de recogida_
+- [x] [09-generic-character-sprite](tasks/09-generic-character-sprite.md) — sonnet
 
 ## Ola D
 
