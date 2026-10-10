@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 // Coordenadas para viewport 1280x720 en la escena personalRoom.
-const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600] };
+const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640] };
 // El bocadillo se cierra solo tras escribir el texto y un tiempo de lectura;
 // mientras está visible no se puede recoger ni interactuar.
 const DIALOG_MS = 10000;
@@ -67,6 +67,19 @@ const enterGame = async () => {
     .waitForFunction(() => document.querySelector("canvas") && !document.querySelector('[aria-label="Cargando…"]'), null, { timeout: 40000 })
     .then(() => true, () => false);
 };
+// Abre la mochila y arrastra el ítem cuyo slot contiene `label` hasta `target`.
+const dragFromInventory = async (label, target) => {
+  await page.mouse.click(...POS.backpack);
+  await page.waitForTimeout(1200);
+  const box = await page.getByRole("button", { name: label }).first().boundingBox();
+  if (!box) return false;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target[0], target[1], { steps: 25 });
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+  return true;
+};
 const count = (plays, name) => plays.filter((p) => p.includes(name)).length;
 const music = (plays) => plays.filter((p) => !p.startsWith("speak") && !p.startsWith("click")).join(",");
 // Camina hasta el umbral de la puerta central y empuja hacia el norte: la
@@ -106,7 +119,30 @@ try {
   check("no suena el sonido de soltar al recoger", count(s.plays, "drop-default") === 0);
   await page.waitForTimeout(DIALOG_MS);
 
-  // 4. Transición a la mazmorra.
+  // 4. Colocar, recoger y devolver ítems arrastrando desde la mochila.
+  check("el gameboy se puede arrastrar desde la mochila", await dragFromInventory(/Gameboy/i, POS.gameboyPad));
+  s = await waitFor((x) => x.placed.includes("gameboy@personalRoom"), 8000);
+  check("soltar el gameboy en su sitio lo coloca", s.placed.includes("gameboy@personalRoom"), s.placed.join());
+  check("el gameboy sale del inventario", !s.inventory.includes("gameboy"), s.inventory.join());
+  check("colocar suena una vez", count(s.plays, "drop-default") === 1, `audio=${music(s.plays)}`);
+  await page.waitForTimeout(DIALOG_MS);
+
+  await page.mouse.click(...POS.gameboyPad);
+  s = await waitFor((x) => x.inventory.includes("gameboy"), 15000);
+  check("recoger el gameboy colocado lo devuelve al inventario", s.inventory.includes("gameboy"), s.inventory.join());
+  check("el gameboy tiene su propio sonido de recogida", count(s.plays, "pickup-gameboy") === 1, `audio=${music(s.plays)}`);
+  await page.waitForTimeout(DIALOG_MS);
+
+  const dropsBefore = count(s.plays, "drop-default");
+  await dragFromInventory(/Llave/i, POS.emptyFloor);
+  await page.waitForTimeout(3000);
+  s = await state();
+  check("soltar la llave fuera de su diana la devuelve", s.inventory.includes("gold-key"), s.inventory.join());
+  check("la llave no queda colocada en la escena", !s.placed.some((p) => p.startsWith("gold-key@")), s.placed.join());
+  check("devolver un ítem no suena", count(s.plays, "drop-default") === dropsBefore, `audio=${music(s.plays)}`);
+  await page.waitForTimeout(DIALOG_MS);
+
+  // 5. Transición a la mazmorra.
   await walkThroughCenterDoor();
   s = await waitFor((x) => x.scene === "dungeon", 15000);
   check("la puerta central lleva a la mazmorra", s.scene === "dungeon", `scene=${s.scene}`);
@@ -115,13 +151,13 @@ try {
   check("suena la transición", count(s.plays, "transition-default") >= 1, `audio=${music(s.plays)}`);
   check("cambia la música a la de la mazmorra", count(s.plays, "dungeon-loop") >= 1);
 
-  // 5. Persistencia tras recargar.
+  // 6. Persistencia tras recargar.
   check("tras recargar pasa la pantalla de carga", await enterGame());
   await page.waitForTimeout(3000);
   s = await state();
   check("la escena guardada se restaura", s.scene === "dungeon", `scene=${s.scene}`);
-  check("el inventario guardado se restaura", s.inventory.join() === "gameboy,gold-key,trophy", s.inventory.join());
-  check("el trofeo no reaparece", !s.placed.some((p) => p.startsWith("trophy@")), s.placed.join());
+  check("el inventario guardado se restaura", s.inventory.slice().sort().join() === "gameboy,gold-key,trophy", s.inventory.join());
+  check("no reaparecen ítems ya recogidos", s.placed.length === 0, s.placed.join());
   check("tras recargar suena la música de la mazmorra", count(s.plays, "dungeon-loop") === 1, `audio=${music(s.plays)}`);
 
   check("sin errores de página ni de consola", errors.length === 0, errors.slice(0, 3).join(" | "));
