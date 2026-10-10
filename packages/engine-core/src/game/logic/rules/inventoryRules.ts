@@ -114,7 +114,7 @@ export function addOneToInventory(
   return { slots: next, added: true };
 }
 
-type InventoryRuleContext = {
+export type InventoryRuleContext = {
   getItemDefinition: (itemId: string) => ItemDefinition | null;
   resolveItemRule: (itemId: string, interactionId: string) => ItemInteractionRule | null;
 };

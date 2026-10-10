@@ -22,3 +22,4 @@ export {
   toGameState,
   toGameActions,
 } from "./createGameRuntime";
+export { createInventoryRuleContext } from "./inventoryRuleContext";

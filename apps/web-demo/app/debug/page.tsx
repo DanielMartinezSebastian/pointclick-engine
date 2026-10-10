@@ -1,5 +1,34 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
+import { createGameRuntime, type GameRuntime } from "../lib/engine/publicApi";
+import { SCENES } from "../../demo-content/scenes/scenes";
+import { ITEMS } from "../../demo-content/items";
 import GameTouchCanvas from "../components/GameTouchCanvas";
+
+// Mismo patron que app/page.tsx: el runtime se crea en un efecto (con dispose en
+// el cleanup) y el canvas se monta cuando ya existe. Asi /debug resuelve items,
+// emite eventos y tiene audio, igual que el juego.
+function DebugGame() {
+  const [runtime, setRuntime] = useState<GameRuntime | null>(null);
+
+  useEffect(() => {
+    const created = createGameRuntime({
+      scenes: Object.values(SCENES),
+      items: Object.values(ITEMS),
+    });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists (children effects run before the parent's)
+    setRuntime(created);
+
+    return () => {
+      created.dispose();
+      setRuntime(null);
+    };
+  }, []);
+
+  return runtime ? <GameTouchCanvas runtime={runtime} /> : null;
+}
 
 export default function DebugPage() {
   const isDebugEnabled = process.env.NEXT_PUBLIC_ENABLE_DEBUG === "true";
@@ -9,5 +38,5 @@ export default function DebugPage() {
     notFound();
   }
 
-  return <GameTouchCanvas />;
+  return <DebugGame />;
 }

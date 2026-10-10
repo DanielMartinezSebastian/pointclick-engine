@@ -7,9 +7,8 @@ import {
 } from "./lib/engine/publicApi";
 import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
 import { SCENES } from "../demo-content/scenes/scenes";
+import { ITEMS } from "../demo-content/items";
 import GameTouchCanvas from "./components/GameTouchCanvas";
-import { useInventoryStore } from "./store/inventoryStore";
-import { useDialogStore } from "./store/dialogStore";
 import { IntroScene } from "./components/intro/IntroScene";
 import { useLocaleDetection } from "@pointclick-engine/engine-renderer-r3f";
 import { createWebI18nAdapter } from "./lib/platform-web";
@@ -45,14 +44,7 @@ function Game() {
   useEffect(() => {
     const created = createGameRuntime({
       scenes: Object.values(SCENES),
-      inventoryAdapter: {
-        toggle: () => useInventoryStore.getState().toggle(),
-        isOpen: () => useInventoryStore.getState().isOpen,
-      },
-      dialogAdapter: {
-        show: (text, key) => useDialogStore.getState().show(text, key),
-        hide: () => useDialogStore.getState().dismiss(),
-      },
+      items: Object.values(ITEMS),
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists (children effects run before the parent's)
     setRuntime(created);

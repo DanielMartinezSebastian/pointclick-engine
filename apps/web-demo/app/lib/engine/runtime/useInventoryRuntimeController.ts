@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
-import { getItemDefinition, resolveItemRule } from "../../../../demo-content/items";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
 import { useProximityHintController } from "@pointclick-engine/engine-renderer-r3f";
+import { createInventoryRuleContext } from "@pointclick-engine/engine-core";
+import { getGameRuntime } from "../publicApi";
 import {
   emitRuntimeEvent,
   type RuntimeEventHandler,
@@ -29,8 +30,9 @@ import {
   saveInventorySlots,
 } from "../../gamePersistence";
 
-// Origen del registro de items: ITEMS de demo-content (page.tsx aun no registra items en el runtime).
-const inventoryRuleContext = { getItemDefinition, resolveItemRule };
+// Origen del registro de items: el runtime activo (page.tsx y example-bridge registran ITEMS).
+// Se resuelve en cada uso, no al montar. Sin runtime el registro esta vacio (items desconocidos).
+const inventoryRuleContext = createInventoryRuleContext(() => getGameRuntime()?.getItems() ?? {});
 
 type InventoryStack = {
   id: string;

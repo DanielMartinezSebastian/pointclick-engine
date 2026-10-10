@@ -321,9 +321,12 @@ describe("publicApi — wired commands (Phase 5)", () => {
     });
   });
 
-  it("without adapters, inventory:toggle is a no-op and does not throw", () => {
+  it("without adapters, inventory:toggle acts on the default core store and does not throw", () => {
     const runtime = createGameRuntime();
     expect(() => runtime.executeCommand({ type: "inventory:toggle" })).not.toThrow();
+    // Los stores de la demo son los del core: el toggle por defecto SI abre el inventario.
+    expect(useInventoryStore.getState().isOpen).toBe(true);
+    runtime.executeCommand({ type: "inventory:toggle" });
     expect(useInventoryStore.getState().isOpen).toBe(false);
   });
 
@@ -337,7 +340,10 @@ describe("publicApi — wired commands (Phase 5)", () => {
     expect(() =>
       runtime.executeCommand({ type: "dialog:trigger", dialogKey: "test.noadapter" }),
     ).not.toThrow();
-    expect(useDialogStore.getState().visible).toBe(false);
+    // Sin adapter se usa el store por defecto del core (el mismo objeto que el de la demo).
+    expect(useDialogStore.getState().visible).toBe(true);
+    expect(useDialogStore.getState().text).toBe("No adapter");
+    expect(useDialogStore.getState().key).toBe("test.noadapter");
     expect(spy).toHaveBeenCalledOnce();
   });
 });

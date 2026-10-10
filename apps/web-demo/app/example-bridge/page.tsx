@@ -6,9 +6,8 @@ import {
   type GameRuntime,
 } from "../lib/engine/publicApi";
 import { SCENES } from "../../demo-content/scenes/scenes";
+import { ITEMS } from "../../demo-content/items";
 import GameTouchCanvas from "../components/GameTouchCanvas";
-import { useInventoryStore } from "../store/inventoryStore";
-import { useDialogStore } from "../store/dialogStore";
 import HtmlBridgePanel from "./HtmlBridgePanel";
 
 /**
@@ -27,14 +26,7 @@ export default function ExampleBridgePage() {
   useEffect(() => {
     const created = createGameRuntime({
       scenes: Object.values(SCENES),
-      inventoryAdapter: {
-        toggle: () => useInventoryStore.getState().toggle(),
-        isOpen: () => useInventoryStore.getState().isOpen,
-      },
-      dialogAdapter: {
-        show: (text, key) => useDialogStore.getState().show(text, key),
-        hide: () => useDialogStore.getState().dismiss(),
-      },
+      items: Object.values(ITEMS),
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists
     setRuntime(created);
