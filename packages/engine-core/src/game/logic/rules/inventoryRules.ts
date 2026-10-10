@@ -1,5 +1,6 @@
 import type {
   GameSceneInteraction,
+  GameSceneInteractionDialogKeys,
   DialogKey,
   ItemDefinition,
   ItemInteractionRule,
@@ -125,7 +126,7 @@ export function resolveInventoryDropHitDecision(
     payload,
     now,
   }: {
-    interaction: GameSceneInteraction & { dialogKeys?: Record<string, DialogKey>; id?: string };
+    interaction: GameSceneInteraction & { dialogKeys?: Partial<GameSceneInteractionDialogKeys>; id?: string };
     payload: DraggedPayloadState;
     now: number;
   },
@@ -138,12 +139,12 @@ export function resolveInventoryDropHitDecision(
     };
   }
 
-  const interactionId = (interaction as any).id || "";
+  const interactionId = (interaction as any).id ?? "";
   const rule = context.resolveItemRule(itemDefinition.id, interactionId);
   if (!rule) {
     return {
       kind: "rule-miss",
-      dialogKey: (interaction as any).dialogKeys?.miss || DEFAULT_DROP_MISS_DIALOG_KEY,
+      dialogKey: (interaction as any).dialogKeys?.miss ?? DEFAULT_DROP_MISS_DIALOG_KEY,
     };
   }
 
@@ -168,7 +169,7 @@ export function resolveInventoryDropHitDecision(
         pickupSuccessDialogKey: rule.pickupSuccessDialogKey,
         pickupBlockedDialogKey: rule.pickupBlockedDialogKey,
       },
-      dialogKey: rule.hitDialogKey || (interaction as any).dialogKeys?.hit || DEFAULT_DROP_MISS_DIALOG_KEY,
+      dialogKey: rule.hitDialogKey ?? (interaction as any).dialogKeys?.hit ?? DEFAULT_DROP_MISS_DIALOG_KEY,
     };
   }
 
@@ -176,14 +177,14 @@ export function resolveInventoryDropHitDecision(
     return {
       kind: "consume",
       fromSlotIndex: payload.fromSlotIndex,
-      dialogKey: rule.hitDialogKey || (interaction as any).dialogKeys?.hit || DEFAULT_DROP_MISS_DIALOG_KEY,
+      dialogKey: rule.hitDialogKey ?? (interaction as any).dialogKeys?.hit ?? DEFAULT_DROP_MISS_DIALOG_KEY,
     };
   }
 
   return {
     kind: "return",
     dialogKey:
-      rule.hitDialogKey || rule.missDialogKey || (interaction as any).dialogKeys?.miss || DEFAULT_DROP_MISS_DIALOG_KEY,
+      rule.hitDialogKey ?? rule.missDialogKey ?? (interaction as any).dialogKeys?.miss ?? DEFAULT_DROP_MISS_DIALOG_KEY,
   };
 }
 
@@ -195,17 +196,17 @@ export function resolveInventoryDropMissDialogKey(
     sceneInteractions,
   }: {
     payload: DraggedPayloadState;
-    interaction?: GameSceneInteraction & { dialogKeys?: Record<string, DialogKey>; id?: string };
-    sceneInteractions: (GameSceneInteraction & { dialogKeys?: Record<string, DialogKey>; id?: string; kind?: string })[];
+    interaction?: GameSceneInteraction & { dialogKeys?: Partial<GameSceneInteractionDialogKeys>; id?: string };
+    sceneInteractions: (GameSceneInteraction & { dialogKeys?: Partial<GameSceneInteractionDialogKeys>; id?: string; kind?: string })[];
   },
 ): DialogKey {
   const interactionId = (interaction as any)?.id;
   const itemRule = interactionId ? context.resolveItemRule(payload.stack.id, interactionId) : null;
 
   return (
-    itemRule?.missDialogKey ||
-    (interaction as any)?.dialogKeys?.miss ||
-    sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys?.miss ||
+    itemRule?.missDialogKey ??
+    (interaction as any)?.dialogKeys?.miss ??
+    sceneInteractions.find((currentInteraction) => currentInteraction.kind === "drop-target")?.dialogKeys?.miss ??
     DEFAULT_DROP_MISS_DIALOG_KEY
   );
 }
@@ -264,7 +265,7 @@ export function resolvePickupPlacedItemDecision(
     return {
       kind: "blocked",
       dialogKey:
-        placedItem.pickupBlockedDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "blocked"),
+        placedItem.pickupBlockedDialogKey ?? getDefaultPickupDialogKey(placedItem.itemId, "blocked"),
     };
   }
 
@@ -277,7 +278,7 @@ export function resolvePickupPlacedItemDecision(
       spriteUrl: itemDefinition.spriteUrl,
     },
     successDialogKey:
-      placedItem.pickupSuccessDialogKey || getDefaultPickupDialogKey(placedItem.itemId, "allowed"),
+      placedItem.pickupSuccessDialogKey ?? getDefaultPickupDialogKey(placedItem.itemId, "allowed"),
   };
 }
 

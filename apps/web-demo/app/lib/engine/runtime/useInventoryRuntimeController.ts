@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
+import { getItemDefinition, resolveItemRule } from "../../../../demo-content/items";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
@@ -22,11 +23,14 @@ import {
   resolveInventoryDropMissDialogKey,
   resolveInventoryDropOnPlayerMessage,
   resolvePickupPlacedItemDecision,
-} from "../../core/rules/inventoryRules";
+} from "@pointclick-engine/engine-core";
 import {
   loadInventorySlots,
   saveInventorySlots,
 } from "../../gamePersistence";
+
+// Origen del registro de items: ITEMS de demo-content (page.tsx aun no registra items en el runtime).
+const inventoryRuleContext = { getItemDefinition, resolveItemRule };
 
 type InventoryStack = {
   id: string;
@@ -216,7 +220,7 @@ export function useInventoryRuntimeController({
 
   const handleInventoryDropHit = useCallback(
     (interaction: SceneInteraction, payload: DraggedInventoryPayload) => {
-      const decision = resolveInventoryDropHitDecision({
+      const decision = resolveInventoryDropHitDecision(inventoryRuleContext, {
         interaction,
         payload,
         now: Date.now(),
@@ -302,7 +306,7 @@ export function useInventoryRuntimeController({
 
   const handleInventoryDropMiss = useCallback(
     (payload: DraggedInventoryPayload, interaction?: SceneInteraction) => {
-      const fallbackMiss = resolveInventoryDropMissDialogKey({
+      const fallbackMiss = resolveInventoryDropMissDialogKey(inventoryRuleContext, {
         payload,
         interaction,
         sceneInteractions,
@@ -324,7 +328,7 @@ export function useInventoryRuntimeController({
 
   const handleInventoryDropOnPlayer = useCallback(
     (payload: DraggedInventoryPayload) => {
-      const message = resolveInventoryDropOnPlayerMessage({ payload });
+      const message = resolveInventoryDropOnPlayerMessage(inventoryRuleContext, { payload });
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDrop",
         outcome: "on-player",
@@ -355,7 +359,7 @@ export function useInventoryRuntimeController({
 
       pickupLockRef.current.add(placedItem.id);
 
-      const decision = resolvePickupPlacedItemDecision({ placedItem });
+      const decision = resolvePickupPlacedItemDecision(inventoryRuleContext, { placedItem });
       if (decision.kind === "ignore") {
         pickupLockRef.current.delete(placedItem.id);
         return;
