@@ -174,6 +174,8 @@ export default function GameTouchCanvas({
       canPickupItems={!disableClickToMove}
       onSceneReady={handleSceneReady}
       spriteRuntimeProps={{
+        // Bola de pruebas de colisión, con un asset de la demo.
+        collisionSphere: { textureUrl: "/globe.svg" },
         showDebugGround: debugPanel.isDebugGroundVisible,
         showDebugWalls: debugPanel.isDebugWallsVisible,
         showPlayerCollider,

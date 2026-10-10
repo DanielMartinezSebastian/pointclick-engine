@@ -100,6 +100,7 @@ function projectDistance(originX: number, originZ: number, pointX: number, point
 export function GameTouchSpriteRuntime({
   activeCharacter,
   character,
+  collisionSphere = null,
   debug,
   showDebugGround,
   showDebugWalls,
@@ -132,6 +133,11 @@ export function GameTouchSpriteRuntime({
    * selected by `activeCharacter` is used (legacy behaviour).
    */
   character?: CharacterDefinition;
+  /**
+   * Esfera física suelta para probar colisiones. No se pinta por defecto; el
+   * host puede activarla y darle una textura propia.
+   */
+  collisionSphere?: { textureUrl?: string } | null;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
@@ -858,7 +864,7 @@ export function GameTouchSpriteRuntime({
       {debug && wallToolMode === "points" && (
         <SceneWallPointPreview preview={wallPointPreview} groundY={ground.y} />
       )}
-      <SceneCollisionSphere />
+      {collisionSphere ? <SceneCollisionSphere textureUrl={collisionSphere.textureUrl} /> : null}
       <RigidBody
         ref={characterBodyRef}
         type="dynamic"

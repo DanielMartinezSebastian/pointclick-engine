@@ -1,8 +1,11 @@
 // Smoke headless de /example-minimal: un juego que solo importa de los paquetes.
 // Uso: node e2e/smoke-minimal.mjs [baseUrl]   (requiere el servidor de la demo en marcha)
+// SMOKE_PATH cambia la ruta de la página (por defecto /example-minimal); sirve para
+// probar el mismo ejemplo servido desde un proyecto externo al monorepo.
 import { chromium } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
+const PAGE_PATH = process.env.SMOKE_PATH ?? "/example-minimal";
 const TROPHY = [789, 540]; // viewport 1280x720, escena minimal-a
 const checks = [];
 const check = (name, ok, detail = "") => {
@@ -31,7 +34,7 @@ const waitForStatus = async (pattern, timeoutMs) => {
 };
 
 try {
-  await page.goto(`${BASE}/example-minimal`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}${PAGE_PATH}`, { waitUntil: "networkidle" });
   await page.waitForSelector("canvas", { timeout: 30000 });
   check("arranca en la escena inicial con el ítem sembrado", await waitForStatus(/escena: minimal-a \| inventario: 0 \| en escena: 1/, 20000), await status());
   await page.waitForTimeout(4000);
