@@ -1,7 +1,7 @@
 import type { EventBus } from "../../events";
 import type { CommandHandler } from "../commands/CommandHandler";
 import { findPath } from "../logic";
-import { useSceneStore } from "../state";
+import { useSceneStore, useDialogStore, useInventoryUiStore } from "../state";
 import type { GameVec3 } from "../types";
 import type { GameRuntimeConfig } from "./types";
 import { ruleRegistry, sceneRegistry, toRuntimeScene } from "./registry";
@@ -18,7 +18,9 @@ export function registerRuntimeExecutors(
       console.warn(`[runtime] scene:set — scene not registered: ${cmd.sceneId}`);
       return;
     }
-    useSceneStore.getState().setScene(sceneConfig.id, toRuntimeScene(sceneConfig));
+    useSceneStore
+      .getState()
+      .setScene(sceneConfig.id, toRuntimeScene(sceneConfig), cmd.spawnPosition);
   });
 
   commands.register("scene:respawn", () => {
@@ -74,7 +76,8 @@ export function registerRuntimeExecutors(
   });
 
   commands.register("inventory:toggle", () => {
-    config.inventoryAdapter?.toggle();
+    if (config.inventoryAdapter) config.inventoryAdapter.toggle();
+    else useInventoryUiStore.getState().toggle();
   });
 
   // Clave del diálogo activo para que dialog:dismiss la incluya en el evento.
@@ -87,7 +90,8 @@ export function registerRuntimeExecutors(
         ? phrases[Math.floor(Math.random() * phrases.length)]!
         : cmd.dialogKey;
     activeDialogKey = cmd.dialogKey;
-    config.dialogAdapter?.show(text, cmd.dialogKey);
+    if (config.dialogAdapter) config.dialogAdapter.show(text, cmd.dialogKey);
+    else useDialogStore.getState().show(text, cmd.dialogKey);
     bus.emit("dialog:triggered", {
       type: "dialog:triggered",
       text,
@@ -99,7 +103,8 @@ export function registerRuntimeExecutors(
   commands.register("dialog:dismiss", () => {
     const key = activeDialogKey;
     activeDialogKey = undefined;
-    config.dialogAdapter?.hide();
+    if (config.dialogAdapter) config.dialogAdapter.hide();
+    else useDialogStore.getState().dismiss();
     bus.emit("dialog:dismissed", { type: "dialog:dismissed", dialogKey: key });
   });
 
@@ -122,7 +127,9 @@ export function registerRuntimeExecutors(
       );
       return;
     }
-    useSceneStore.getState().setScene(sceneConfig.id, toRuntimeScene(sceneConfig));
+    useSceneStore
+      .getState()
+      .setScene(sceneConfig.id, toRuntimeScene(sceneConfig), transition.spawnPosition);
     bus.emit("transition:completed", {
       type: "transition:completed",
       fromSceneId,

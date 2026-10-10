@@ -9,7 +9,7 @@ type AudioMuteTarget = "master" | SoundCategory;
  */
 export type GameCommand =
   // Scene
-  | { type: "scene:set"; sceneId: string }
+  | { type: "scene:set"; sceneId: string; spawnPosition?: GameVec3 }
   | { type: "scene:respawn" }
   // Player
   | { type: "player:move"; position: GameVec3 }

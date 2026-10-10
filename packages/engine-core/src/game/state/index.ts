@@ -24,3 +24,9 @@ export {
   setI18nStoreEmitter,
   type I18nStore,
 } from "./i18nStore";
+export { useDialogStore, getDialogState, type DialogStoreState } from "./dialogStore";
+export {
+  useInventoryUiStore,
+  getInventoryUiState,
+  type InventoryUiStoreState,
+} from "./inventoryUiStore";

@@ -128,8 +128,8 @@ export type GameRuntimeConfig = {
   scenes?: GameSceneConfig[];
   items?: GameItemConfig[];
   rules?: GameRuleConfig[];
-  /** Adapter de UI para inventory. Si no se pasa, inventory:toggle es no-op. */
+  /** Adapter de UI para inventory. Si no se pasa, inventory:toggle usa el store del core (useInventoryUiStore). */
   inventoryAdapter?: InventoryUIAdapter;
-  /** Adapter de UI para diálogos. Si no se pasa, dialog:trigger solo emite el evento. */
+  /** Adapter de UI para diálogos. Si no se pasa, dialog:trigger/dismiss usan el store del core (useDialogStore) y emiten el evento. */
   dialogAdapter?: DialogUIAdapter;
 };
