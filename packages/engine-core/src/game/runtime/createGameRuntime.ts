@@ -1,6 +1,6 @@
 import { EventBus } from "../../events";
 import { CommandHandler } from "../commands/CommandHandler";
-import { setSceneStoreEmitter, useSceneStore } from "../state";
+import { setSceneStoreEmitter, useSceneStore, useWorldStateStore } from "../state";
 import type { GameEvent, GameEventType, GameEventHandler } from "../events/types";
 import type {
   GameRuntime,
@@ -20,6 +20,40 @@ import {
 } from "./registry";
 import { registerRuntimeExecutors } from "./executors";
 
+/**
+ * Cablea el estado de mundo con el bus (los stores no se conocen entre sí ni al bus):
+ *  - suscripción al store de mundo -> emite `state:flagChanged` por diff de flags
+ *    (cubre comandos y llamadas directas a `getWorldState().setFlag`).
+ *  - `scene:changed` del bus -> `markSceneVisited` (incluida la escena ya activa).
+ * Devuelve la función que suelta ambas suscripciones.
+ */
+function wireWorldState(bus: EventBus): () => void {
+  const unsubStore = useWorldStateStore.subscribe((state, prev) => {
+    if (state.flags === prev.flags) return;
+    const names = new Set([...Object.keys(prev.flags), ...Object.keys(state.flags)]);
+    for (const name of names) {
+      const before = prev.flags[name];
+      const after = state.flags[name];
+      if (before === after) continue;
+      bus.emit("state:flagChanged", {
+        type: "state:flagChanged",
+        name,
+        ...(after !== undefined ? { value: after } : {}),
+        ...(before !== undefined ? { previous: before } : {}),
+      });
+    }
+  });
+  const unsubScene = bus.on<{ sceneId: string }>("scene:changed", (e) => {
+    useWorldStateStore.getState().markSceneVisited(e.sceneId);
+  });
+  const activeSceneId = useSceneStore.getState().sceneId;
+  if (activeSceneId) useWorldStateStore.getState().markSceneVisited(activeSceneId);
+  return () => {
+    unsubStore();
+    unsubScene();
+  };
+}
+
 /** Singleton del runtime activo. Accesible vía getGameRuntime(). */
 let runtimeHandle: GameRuntime | null = null;
 
@@ -38,6 +72,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
 
   setSceneStoreEmitter((event) => bus.emit(event.type, event));
   registerRuntimeExecutors(commands, bus, config);
+  const unwireWorldState = wireWorldState(bus);
 
   const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(sceneRegistry),
@@ -48,6 +83,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
       bus.on(type, handler as (data: unknown) => void),
     emit: (event: GameEvent) => bus.emit(event.type, event),
     dispose: () => {
+      unwireWorldState();
       bus.clear();
       commands.clear();
       setSceneStoreEmitter(null);

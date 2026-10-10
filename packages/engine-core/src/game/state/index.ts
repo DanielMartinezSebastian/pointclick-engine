@@ -38,6 +38,13 @@ export {
   type InventoryStateStoreState,
 } from "./inventoryStore";
 export {
+  useWorldStateStore,
+  getWorldState,
+  type FlagValue,
+  type WorldSnapshot,
+  type WorldStateStoreState,
+} from "./worldStateStore";
+export {
   selectPlacedItemsForScene,
   usePlacedItemsStateStore,
   getPlacedItemsState,

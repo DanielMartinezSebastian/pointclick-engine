@@ -31,6 +31,9 @@ export type GameCommand =
   | { type: "audio:setVolume"; target: AudioMuteTarget; volume: number }
   // i18n
   | { type: "i18n:setLocale"; locale: Locale }
-  | { type: "i18n:registerDictionary"; locale: Locale; dict: DialogDictionary };
+  | { type: "i18n:registerDictionary"; locale: Locale; dict: DialogDictionary }
+  // World state
+  | { type: "state:setFlag"; name: string; value: boolean | number | string }
+  | { type: "state:clearFlag"; name: string };
 
 export type GameCommandType = GameCommand["type"];

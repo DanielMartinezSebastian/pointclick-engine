@@ -8,8 +8,8 @@
 
 ## Ola A — en paralelo
 
-- [ ] [02-clock-port](tasks/02-clock-port.md) — haiku
-- [ ] [03-world-state](tasks/03-world-state.md) — sonnet
+- [x] [02-clock-port](tasks/02-clock-port.md) — haiku
+- [x] [03-world-state](tasks/03-world-state.md) — sonnet
 - [ ] [11-legacy-outcomes](tasks/11-legacy-outcomes.md) — haiku
 
 ## Ola B — en paralelo

@@ -1,7 +1,12 @@
 import type { EventBus } from "../../events";
 import type { CommandHandler } from "../commands/CommandHandler";
 import { findPath } from "../logic";
-import { useSceneStore, useDialogStore, useInventoryUiStore } from "../state";
+import {
+  useSceneStore,
+  useDialogStore,
+  useInventoryUiStore,
+  useWorldStateStore,
+} from "../state";
 import type { GameVec3 } from "../types";
 import type { GameRuntimeConfig } from "./types";
 import { ruleRegistry, sceneRegistry, toRuntimeScene } from "./registry";
@@ -150,6 +155,14 @@ export function registerRuntimeExecutors(
         reason: "user-input",
       });
     }
+  });
+
+  commands.register("state:setFlag", (cmd) => {
+    useWorldStateStore.getState().setFlag(cmd.name, cmd.value);
+  });
+
+  commands.register("state:clearFlag", (cmd) => {
+    useWorldStateStore.getState().clearFlag(cmd.name);
   });
 
   // Formalmente aplazados (v0.2.0): solo avisan.
