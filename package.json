@@ -16,7 +16,7 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc --noEmit -p packages/engine-core && tsc --noEmit -p packages/engine-renderer-r3f && tsc --noEmit -p apps/web-demo",
     "lint": "npm run lint --workspaces --if-present",
-    "smoke": "node e2e/smoke.mjs"
+    "smoke": "node e2e/smoke.mjs && node e2e/smoke-minimal.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

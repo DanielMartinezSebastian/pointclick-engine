@@ -51,6 +51,11 @@ describe("seedSceneItems", () => {
     expect(cb).toHaveBeenCalledTimes(1);
   });
 
+  it("un item sembrado sin sceneId queda asignado a la escena sembrada", () => {
+    seedSceneItems("room", () => [placed("a"), placed("b", { sceneId: "other" })]);
+    expect(getPlacedItemsState().items.map((i) => i.sceneId)).toEqual(["room", "other"]);
+  });
+
   it("el callback recibe todos los items existentes", () => {
     getPlacedItemsState().setItems([placed("x")]);
     const cb = vi.fn(() => [placed("y")]);

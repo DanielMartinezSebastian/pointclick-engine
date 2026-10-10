@@ -30,7 +30,7 @@
 
 ## Ola D
 
-- [ ] [11-functional-game-viewport](tasks/11-functional-game-viewport.md) — sonnet — _troceada en 9 pasos: [11-steps](tasks/11-steps.md)_
+- [x] [11-functional-game-viewport](tasks/11-functional-game-viewport.md) — sonnet — _hecha en 9 pasos ([11-steps](tasks/11-steps.md)); validada con `npm run smoke` (40/40 y 5/5)_
 
 ## Ola E
 
@@ -42,7 +42,7 @@
 - [ ] Gate técnico verde (`build:packages`, `test`, `typecheck`, `lint`, `build`)
 - [ ] `coreAgnosticism.test.ts` verde
 - [ ] Contrato v1: todos los nombres siguen exportándose desde `publicApi.ts`
-- [ ] `apps/web-demo/app/lib/engine/render/` y `app/lib/core/` no existen
-- [ ] Ejemplo mínimo de consumo (solo imports de paquetes) arranca en navegador
+- [x] `apps/web-demo/app/lib/engine/render/` y `app/lib/core/` no existen
+- [x] Ejemplo mínimo de consumo (solo imports de paquetes) arranca en navegador — _`/example-minimal`, smoke 5/5_
 - [ ] Smoke completo de la demo sin regresiones
 - [ ] CHANGELOG y versión 0.5.0 en ambos paquetes

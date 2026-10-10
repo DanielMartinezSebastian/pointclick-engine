@@ -3,7 +3,8 @@ import { getPlacedItemsState, type PlacedSceneItem } from "@pointclick-engine/en
 /**
  * Callback de siembra por escena. Devuelve los items a anadir (puede ser `[]`:
  * la escena se marca sembrada sin anadir nada) o `null` para indicar que la
- * escena no se siembra y NO debe marcarse como sembrada.
+ * escena no se siembra y NO debe marcarse como sembrada. Un item devuelto sin
+ * `sceneId` se asigna a la escena que se esta sembrando.
  */
 export type GetInitialPlacedItems = (
   sceneId: string,
@@ -29,7 +30,10 @@ export function seedSceneItems(
   if (state.isSceneSeeded(sceneId)) return false;
   const added = getInitialPlacedItems(sceneId, state.items);
   if (added === null) return false;
-  if (added.length > 0) state.setItems([...state.items, ...added]);
+  if (added.length > 0) {
+    const owned = added.map((item) => (item.sceneId === undefined ? { ...item, sceneId } : item));
+    state.setItems([...state.items, ...owned]);
+  }
   state.markSceneSeeded(sceneId);
   return true;
 }
