@@ -5,6 +5,7 @@ export * from "./game/commands";
 export * from "./game/events";
 export * from "./game/i18n";
 export * from "./game/runtime";
+export * from "./game/narrative";
 export * from "./events";
 export * from "./ports";
 
