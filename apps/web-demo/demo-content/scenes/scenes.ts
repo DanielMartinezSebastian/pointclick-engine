@@ -1,86 +1,35 @@
-import type { DialogKey } from "../dialogs/types";
-import type { GameSceneTransition, SceneMusicConfig } from "@pointclick-engine/engine-core";
+import type {
+  GameScene,
+  GameSceneGround,
+  GameSceneInteractionDialogKeys,
+  GameSceneInteractionFull,
+  GameSceneInteractionHintDialogKeys,
+  GameSceneWall,
+  GameSceneWallOpening,
+} from "@pointclick-engine/engine-core";
 import {
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
   sceneTransitionOnItemInteraction,
 } from "@pointclick-engine/engine-core";
 
-export type SceneWallOpening = {
-  id: string;
-  /** Position in wall-local space relative to wall center */
-  position: [number, number, number];
-  /** Half-extents of the opening: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-};
+// Aliases de compatibilidad: los tipos de geometria/interaccion viven en el core.
+export type SceneWallOpening = GameSceneWallOpening;
+export type SceneWall = GameSceneWall;
+export type SceneInteractionDialogKeys = GameSceneInteractionDialogKeys;
+export type SceneInteractionHintDialogKeys = GameSceneInteractionHintDialogKeys;
+export type SceneGround = GameSceneGround;
 
-export type SceneWall = {
-  position: [number, number, number];
-  /** Rotation around Y axis in radians */
-  rotationY?: number;
-  /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-  /** Openings (doors/windows) cut into this wall */
-  openings?: SceneWallOpening[];
-  /** Optional texture URL for wall billboard */
-  textureUrl?: string;
-  /** Optional texture position offset [x, y, z] */
-  texturePosition?: [number, number, number];
-};
-
-export type SceneInteractionDialogKeys = {
-  hit: DialogKey;
-  miss: DialogKey;
-};
-
-export type SceneInteractionHintDialogKeys = {
-  /** Dialog cuando el personaje se acerca o inspecciona el target vacío (sin ítem colocado). */
-  empty: DialogKey;
-  /** Dialog cuando el personaje se acerca o inspecciona el target con un ítem colocado. */
-  occupied: DialogKey;
-};
-
-export type SceneInteraction = {
-  id: string;
-  kind: "drop-target";
-  /** World-space center position [x, y, z] */
-  position: [number, number, number];
-  /** Rotation around Y axis in radians */
-  rotationY?: number;
-  /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-  /** If true, character collides and cannot pass through this interaction */
-  hasCollision?: boolean;
+/** Interaccion de la demo: el tipo del core mas campos exclusivos de la demo. */
+export type DemoSceneInteraction = GameSceneInteractionFull & {
   /**
    * Suppress the default drop-target visual (cylinder + box). Use when
    * another renderer (e.g. SceneDoors) already shows the interactable
    * surface. The pick volume + drop logic remain active.
    */
   invisible?: boolean;
-  /** Item ids accepted by this interaction. If omitted, any item can be accepted. */
-  acceptsItemIds?: string[];
-  dialogKeys: SceneInteractionDialogKeys;
-  /**
-   * Diálogos de pista por proximidad/inspección.
-   * Si está presente se muestran cuando el personaje se acerca mucho
-   * o hace click sobre el target sin arrastrar un ítem.
-   */
-  hintDialogKeys?: SceneInteractionHintDialogKeys;
-  label: string;
 };
-
-export type SceneGround = {
-  /** Límite izquierdo (X negativo) */
-  minX: number;
-  /** Límite derecho (X positivo) */
-  maxX: number;
-  /** Límite trasero/lejano (Z negativo) */
-  minZ: number;
-  /** Límite frontal/cercano (Z positivo) */
-  maxZ: number;
-  /** Y position of the ground plane */
-  y: number;
-};
+export type SceneInteraction = DemoSceneInteraction;
 
 /**
  * Door — interactive opening with two visual states driven by two full-wall
@@ -127,21 +76,13 @@ export type SceneDoor = {
   showHintWhenOpen?: boolean;
 };
 
-export type Scene = {
-  id: string;
-  label: string;
-  background: string;
-  playerSpawn: [number, number, number];
-  ground: SceneGround;
-  walls: SceneWall[];
-  interactions: SceneInteraction[];
+/** Escena de la demo: el tipo del core mas `doors` y las interacciones extendidas. */
+export type DemoScene = Omit<GameScene, "interactions"> & {
+  interactions: DemoSceneInteraction[];
   /** Optional interactive doors. */
   doors?: SceneDoor[];
-  /** Declarative scene transitions (collision/item-drop/item-consume). */
-  transitions?: GameSceneTransition[];
-  /** Optional music configuration for this scene. */
-  music?: SceneMusicConfig;
 };
+export type Scene = DemoScene;
 
 export const SCENES: Record<string, Scene> = {
   town: {

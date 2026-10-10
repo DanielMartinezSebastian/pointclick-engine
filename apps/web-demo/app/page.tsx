@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   createGameRuntime,
-  type GameSceneConfig,
 } from "./lib/engine/publicApi";
 import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
 import { SCENES } from "../demo-content/scenes/scenes";
@@ -35,7 +34,7 @@ const I18N_CONFIG = {
 function Game() {
   useEffect(() => {
     const runtime = createGameRuntime({
-      scenes: Object.values(SCENES) as GameSceneConfig[],
+      scenes: Object.values(SCENES),
       inventoryAdapter: {
         toggle: () => useInventoryStore.getState().toggle(),
         isOpen: () => useInventoryStore.getState().isOpen,

@@ -85,7 +85,7 @@ describe("publicApi", () => {
 
   it("expone acciones/estado base del runtime store", () => {
     // Register scenes first
-    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
+    Object.values(SCENES).forEach(registerScene);
 
     const actions = getGameActions();
     const sceneIds = Object.keys(SCENES);
@@ -103,7 +103,7 @@ describe("publicApi", () => {
 
   it("useGameState aplica selector sobre estado publico", () => {
     // Register scenes first
-    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
+    Object.values(SCENES).forEach(registerScene);
 
     // Initialize store with default scene
     const actions = getGameActions();
@@ -116,7 +116,7 @@ describe("publicApi", () => {
 
   it("useGameActions expone acciones equivalentes al runtime", () => {
     // Register scenes first
-    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
+    Object.values(SCENES).forEach(registerScene);
 
     const sceneIds = Object.keys(SCENES);
     const holder: { actions: GameActions | null } = { actions: null };

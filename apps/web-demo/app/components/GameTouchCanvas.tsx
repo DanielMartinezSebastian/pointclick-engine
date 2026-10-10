@@ -27,7 +27,7 @@ import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntime
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
 import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
 import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
-import { legacyRuntimeEventToGameEvent, type GameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, type GameScene, useSceneStore } from "@pointclick-engine/engine-core";
+import { legacyRuntimeEventToGameEvent, type GameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { webAudioAdapter } from "../lib/platform-web-audio";
 import { audioSettingsStore } from "../store/audio";
@@ -154,7 +154,7 @@ export default function GameTouchCanvas({
 
   const { handleTransitionTriggered, wrapRuntimeEventForTransitions } = useTransitionSystem({
     onBeforeChange: handleBeforeSceneChange,
-    resolveScene: (id) => (SCENES[id] as GameScene | undefined) ?? null,
+    resolveScene: (id) => SCENES[id] ?? null,
   });
 
   const afterDoorRuntimeEvent = useDoorSystem({

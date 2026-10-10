@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 
 import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
-import { useSceneStore, type GameScene } from "@pointclick-engine/engine-core";
+import { useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../publicApi";
 import {
   loadCurrentSceneId,
@@ -45,7 +45,7 @@ export function useSceneRuntimeController() {
         const spawnPos = transitionToTarget.spawnPosition;
         const targetPos = "targetPosition" in transitionToTarget ? transitionToTarget.targetPosition : undefined;
 
-        storeSetScene(id, scene as GameScene, spawnPos);
+        storeSetScene(id, scene, spawnPos);
 
         // Execute walk command if target position exists
         if (targetPos) {
@@ -58,7 +58,7 @@ export function useSceneRuntimeController() {
         }
       } else {
         // No transition found, just change scene normally
-        storeSetScene(id, scene as GameScene);
+        storeSetScene(id, scene);
       }
     },
     [storeSetScene],
@@ -75,12 +75,12 @@ export function useSceneRuntimeController() {
       const initialScene = SCENES[initialSceneId];
 
       if (initialScene) {
-        storeSetScene(initialSceneId, initialScene as GameScene);
+        storeSetScene(initialSceneId, initialScene);
       } else {
         // Fallback to default if saved scene doesn't exist
         const defaultScene = SCENES[DEFAULT_SCENE_ID];
         if (defaultScene) {
-          storeSetScene(DEFAULT_SCENE_ID, defaultScene as GameScene);
+          storeSetScene(DEFAULT_SCENE_ID, defaultScene);
         }
       }
     }

@@ -15,9 +15,9 @@
 
 ## Ola B — en paralelo
 
-- [ ] [03-renderer-state-hooks-and-barrel](tasks/03-renderer-state-hooks-and-barrel.md) — sonnet
-- [ ] [04-unify-scene-types](tasks/04-unify-scene-types.md) — sonnet
-- [ ] [10-wire-player-stop](tasks/10-wire-player-stop.md) — haiku
+- [x] [03-renderer-state-hooks-and-barrel](tasks/03-renderer-state-hooks-and-barrel.md) — sonnet
+- [x] [04-unify-scene-types](tasks/04-unify-scene-types.md) — sonnet
+- [x] [10-wire-player-stop](tasks/10-wire-player-stop.md) — haiku
 
 ## Ola C — en paralelo
 

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import {
   createGameRuntime,
-  type GameSceneConfig,
 } from "../lib/engine/publicApi";
 import { SCENES } from "../../demo-content/scenes/scenes";
 import GameTouchCanvas from "../components/GameTouchCanvas";
@@ -22,7 +21,7 @@ import HtmlBridgePanel from "./HtmlBridgePanel";
 export default function ExampleBridgePage() {
   useEffect(() => {
     const runtime = createGameRuntime({
-      scenes: Object.values(SCENES) as GameSceneConfig[],
+      scenes: Object.values(SCENES),
       inventoryAdapter: {
         toggle: () => useInventoryStore.getState().toggle(),
         isOpen: () => useInventoryStore.getState().isOpen,
