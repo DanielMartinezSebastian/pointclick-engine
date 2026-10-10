@@ -6,6 +6,11 @@ import {
   useDialogStore,
   useInventoryUiStore,
   useWorldStateStore,
+  applySnapshot,
+  clearSave,
+  loadGame,
+  resetGameState,
+  saveGame,
 } from "../state";
 import type { GameVec3 } from "../types";
 import type { GameRuntimeConfig } from "./types";
@@ -163,6 +168,40 @@ export function registerRuntimeExecutors(
 
   commands.register("state:clearFlag", (cmd) => {
     useWorldStateStore.getState().clearFlag(cmd.name);
+  });
+
+  commands.register("game:save", (cmd) => {
+    if (!config.storage) {
+      console.warn("[runtime] game:save — no storage configured");
+      return;
+    }
+    saveGame(config.storage, { key: config.saveKey, extra: cmd.extra });
+    bus.emit("game:saved", { type: "game:saved" });
+  });
+
+  commands.register("game:load", () => {
+    if (!config.storage) {
+      console.warn("[runtime] game:load — no storage configured");
+      return;
+    }
+    const snapshot = loadGame(config.storage, { key: config.saveKey });
+    if (!snapshot) {
+      bus.emit("game:loaded", { type: "game:loaded", found: false });
+      return;
+    }
+    const applied = applySnapshot(snapshot);
+    bus.emit("game:loaded", {
+      type: "game:loaded",
+      found: true,
+      applied,
+      ...(snapshot.extra ? { extra: snapshot.extra } : {}),
+    });
+  });
+
+  commands.register("game:reset", () => {
+    resetGameState();
+    if (config.storage) clearSave(config.storage, { key: config.saveKey });
+    bus.emit("game:reset", { type: "game:reset" });
   });
 
   // Formalmente aplazados (v0.2.0): solo avisan.

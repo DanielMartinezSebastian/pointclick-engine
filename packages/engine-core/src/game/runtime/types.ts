@@ -12,7 +12,7 @@ import type {
   GameEventHandler,
 } from "../events/types";
 import type { GameCommand } from "../commands/types";
-import type { useSceneStore } from "../state";
+import type { useSceneStore, KeyValueStoragePort } from "../state";
 
 /** Configuración de escena registrable via API pública. */
 export type GameSceneConfig = {
@@ -132,4 +132,8 @@ export type GameRuntimeConfig = {
   inventoryAdapter?: InventoryUIAdapter;
   /** Adapter de UI para diálogos. Si no se pasa, dialog:trigger/dismiss usan el store del core (useDialogStore) y emiten el evento. */
   dialogAdapter?: DialogUIAdapter;
+  /** Almacenamiento para game:save / game:load / game:reset. Sin él esos comandos solo avisan. */
+  storage?: KeyValueStoragePort;
+  /** Clave de guardado dentro de `storage` (por defecto `pointclick-save`). */
+  saveKey?: string;
 };

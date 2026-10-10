@@ -34,6 +34,10 @@ export type GameCommand =
   | { type: "i18n:registerDictionary"; locale: Locale; dict: DialogDictionary }
   // World state
   | { type: "state:setFlag"; name: string; value: boolean | number | string }
-  | { type: "state:clearFlag"; name: string };
+  | { type: "state:clearFlag"; name: string }
+  // Save / load
+  | { type: "game:save"; extra?: Record<string, unknown> }
+  | { type: "game:load" }
+  | { type: "game:reset" };
 
 export type GameCommandType = GameCommand["type"];

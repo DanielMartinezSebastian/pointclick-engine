@@ -52,7 +52,18 @@ export type GameEvent =
       name: string;
       value?: boolean | number | string;
       previous?: boolean | number | string;
-    };
+    }
+  // Save / load
+  | { type: "game:saved" }
+  | {
+      type: "game:loaded";
+      found: boolean;
+      /** true si se aplicó todo (la escena guardada estaba registrada). Solo con found. */
+      applied?: boolean;
+      /** Estado propio del host guardado en la instantánea. Solo con found. */
+      extra?: Record<string, unknown>;
+    }
+  | { type: "game:reset" };
 
 export type GameEventType = GameEvent["type"];
 

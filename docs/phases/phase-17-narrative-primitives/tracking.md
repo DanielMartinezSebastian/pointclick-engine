@@ -14,8 +14,8 @@
 
 ## Ola B — en paralelo
 
-- [ ] [04-conditions](tasks/04-conditions.md) — sonnet
-- [ ] [10-save-load](tasks/10-save-load.md) — sonnet
+- [x] [04-conditions](tasks/04-conditions.md) — sonnet
+- [x] [10-save-load](tasks/10-save-load.md) — sonnet
 
 ## Ola C
 

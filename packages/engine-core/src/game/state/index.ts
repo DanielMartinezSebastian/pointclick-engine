@@ -60,3 +60,18 @@ export {
   type KeyValueStoragePort,
   type PersistedPlacedItems,
 } from "./gameStatePersistence";
+export {
+  SAVE_FORMAT_VERSION,
+  SAVE_STORAGE_KEY,
+  SAVE_MIGRATIONS,
+  captureSnapshot,
+  applySnapshot,
+  saveGame,
+  loadGame,
+  clearSave,
+  resetGameState,
+  applySaveMigrations,
+  type GameSnapshot,
+  type SnapshotMigration,
+} from "./saveGame";
+export { migrateLegacySave, LEGACY_SCENE_ID_STORAGE_KEY } from "./saveGameLegacy";
