@@ -1,6 +1,6 @@
 # Task 16.11 — Troceo en pasos (tras el inventario de dependencias)
 
-Complementa [11-functional-game-viewport.md](11-functional-game-viewport.md). Sale del inventario de dependencias del 2026-10-10. Regla: **tras cada paso el juego sigue funcionando** y el orquestador ejecuta el gate; el owner hace smoke en navegador al cierre de cada ola.
+Complementa [11-functional-game-viewport.md](11-functional-game-viewport.md). Sale del inventario de dependencias del 2026-10-10. Regla: **tras cada paso el juego sigue funcionando**: el orquestador ejecuta el gate técnico y `npm run smoke` (recorrido headless con Playwright: partida nueva, bloqueo de salida sin trofeo, recogida, transición, recarga y registro de los sonidos reproducidos; requiere la demo en marcha).
 
 ## Decisiones de diseño (orquestador)
 
