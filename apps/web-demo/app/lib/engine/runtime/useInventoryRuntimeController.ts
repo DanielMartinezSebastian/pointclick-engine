@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
-import { getGameRuntime } from "../publicApi";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
 import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
@@ -154,6 +153,7 @@ export function useInventoryRuntimeController({
   useEffect(() => {
     const { items: storedItems, initialItemsCreated } = usePlacedItemsStore.getState();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrates local state from external persisted store on scene change; deriving in render would require calling markInitialItemsCreated (store write) during render
     setPlacedItems((prev) => {
       // Start with all stored items (already persisted in localStorage)
       const allItems = storedItems.length > 0 ? storedItems : prev;

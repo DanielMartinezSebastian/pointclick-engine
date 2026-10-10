@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
@@ -29,7 +29,7 @@ import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntime
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
 import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
 import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
-import { legacyRuntimeEventToGameEvent, type RuntimeEvent, type GameSceneTransition, type GameScene, useSceneStore } from "@pointclick-engine/engine-core";
+import { legacyRuntimeEventToGameEvent, type GameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, type GameScene, useSceneStore } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../lib/engine/publicApi";
 import { webAudioAdapter } from "../lib/platform-web-audio";
 import { audioSettingsStore } from "../store/audio";
@@ -209,7 +209,7 @@ export default function GameTouchCanvas({
 
   // Click sound on canvas for pathfinding
   const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
-  const prevWalkingRef = useRef<any>(null);
+  const prevWalkingRef = useRef<PlayerWalkingState | null>(null);
   useEffect(() => {
     // Play click sound when walking starts (transition from null to walking state)
     if (playerWalkingState && !prevWalkingRef.current) {
@@ -233,7 +233,10 @@ export default function GameTouchCanvas({
       clearInterval(trySubscribe);
 
       const subs = [
-        runtime.on("item:dropped", (event: any) => {
+        runtime.on("item:dropped", (event: Extract<GameEvent, { type: "item:dropped" }>) => {
+          // The core type declares outcome as "consume" | "place" | "return", but
+          // legacy emitters also send "pickup-success"; widen locally (core untouched).
+          const outcome: string = event.outcome;
           console.log("[audio] item:dropped -", JSON.stringify(event));
           // Differentiate by outcome: pickup-success = pickup sound, place = drop sound
           const soundMap: Record<string, { pickup: string; drop: string }> = {
@@ -249,13 +252,13 @@ export default function GameTouchCanvas({
 
           const itemSounds = soundMap[event.itemId] || soundMap.default;
 
-          if (event.outcome === "pickup-success") {
+          if (outcome === "pickup-success") {
             webAudioAdapter.playSound({
               id: `pickup-${event.itemId}`,
               url: itemSounds.pickup,
               category: "sfx",
             });
-          } else if (event.outcome === "place") {
+          } else if (outcome === "place") {
             webAudioAdapter.playSound({
               id: `drop-${event.itemId}`,
               url: itemSounds.drop,
@@ -283,8 +286,8 @@ export default function GameTouchCanvas({
   }, []);
 
   // Chain: door system → transition item-drop check
-  const handleRuntimeEvent = useCallback(
-    wrapRuntimeEventForTransitions(afterDoorRuntimeEvent.handleRuntimeEvent),
+  const handleRuntimeEvent = useMemo(
+    () => wrapRuntimeEventForTransitions(afterDoorRuntimeEvent.handleRuntimeEvent),
     [wrapRuntimeEventForTransitions, afterDoorRuntimeEvent.handleRuntimeEvent],
   );
   const { getEffectiveClickGoal } = afterDoorRuntimeEvent;

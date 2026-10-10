@@ -76,17 +76,15 @@ export function IntroScene({ onComplete }: IntroSceneProps) {
   // restart. The ref is reset to 0 whenever introText changes (locale switch
   // before clicking).
   const introTextRef = useRef(t("intro.text"));
-  // Keep the ref up-to-date while the user hasn't started yet.
-  if (!started) {
-    introTextRef.current = t("intro.text");
-    indexRef.current = 0;
-  }
-
+  // The text/cursor are captured in handleStart (an event handler, not render),
+  // using the locale active at click time.
   const handleStart = useCallback(() => {
     if (started) return;
+    introTextRef.current = t("intro.text");
+    indexRef.current = 0;
     playClickSound();
     setStarted(true);
-  }, [started]);
+  }, [started, t]);
 
   const handleSkip = useCallback(() => {
     skipTypingRef.current?.();
