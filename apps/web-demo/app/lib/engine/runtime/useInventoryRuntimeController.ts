@@ -23,6 +23,10 @@ import {
   resolveInventoryDropOnPlayerMessage,
   resolvePickupPlacedItemDecision,
 } from "../../core/rules/inventoryRules";
+import {
+  loadInventorySlots,
+  saveInventorySlots,
+} from "../../gamePersistence";
 
 type InventoryStack = {
   id: string;
@@ -105,16 +109,10 @@ export function useInventoryRuntimeController({
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
 
   const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() => {
-    // Try to load from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("inventory-slots");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          // Fall back to initial if parse fails
-        }
-      }
+    // Try to load from gamePersistence (which handles SSR safely)
+    const saved = loadInventorySlots();
+    if (saved) {
+      return saved;
     }
     return createInitialInventorySlots();
   });
@@ -131,9 +129,9 @@ export function useInventoryRuntimeController({
     inventorySlotsRef.current = inventorySlots;
   });
 
-  // Persist inventory slots to localStorage whenever they change
+  // Persist inventory slots via gamePersistence whenever they change
   useEffect(() => {
-    localStorage.setItem("inventory-slots", JSON.stringify(inventorySlots));
+    saveInventorySlots(inventorySlots);
   }, [inventorySlots]);
 
   useEffect(() => {

@@ -15,6 +15,7 @@ import {
   type AnimationFrameHandle,
   type TimerHandle,
 } from "../lib/platform-web";
+import { clearGameProgress } from "../lib/gamePersistence";
 
 export type InventoryStack = {
   id: string;
@@ -308,7 +309,7 @@ export function InventoryUI({
         cancelText={t("ui.cancel")}
         isDangerous={true}
         onConfirm={() => {
-          localStorage.clear();
+          clearGameProgress();
           window.location.reload();
         }}
         onCancel={() => setIsResetConfirmOpen(false)}

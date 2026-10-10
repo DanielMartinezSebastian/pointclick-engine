@@ -5,6 +5,10 @@ import { useEffect, useMemo } from "react";
 import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore, type GameScene } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../publicApi";
+import {
+  loadCurrentSceneId,
+  saveCurrentSceneId,
+} from "../../gamePersistence";
 
 export function useSceneRuntimeController() {
   const sceneId = useSceneStore((s) => s.sceneId);
@@ -62,12 +66,11 @@ export function useSceneRuntimeController() {
 
   // Load default scene on mount if the store is empty (engine-core store
   // is agnostic and starts blank — the demo is responsible for seeding it).
-  // Try to load last visited scene from localStorage, fallback to default.
+  // Try to load last visited scene from gamePersistence, fallback to default.
   useEffect(() => {
     if (!useSceneStore.getState().sceneId) {
-      // Try to load from localStorage
-      const savedSceneId =
-        typeof window !== "undefined" ? localStorage.getItem("current-scene-id") : null;
+      // Try to load from gamePersistence
+      const savedSceneId = loadCurrentSceneId();
       const initialSceneId = savedSceneId || DEFAULT_SCENE_ID;
       const initialScene = SCENES[initialSceneId];
 
@@ -84,10 +87,10 @@ export function useSceneRuntimeController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist current scene to localStorage whenever it changes
+  // Persist current scene via gamePersistence whenever it changes
   useEffect(() => {
     if (sceneId) {
-      localStorage.setItem("current-scene-id", sceneId);
+      saveCurrentSceneId(sceneId);
     }
   }, [sceneId]);
 
