@@ -32,6 +32,10 @@ export { default as SpeechBubble } from "./SpeechBubble";
 // Hooks
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 export { useAudioSystem } from "./hooks/useAudioSystem";
+export {
+  attachAudioSystem,
+  type AttachAudioSystemOpts,
+} from "./hooks/attachAudioSystem";
 export { useClickToMoveController } from "./hooks/useClickToMoveController";
 export { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 export type { KeyboardMovementState } from "./adapters/useKeyboardMovementInput";
