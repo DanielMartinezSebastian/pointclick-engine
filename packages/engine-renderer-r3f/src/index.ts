@@ -52,3 +52,7 @@ export {
   type LocaleSwitcherProps,
   type LocaleSwitcherRenderOption,
 } from "./components/LocaleSwitcher";
+
+// Game state hooks
+export { useGameState } from "./hooks/useGameState";
+export { useGameActions } from "./hooks/useGameActions";
