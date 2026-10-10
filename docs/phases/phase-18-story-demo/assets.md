@@ -38,6 +38,7 @@ Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature")
 
 - **El repositorio es público y cada PR se despliega en Vercel.** "Solo en local" no describe la situación real: lo que se sube al repo se distribuye. Por eso la recomendación para todo lo que se commitee es CC0.
 - **`town.jpg` lleva la marca de agua "DanielThomasArt.com"** y no hay constancia de su licencia en el repo. `LICENSES.md` solo cubre el audio. Antes de enseñar la demo a colaboradores conviene documentar el origen y la licencia de los cinco fondos, del sprite de David y de los tres ítems, o sustituirlos.
+- **Decisión del owner (2026-10-10)**: `town.jpg` se mantiene tal cual, con la marca de agua visible. No recortarla, taparla ni retocarla. La firma acredita al autor pero no es una licencia: revisar si la demo sale de la beta cerrada.
 - Los packs sin documento de licencia (Danger Goose) son de bajo riesgo para pruebas, pero no equivalen a CC0.
 
 ## Siguiente paso
