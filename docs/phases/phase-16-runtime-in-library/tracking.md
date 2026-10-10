@@ -5,7 +5,7 @@
 ## Previo
 
 - [ ] Fase 15 cerrada (gate verde)
-- [ ] [01-adr-and-issue](tasks/01-adr-and-issue.md) — opus
+- [x] [01-adr-and-issue](tasks/01-adr-and-issue.md) — opus
 
 ## Ola A — en paralelo
 

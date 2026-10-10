@@ -1,6 +1,7 @@
 # ADR-0009: El runtime vive en los paquetes, no en la demo
 
-**Status**: proposed (pendiente de issue y visto bueno del owner)
+**Status**: accepted (aprobado por el owner el 2026-10-10)
+**Issue**: [#21](https://github.com/DanielMartinezSebastian/pointclick-engine/issues/21)
 **Date**: 2026-10-10
 
 ## Context

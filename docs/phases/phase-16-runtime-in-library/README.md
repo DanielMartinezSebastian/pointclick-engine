@@ -2,7 +2,7 @@
 
 **Objetivo**: que el juego se pueda montar importando solo los paquetes; la demo pasa de orquestadora a consumidora.
 **Duración estimada**: 1.5–2 semanas
-**Estado**: planning (bloqueada por Fase 15 y por el issue de ADR-0009)
+**Estado**: active (issue #21; smoke en navegador de la Fase 15 aún parcial)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: v0.5.0 (lockstep, solo adiciones)
 
