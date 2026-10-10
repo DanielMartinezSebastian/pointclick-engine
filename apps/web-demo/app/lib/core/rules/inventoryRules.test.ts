@@ -50,7 +50,7 @@ describe("inventoryRules", () => {
   it("resuelve drop-hit place para gameboy en target valido", () => {
     const interaction = {
       id: "personal-room-gameboy-drop-target",
-      kind: "drop-target",
+      kind: "drop-target" as const,
       label: "Soporte del Gameboy",
       position: [3.27, -1.65, 19.71] as [number, number, number],
       halfSize: [0.95, 0.55, 0.95] as [number, number, number],

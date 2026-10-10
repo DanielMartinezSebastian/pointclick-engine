@@ -214,10 +214,11 @@ export type GameState = Pick<
   "sceneId" | "scene" | "playerPosition" | "respawnSignal"
 >;
 
-export type GameActions = Pick<
-  SceneStoreSnapshot,
-  "setScene" | "setPlayerPosition" | "requestRespawn"
->;
+export type GameActions = {
+  setScene: (sceneId: string) => void;
+  setPlayerPosition: SceneStoreSnapshot["setPlayerPosition"];
+  requestRespawn: SceneStoreSnapshot["requestRespawn"];
+};
 
 function toGameState(state: SceneStoreSnapshot): GameState {
   return {

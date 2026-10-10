@@ -15,6 +15,7 @@ import {
   registerRule,
   registerScene,
   useGameActions,
+  type GameActions,
   type GameItemConfig,
   type GameRuleConfig,
   type GameSceneConfig,
@@ -84,7 +85,7 @@ describe("publicApi", () => {
 
   it("expone acciones/estado base del runtime store", () => {
     // Register scenes first
-    Object.values(SCENES).forEach(registerScene);
+    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
 
     const actions = getGameActions();
     const sceneIds = Object.keys(SCENES);
@@ -102,7 +103,7 @@ describe("publicApi", () => {
 
   it("useGameState aplica selector sobre estado publico", () => {
     // Register scenes first
-    Object.values(SCENES).forEach(registerScene);
+    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
 
     // Initialize store with default scene
     const actions = getGameActions();
@@ -115,25 +116,25 @@ describe("publicApi", () => {
 
   it("useGameActions expone acciones equivalentes al runtime", () => {
     // Register scenes first
-    Object.values(SCENES).forEach(registerScene);
+    (Object.values(SCENES) as GameSceneConfig[]).forEach(registerScene);
 
     const sceneIds = Object.keys(SCENES);
-    let actionsFromHook: ReturnType<typeof useGameActions> | null = null;
+    const holder: { actions: GameActions | null } = { actions: null };
 
     function Probe() {
-      actionsFromHook = useGameActions();
+      holder.actions = useGameActions();
       return null;
     }
 
     renderToString(createElement(Probe));
 
-    expect(actionsFromHook).not.toBeNull();
-    expect(typeof actionsFromHook?.setScene).toBe("function");
-    expect(typeof actionsFromHook?.setPlayerPosition).toBe("function");
-    expect(typeof actionsFromHook?.requestRespawn).toBe("function");
+    expect(holder.actions).not.toBeNull();
+    expect(typeof holder.actions?.setScene).toBe("function");
+    expect(typeof holder.actions?.setPlayerPosition).toBe("function");
+    expect(typeof holder.actions?.requestRespawn).toBe("function");
 
     // Test that setScene actually works
-    actionsFromHook?.setScene(sceneIds[0]);
+    holder.actions?.setScene(sceneIds[0]);
     const afterSetScene = getGameState();
     expect(afterSetScene.sceneId).toBe(sceneIds[0]);
   });
@@ -238,6 +239,20 @@ describe("publicApi — bidirectional API (Phase 4)", () => {
 // Phase 5: Wired commands
 // ---------------------------------------------------------------------------
 
+function createWiredRuntime(config: Parameters<typeof createGameRuntime>[0] = {}) {
+  return createGameRuntime({
+    ...config,
+    inventoryAdapter: {
+      toggle: () => useInventoryStore.getState().toggle(),
+      isOpen: () => useInventoryStore.getState().isOpen,
+    },
+    dialogAdapter: {
+      show: (text, key) => useDialogStore.getState().show(text, key),
+      hide: () => useDialogStore.getState().dismiss(),
+    },
+  });
+}
+
 describe("publicApi — wired commands (Phase 5)", () => {
   beforeEach(() => {
     // Reset stores before each test
@@ -250,7 +265,7 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("inventory:toggle toggles inventoryStore.isOpen", () => {
-    const runtime = createGameRuntime();
+    const runtime = createWiredRuntime();
     expect(useInventoryStore.getState().isOpen).toBe(false);
 
     runtime.executeCommand({ type: "inventory:toggle" });
@@ -261,7 +276,7 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("dialog:trigger shows text in dialogStore and emits event", () => {
-    const runtime = createGameRuntime({
+    const runtime = createWiredRuntime({
       rules: [{ key: "test.dialog", phrases: ["Hello world"] }],
     });
     const spy = vi.fn();
@@ -282,13 +297,13 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("dialog:trigger uses dialogKey as fallback when rule not registered", () => {
-    const runtime = createGameRuntime();
+    const runtime = createWiredRuntime();
     runtime.executeCommand({ type: "dialog:trigger", dialogKey: "unregistered.key" });
     expect(useDialogStore.getState().text).toBe("unregistered.key");
   });
 
   it("dialog:dismiss hides dialogStore and emits event", () => {
-    const runtime = createGameRuntime({
+    const runtime = createWiredRuntime({
       rules: [{ key: "test.dismiss", phrases: ["Dismiss me"] }],
     });
     const spy = vi.fn();
@@ -304,5 +319,25 @@ describe("publicApi — wired commands (Phase 5)", () => {
       type: "dialog:dismissed",
       dialogKey: "test.dismiss",
     });
+  });
+
+  it("without adapters, inventory:toggle is a no-op and does not throw", () => {
+    const runtime = createGameRuntime();
+    expect(() => runtime.executeCommand({ type: "inventory:toggle" })).not.toThrow();
+    expect(useInventoryStore.getState().isOpen).toBe(false);
+  });
+
+  it("without adapters, dialog:trigger does not throw and still emits dialog:triggered", () => {
+    const runtime = createGameRuntime({
+      rules: [{ key: "test.noadapter", phrases: ["No adapter"] }],
+    });
+    const spy = vi.fn();
+    runtime.on("dialog:triggered", spy);
+
+    expect(() =>
+      runtime.executeCommand({ type: "dialog:trigger", dialogKey: "test.noadapter" }),
+    ).not.toThrow();
+    expect(useDialogStore.getState().visible).toBe(false);
+    expect(spy).toHaveBeenCalledOnce();
   });
 });
