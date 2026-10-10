@@ -47,6 +47,12 @@ Investigación del 2026-10-10 para la premisa B ("No es un bug, es una feature")
 
 Uso previsto: escena candidata para la aventura (encaja con la premisa B como "el interior del motor") y escena de pruebas seleccionable en el modo debug. Es mucho más ancho que los fondos actuales: hay que trocearlo en varias pantallas o usarlo con cámara que siga al personaje.
 
+## Personaje aportado por el owner (2026-10-11)
+
+*8 Directional 2D Point and Click Male Character*, de DeMoNiCaTeD — https://opengameart.org/content/8-directional-2d-point-and-click-male-character. CC-BY-SA 4.0 (o GPL 3.0): atribución y misma licencia para las versiones modificadas. Una hoja de sprites con reposo y paseo en 8 direcciones a 64×64. Descargado sin modificar en `apps/web-demo/assets-src/characters/helix-male/`.
+
+Para usarlo como NPC hay que recortar la hoja en frames sueltos (el motor carga un PNG por frame) y no trae clip de habla. A 64 px de alto, junto a David (255 px) se verá de otra resolución: sirve para probar NPCs y como personaje lejano o "de otro juego", que en la premisa B puede ser un chiste a favor.
+
 ## Siguiente paso
 
 En el documento de diseño de la Fase 18: elegir los iconos concretos de entre los descargados, copiarlos escalados ×2 a `apps/web-demo/public/assets/items/` y anotarlos en un `LICENSES.md` de arte junto al de audio.
