@@ -26,4 +26,4 @@
 - [x] Regla de Oro: grep de imports prohibidos en core vacío
 - [x] `git ls-files packages | grep /dist/` vacío
 - [x] Gates heredados de las fases 11, 12 y 13 revisados y marcados (o anotados como bloqueados)
-- [ ] Smoke manual en navegador: mover, recoger ítem, cambiar de escena — _parcial: intro, click-to-move, recoger trofeo y persistencia tras recargar OK; la transición personalRoom→dungeon no se disparó bajo automatización (tampoco con el código previo a la fase); falta prueba manual de transición, puerta, audio e idioma_
+- [x] Smoke manual en navegador: mover, recoger ítem, cambiar de escena — _intro, click-to-move, recoger trofeo y persistencia verificados por el orquestador; transición personalRoom→dungeon verificada a mano por el owner (2026-10-10). Sin verificar: puerta con llave, audio, cambio de idioma_
