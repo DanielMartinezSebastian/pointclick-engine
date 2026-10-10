@@ -43,6 +43,7 @@ Cada ADR es **~30 líneas**. Estructura:
 - [0007 — Release strategy (npm scope, versioning, publish process)](0007-release-strategy.md)
 - [0008 — Multiplayer architecture (agnostic transport + state partition)](0008-multiplayer-architecture.md)
 - [0009 — El runtime vive en los paquetes, no en la demo](0009-runtime-lives-in-packages.md)
+- [0010 — Modelo narrativo declarativo (flags, condiciones, acciones)](0010-declarative-narrative-model.md) *(proposed)*
 
 ## Cómo añadir un ADR
 

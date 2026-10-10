@@ -155,7 +155,7 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 | Delegar subagentes | `docs/workflow/how-to-spawn-subagent.md` |
 | Hacer commit | `docs/workflow/commit-convention.md` |
 | Decisiones tomadas | `docs/decisions/` (ADRs) |
-| Fase activa | Ninguna en curso. Última cerrada: `docs/phases/phase-16-runtime-in-library/`. Siguiente: fase narrativa (por planificar) |
+| Fase activa | Ninguna en curso. Última cerrada: `docs/phases/phase-16-runtime-in-library/`. Siguiente: `docs/phases/phase-17-narrative-primitives/` (planificada, pendiente de ADR-0010) |
 
 ---
 
