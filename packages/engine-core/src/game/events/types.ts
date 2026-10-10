@@ -1,4 +1,4 @@
-import type { AudioSettings, GameScene, GameVec3, Locale, SoundCategory } from "../types";
+import type { AudioSettings, GameScene, GameVec3, Locale, SoundCategory, Verb } from "../types";
 
 /**
  * Union exhaustiva de todos los eventos que el motor puede emitir.
@@ -70,7 +70,22 @@ export type GameEvent =
   | { type: "script:started"; id: number }
   | { type: "script:finished"; id: number; result: "finished" | "cancelled" }
   | { type: "input:lockChanged"; locked: boolean }
-  | { type: "custom"; name: string; payload?: unknown };
+  | { type: "custom"; name: string; payload?: unknown }
+  // Hotspots
+  | { type: "hotspot:interacted"; hotspotId: string; verb: Verb | "useItem"; itemId?: string }
+  | {
+      type: "hotspot:noAction";
+      hotspotId: string;
+      verb: Verb | "useItem";
+      itemId?: string;
+      reason: "not-found" | "hidden" | "missing-item" | "no-rule";
+    }
+  // Inventory (comandos inventory:pickup / inventory:drop)
+  | {
+      type: "inventory:pickupFailed";
+      itemId: string;
+      reason: "not-found" | "blocked" | "full" | "unknown-item";
+    };
 
 export type GameEventType = GameEvent["type"];
 

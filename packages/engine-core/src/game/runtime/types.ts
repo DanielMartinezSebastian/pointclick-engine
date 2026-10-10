@@ -4,6 +4,7 @@ import type {
   GameSceneWall,
   GameSceneInteractionFull,
   GameSceneTransition,
+  GameSceneHotspot,
   SceneMusicConfig,
 } from "../types";
 import type {
@@ -28,6 +29,8 @@ export type GameSceneConfig = {
   /** Zonas de transición declarativas (se conservan al registrar la escena). */
   transitions?: GameSceneTransition[];
   music?: SceneMusicConfig;
+  /** Hotspots con verbos narrativos (se conservan al registrar la escena). */
+  hotspots?: GameSceneHotspot[];
 };
 
 export type GameItemDropOutcome =

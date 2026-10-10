@@ -209,15 +209,4 @@ export function registerRuntimeExecutors(
     bus.emit("game:reset", { type: "game:reset" });
   });
 
-  // Formalmente aplazados (v0.2.0): solo avisan.
-  commands.register("inventory:pickup", (cmd) =>
-    console.warn(
-      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires UI context (which interaction was clicked). See docs/phases/phase-9-placed-items-agnóstic/README.md#phase-d`,
-    ),
-  );
-  commands.register("inventory:drop", (cmd) =>
-    console.warn(
-      `[runtime] executor deferred to v0.2.0: ${cmd.type} — requires UI context (drag coordinates, target interaction). See docs/phases/phase-9-placed-items-agnóstic/README.md#phase-d`,
-    ),
-  );
 }

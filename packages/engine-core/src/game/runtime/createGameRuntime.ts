@@ -20,6 +20,8 @@ import {
 } from "./registry";
 import { registerRuntimeExecutors } from "./executors";
 import { createSequencer } from "../narrative/sequencer";
+import { registerHotspotCommands } from "../narrative/hotspots";
+import { registerInventoryCommands } from "./inventoryExecutors";
 import { systemClock } from "../../ports/clock";
 
 /**
@@ -89,6 +91,9 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     sequencer.run(cmd.script, { interrupt: cmd.interrupt });
   });
   commands.register("script:cancelAll", () => sequencer.cancelAll());
+  const emitEvent = (event: GameEvent) => bus.emit(event.type, event);
+  registerHotspotCommands(commands, { emit: emitEvent, runScript: (s) => sequencer.run(s) });
+  registerInventoryCommands(commands, emitEvent);
 
   const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(sceneRegistry),

@@ -40,5 +40,6 @@ export function toRuntimeScene(config: GameSceneConfig): GameScene {
     interactions: config.interactions,
     transitions: config.transitions,
     music: config.music,
+    hotspots: config.hotspots,
   };
 }

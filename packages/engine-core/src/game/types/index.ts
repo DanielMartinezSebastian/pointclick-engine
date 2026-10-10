@@ -5,6 +5,9 @@
 export type GameVec3 = [x: number, y: number, z: number];
 export type GameVec2 = [x: number, y: number];
 
+import type { Branch } from "../narrative/actions";
+import type { Condition } from "../narrative/conditions";
+
 // Scene geometry
 export interface GameSceneGround {
   minX: number;
@@ -206,6 +209,27 @@ export interface PlayerWalkingState {
   isActive: boolean;
 }
 
+// Hotspots (verbos narrativos; ver narrative/hotspots.ts)
+export type Verb = "look" | "use" | "talk";
+
+export interface GameSceneHotspot {
+  id: string;
+  /** Clave de i18n. */
+  label: string;
+  position: GameVec3;
+  halfSize: GameVec3;
+  rotationY?: number;
+  visibleWhen?: Condition;
+  hasCollision?: boolean;
+  /** Punto al que camina el jugador antes de actuar. Sin el, actua desde donde esta. */
+  approach?: GameVec3;
+  verbs?: Partial<Record<Verb, Branch[]>>;
+  /** Ramas por itemId al usar un item del inventario sobre el hotspot. */
+  useItem?: Record<string, Branch[]>;
+  /** Ramas para un item sin regla propia en `useItem`. */
+  useItemDefault?: Branch[];
+}
+
 // Scene (full scene with all interactions)
 export interface GameScene {
   id: string;
@@ -219,6 +243,8 @@ export interface GameScene {
   transitions?: GameSceneTransition[];
   /** Music optional associated to this scene. */
   music?: SceneMusicConfig;
+  /** Hotspots con verbos narrativos. */
+  hotspots?: GameSceneHotspot[];
 }
 
 // Editor/Debug modes

@@ -15,5 +15,12 @@ export {
   type ScriptRun,
 } from "./actions";
 export { pickBranch } from "./branches";
+export {
+  getAvailableVerbs,
+  getDefaultVerb,
+  isHotspotVisible,
+  registerHotspotCommands,
+  type HotspotCommandDeps,
+} from "./hotspots";
 export { createSequencer, type Sequencer, type SequencerEnvInput } from "./sequencer";
 export type { ActionContext, ActionExecutor, SequencerEnv } from "./actionExecutors";
