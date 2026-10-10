@@ -52,6 +52,11 @@ export type GameCommand =
   | { type: "script:run"; script: Script; interrupt?: boolean }
   | { type: "script:cancelAll" }
   // Hotspots
-  | { type: "hotspot:interact"; hotspotId: string; verb: Verb | "useItem"; itemId?: string };
+  | { type: "hotspot:interact"; hotspotId: string; verb: Verb | "useItem"; itemId?: string }
+  // Dialogue trees (conversaciones; `dialog:*` es el bocadillo de una frase)
+  | { type: "dialogue:start"; dialogueId: string }
+  | { type: "dialogue:choose"; index: number }
+  | { type: "dialogue:advance" }
+  | { type: "dialogue:end" };
 
 export type GameCommandType = GameCommand["type"];

@@ -69,7 +69,7 @@ export function createSequencer(input: SequencerEnvInput): Sequencer {
   }
 
   function makeContext(entry: Entry): ActionContext {
-    return {
+    const ctx: ActionContext = {
       env,
       isCancelled: () => entry.cancelled,
       setInputLock: (locked) => {
@@ -93,7 +93,14 @@ export function createSequencer(input: SequencerEnvInput): Sequencer {
           cleanup = arm(finish);
           if (done) cleanup();
         }),
+      runInline: async (script) => {
+        for (const action of Array.isArray(script) ? script : []) {
+          if (entry.cancelled) return;
+          await runAction(action, ctx);
+        }
+      },
     };
+    return ctx;
   }
 
   async function runAction(action: Action, ctx: ActionContext): Promise<void> {
@@ -119,11 +126,8 @@ export function createSequencer(input: SequencerEnvInput): Sequencer {
 
   async function loop(entry: Entry): Promise<void> {
     const ctx = makeContext(entry);
-    const script = Array.isArray(entry.script) ? entry.script : [];
-    for (const action of script) {
-      if (entry.cancelled) return;
-      await runAction(action, ctx);
-    }
+    await ctx.runInline(entry.script);
+    if (entry.cancelled) return;
     settle(entry, "finished");
   }
 

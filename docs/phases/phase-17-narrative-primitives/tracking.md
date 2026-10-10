@@ -25,7 +25,7 @@
 ## Ola D — en secuencia (las cuatro amplían los mismos archivos de tipos y executors)
 
 - [x] [06-hotspots](tasks/06-hotspots.md) — sonnet
-- [ ] [07-dialogue-trees](tasks/07-dialogue-trees.md) — sonnet
+- [x] [07-dialogue-trees](tasks/07-dialogue-trees.md) — sonnet
 - [ ] [08-item-combine](tasks/08-item-combine.md) — haiku
 - [ ] [09-declarative-scene-rules](tasks/09-declarative-scene-rules.md) — sonnet
 

@@ -25,6 +25,12 @@ export {
   type I18nStore,
 } from "./i18nStore";
 export { useDialogStore, getDialogState, type DialogStoreState } from "./dialogStore";
+export {
+  useDialogueStore,
+  getDialogueState,
+  type DialogueStoreState,
+  type DialogueChoiceView,
+} from "./dialogueStore";
 export { useInputLockStore, getInputLockState, type InputLockStoreState } from "./inputLockStore";
 export {
   useInventoryUiStore,

@@ -13,14 +13,17 @@ import {
   registerScene,
   registerItem,
   registerRule,
+  registerDialogue,
   sceneRegistry,
   itemRegistry,
   ruleRegistry,
+  dialogueRegistry,
   toRuntimeScene,
 } from "./registry";
 import { registerRuntimeExecutors } from "./executors";
 import { createSequencer } from "../narrative/sequencer";
 import { registerHotspotCommands } from "../narrative/hotspots";
+import { registerDialogueCommands } from "../narrative/dialogue";
 import { registerInventoryCommands } from "./inventoryExecutors";
 import { systemClock } from "../../ports/clock";
 
@@ -70,6 +73,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
   for (const scene of config.scenes ?? []) registerScene(scene);
   for (const item of config.items ?? []) registerItem(item);
   for (const rule of config.rules ?? []) registerRule(rule);
+  for (const dlg of config.dialogues ?? []) registerDialogue(dlg);
 
   const bus = new EventBus();
   const commands = new CommandHandler();
@@ -93,12 +97,18 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
   commands.register("script:cancelAll", () => sequencer.cancelAll());
   const emitEvent = (event: GameEvent) => bus.emit(event.type, event);
   registerHotspotCommands(commands, { emit: emitEvent, runScript: (s) => sequencer.run(s) });
+  const dialogueEngine = registerDialogueCommands(commands, {
+    emit: emitEvent,
+    runScript: (s) => sequencer.run(s),
+    registerExecutor: (key, executor) => sequencer.registerExecutor(key, executor),
+  });
   registerInventoryCommands(commands, emitEvent);
 
   const runtime: GameRuntime = {
     getScenes: () => Object.fromEntries(sceneRegistry),
     getItems: () => Object.fromEntries(itemRegistry),
     getRules: () => Object.fromEntries(ruleRegistry),
+    getDialogues: () => Object.fromEntries(dialogueRegistry),
     executeCommand: (cmd) => commands.execute(cmd),
     on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) =>
       bus.on(type, handler as (data: unknown) => void),
@@ -106,6 +116,7 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     runScript: (script, opts) => sequencer.run(script, opts),
     registerHandler: (name, fn) => sequencer.registerHandler(name, fn),
     dispose: () => {
+      dialogueEngine.dispose();
       sequencer.dispose();
       unwireWorldState();
       bus.clear();

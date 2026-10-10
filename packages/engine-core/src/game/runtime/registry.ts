@@ -1,4 +1,5 @@
 import type { GameScene } from "../types";
+import type { DialogueDefinition } from "../narrative/dialogueTypes";
 import type {
   GameSceneConfig,
   GameItemConfig,
@@ -9,6 +10,7 @@ import type {
 export const sceneRegistry = new Map<string, GameSceneConfig>();
 export const itemRegistry = new Map<string, GameItemConfig>();
 export const ruleRegistry = new Map<string, GameRuleConfig>();
+export const dialogueRegistry = new Map<string, DialogueDefinition>();
 
 /** Registra una escena. Idempotente: la misma id sobreescribe la anterior. */
 export function registerScene(config: GameSceneConfig): void {
@@ -23,6 +25,11 @@ export function registerItem(config: GameItemConfig): void {
 /** Registra una regla de diálogo. Idempotente por key. */
 export function registerRule(config: GameRuleConfig): void {
   ruleRegistry.set(config.key, config);
+}
+
+/** Registra un arbol de dialogo. Idempotente: el mismo id sobreescribe el anterior. */
+export function registerDialogue(def: DialogueDefinition): void {
+  dialogueRegistry.set(def.id, def);
 }
 
 /**

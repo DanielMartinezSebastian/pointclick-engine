@@ -14,6 +14,7 @@ import type {
 } from "../events/types";
 import type { GameCommand } from "../commands/types";
 import type { Script, ScriptRun } from "../narrative/actions";
+import type { DialogueDefinition } from "../narrative/dialogueTypes";
 import type { ClockPort } from "../../ports/clock";
 import type { useSceneStore, KeyValueStoragePort } from "../state";
 
@@ -93,6 +94,7 @@ export type GameRuntime = {
   getScenes: () => Record<string, GameSceneConfig>;
   getItems: () => Record<string, GameItemConfig>;
   getRules: () => Record<string, GameRuleConfig>;
+  getDialogues: () => Record<string, DialogueDefinition>;
   /**
    * Envía un comando al motor. Sync, fire-and-forget.
    * Comandos sin executor registrado loguean warn y no hacen nada.
@@ -139,6 +141,8 @@ export type GameRuntimeConfig = {
   scenes?: GameSceneConfig[];
   items?: GameItemConfig[];
   rules?: GameRuleConfig[];
+  /** Arboles de dialogo (conversaciones); se registran igual que escenas e items. */
+  dialogues?: DialogueDefinition[];
   /** Adapter de UI para inventory. Si no se pasa, inventory:toggle usa el store del core (useInventoryUiStore). */
   inventoryAdapter?: InventoryUIAdapter;
   /** Adapter de UI para diálogos. Si no se pasa, dialog:trigger/dismiss usan el store del core (useDialogStore) y emiten el evento. */

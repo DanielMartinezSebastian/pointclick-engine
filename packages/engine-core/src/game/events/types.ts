@@ -80,6 +80,11 @@ export type GameEvent =
       itemId?: string;
       reason: "not-found" | "hidden" | "missing-item" | "no-rule";
     }
+  // Dialogue trees
+  | { type: "dialogue:started"; dialogueId: string }
+  | { type: "dialogue:nodeEntered"; dialogueId: string; nodeId: string }
+  | { type: "dialogue:choiceMade"; dialogueId: string; nodeId: string; index: number }
+  | { type: "dialogue:ended"; dialogueId: string; reason: "finished" | "ended" | "cancelled" }
   // Inventory (comandos inventory:pickup / inventory:drop)
   | {
       type: "inventory:pickupFailed";

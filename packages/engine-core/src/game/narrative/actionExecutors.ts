@@ -9,7 +9,7 @@ import {
   usePlacedItemsStateStore,
 } from "../state";
 import type { GameVec3 } from "../types";
-import type { Action } from "./actions";
+import type { Action, Script } from "./actions";
 
 /** Lo que el secuenciador necesita del runtime (todo inyectado: sin acoplarse a el). */
 export interface SequencerEnv {
@@ -34,6 +34,12 @@ export interface ActionContext {
   wait(arm: (resolve: () => void) => () => void): Promise<void>;
   /** Fija el bloqueo de entrada; emite `input:lockChanged` solo si cambia. */
   setInputLock(locked: boolean): void;
+  /**
+   * Ejecuta un sub-guion "en linea": mismo bucle y misma cancelacion que el guion en
+   * curso, sin `script:started`/`finished` ni tocar la cola. Se resuelve al terminar
+   * las acciones o al cancelarse el guion. Seguro de llamar desde un ejecutor.
+   */
+  runInline(script: Script): Promise<void>;
 }
 
 /**

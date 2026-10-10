@@ -14,7 +14,7 @@ export type {
   DialogUIAdapter,
   ScriptHandler,
 } from "./types";
-export { registerScene, registerItem, registerRule, toRuntimeScene } from "./registry";
+export { registerScene, registerItem, registerRule, registerDialogue, toRuntimeScene } from "./registry";
 export {
   createGameRuntime,
   getGameRuntime,
