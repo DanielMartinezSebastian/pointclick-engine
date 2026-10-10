@@ -28,7 +28,28 @@ type AutoMoveDirection = {
   horizontal: number;
   vertical: number;
   snapToTarget?: { x: number; z: number };
+  /** Signed distance left to the current waypoint, to avoid overshooting it. */
+  remaining?: { x: number; z: number };
 };
+
+/**
+ * Limits a velocity so one frame of movement cannot carry the body past the
+ * waypoint. Without it, a long frame overshoots and the character bounces
+ * back and forth around the target, flipping its walk direction every frame.
+ */
+export function clampVelocityToRemaining(
+  velocity: { x: number; z: number },
+  remaining: { x: number; z: number },
+  delta: number,
+): { x: number; z: number } {
+  if (delta <= 0) return velocity;
+  const maxX = Math.abs(remaining.x) / delta;
+  const maxZ = Math.abs(remaining.z) / delta;
+  return {
+    x: Math.max(-maxX, Math.min(maxX, velocity.x)),
+    z: Math.max(-maxZ, Math.min(maxZ, velocity.z)),
+  };
+}
 
 const DEFAULT_CONFIG: UseClickToMoveControllerConfig = {
   arrivalThreshold: 0.15,
@@ -118,6 +139,7 @@ export function useClickToMoveController(
       return {
         horizontal: MathUtils.clamp(dx / dist, -1, 1),
         vertical: MathUtils.clamp(dz / dist, -1, 1),
+        remaining: { x: dx, z: dz },
       };
     },
     [mergedConfig.arrivalThreshold],

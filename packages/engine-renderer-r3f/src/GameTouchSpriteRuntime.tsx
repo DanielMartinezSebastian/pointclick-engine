@@ -7,6 +7,7 @@ import type { Collider as RapierCollider } from "@dimforge/rapier3d-compat";
 import { MathUtils, Mesh, Vector2, Vector3 } from "three";
 
 import SpeechBubble from "./SpeechBubble";
+import { detectSlideBlock, NO_SLIDE_BLOCK, type SlideBlock } from "./hooks/wallSlide";
 import CharacterSprite, { type CharacterSpriteHandle } from "./sprite/CharacterSprite";
 import {
   DEFAULT_CHARACTER_SIZE,
@@ -29,7 +30,7 @@ import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 
 import { findPath, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
 import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
-import { useClickToMoveController } from "./hooks/useClickToMoveController";
+import { clampVelocityToRemaining, useClickToMoveController } from "./hooks/useClickToMoveController";
 import { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 
 // ── Main runtime component ───────────────────────────────────────────────────
@@ -242,6 +243,7 @@ export function GameTouchSpriteRuntime({
   // along the unblocked axis instead of pressing into the wall.
   const prevBodyPositionRef = useRef<{ x: number; z: number } | null>(null);
   const prevBodyVelSetRef = useRef<{ vx: number; vz: number }>({ vx: 0, vz: 0 });
+  const slideBlockRef = useRef<SlideBlock>(NO_SLIDE_BLOCK);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const playerPosition = useSceneStore((s) => s.playerPosition);
@@ -587,23 +589,19 @@ export function GameTouchSpriteRuntime({
     // relative to what was expected, a rigid-body is blocking it — suppress
     // that component this frame so the character slides along the free axis
     // rather than sticking against the obstacle surface.
+    // A frame with no physics step in between keeps the previous result (see
+    // `detectSlideBlock`).
     const frameStartPos = body.translation();
-    let slideBlockX = false;
-    let slideBlockZ = false;
-    {
-      const pp = prevBodyPositionRef.current;
-      const { vx: pvx, vz: pvz } = prevBodyVelSetRef.current;
-      if (pp && (Math.abs(pvx) > 0.3 || Math.abs(pvz) > 0.3)) {
-        const adx = frameStartPos.x - pp.x;
-        const adz = frameStartPos.z - pp.z;
-        // Expected displacement (approximated with current delta — consecutive
-        // frame durations are close enough for this heuristic).
-        const edx = pvx * delta;
-        const edz = pvz * delta;
-        if (Math.abs(edx) > 0.002) slideBlockX = Math.abs(adx) < Math.abs(edx) * 0.25;
-        if (Math.abs(edz) > 0.002) slideBlockZ = Math.abs(adz) < Math.abs(edz) * 0.25;
-      }
-    }
+    const slideBlock = detectSlideBlock(
+      prevBodyPositionRef.current,
+      frameStartPos,
+      prevBodyVelSetRef.current,
+      delta,
+      slideBlockRef.current,
+    );
+    slideBlockRef.current = slideBlock;
+    const slideBlockX = slideBlock.x;
+    const slideBlockZ = slideBlock.z;
 
     const { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed } = getKeyboardMovement();
 
@@ -638,6 +636,7 @@ export function GameTouchSpriteRuntime({
 
     let horizontal = 0;
     let vertical = 0;
+    let autoMoveRemaining: { x: number; z: number } | null = null;
 
     // During walk animation, ignore all input (joystick, keyboard, auto-move)
     if (!inputBlocked) {
@@ -657,6 +656,7 @@ export function GameTouchSpriteRuntime({
         );
         horizontal = autoMove.horizontal;
         vertical = autoMove.vertical;
+        autoMoveRemaining = autoMove.remaining ?? null;
 
         if (autoMove.snapToTarget) {
           body.setTranslation(
@@ -678,6 +678,10 @@ export function GameTouchSpriteRuntime({
     // into it again this frame.  The perpendicular axis is kept intact so the
     // character slides along the surface.  Only suppress when *trying* to move
     // in the blocked direction (same sign), not when already idle on that axis.
+    // The animation follows the intended direction, not the suppressed one:
+    // the wall-slide heuristic can toggle an axis from one frame to the next,
+    // and the clip would flicker between directions (or to idle) with it.
+    const intendedAction = resolveAction(horizontal, vertical);
     if (slideBlockX && horizontal !== 0) horizontal = 0;
     if (slideBlockZ && vertical !== 0) vertical = 0;
 
@@ -690,7 +694,7 @@ export function GameTouchSpriteRuntime({
       const dz = targetPos[1] - currentPos[1];
       nextAction = resolveAction(dx, dz);
     } else {
-      nextAction = resolveAction(horizontal, vertical);
+      nextAction = intendedAction;
     }
 
     if (currentActionRef.current !== nextAction) {
@@ -716,7 +720,10 @@ export function GameTouchSpriteRuntime({
     if (horizontal === 0 && vertical === 0) {
       body.setLinvel({ x: 0, y: currentVelocity.y, z: 0 }, true);
     } else {
-      body.setLinvel(targetVelocity, true);
+      const planar = autoMoveRemaining
+        ? clampVelocityToRemaining(targetVelocity, autoMoveRemaining, delta)
+        : targetVelocity;
+      body.setLinvel({ x: planar.x, y: targetVelocity.y, z: planar.z }, true);
     }
 
     const currentPosition = body.translation();
