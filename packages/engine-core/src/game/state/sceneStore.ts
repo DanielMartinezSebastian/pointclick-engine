@@ -29,7 +29,8 @@ function emit(event: GameEvent): void {
   if (_emitter) _emitter(event);
 }
 
-const SHOULD_LOG_STATE_TRANSITIONS = process.env.NODE_ENV !== "production";
+const SHOULD_LOG_STATE_TRANSITIONS =
+  typeof process !== "undefined" && process.env?.NODE_ENV !== "production";
 
 type SceneStoreLogger = (event: string, payload: Record<string, unknown>) => void;
 let _logger: SceneStoreLogger | null = null;
