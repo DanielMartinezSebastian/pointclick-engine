@@ -5,7 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { browserEnvironmentAdapter } from "../../platform-web";
 import type { SceneInteraction } from "../../../../demo-content/scenes/scenes";
-import type { PlacedSceneItem } from "@pointclick-engine/engine-core";
+import {
+  getInventoryState,
+  getPlacedItemsState,
+  useInventoryStateStore,
+  usePlacedItemsStateStore,
+  type PlacedSceneItem,
+} from "@pointclick-engine/engine-core";
 import { useProximityHintController } from "@pointclick-engine/engine-renderer-r3f";
 import { createInventoryRuleContext } from "@pointclick-engine/engine-core";
 import { getGameRuntime } from "../publicApi";
@@ -15,7 +21,6 @@ import {
 } from "@pointclick-engine/engine-core";
 import { useDialogStore } from "../../../store/dialogStore";
 import { useInventoryStore } from "../../../store/inventoryStore";
-import { usePlacedItemsStore } from "../../../store/placedItemsStore";
 import {
   addOneToInventory,
   inventoryRuleMessages,
@@ -25,10 +30,10 @@ import {
   resolveInventoryDropOnPlayerMessage,
   resolvePickupPlacedItemDecision,
 } from "@pointclick-engine/engine-core";
-import {
-  loadInventorySlots,
-  saveInventorySlots,
-} from "../../gamePersistence";
+import { startGamePersistence } from "../../gamePersistence";
+
+// Escena que siembra el trofeo inicial (la que sembraba el antiguo flag initialItemsCreated).
+const SEED_SCENE_ID = "personalRoom";
 
 // Origen del registro de items: el runtime activo (page.tsx y example-bridge registran ITEMS).
 // Se resuelve en cada uso, no al montar. Sin runtime el registro esta vacio (items desconocidos).
@@ -41,8 +46,6 @@ type InventoryStack = {
   quantity: number;
 };
 
-type InventorySlots = Array<InventoryStack | null>;
-
 type DraggedInventoryPayload = {
   stack: InventoryStack;
   fromSlotIndex: number;
@@ -52,31 +55,6 @@ type RuntimeDraggedStack = DraggedInventoryPayload & {
   pointerX: number;
   pointerY: number;
 };
-
-function createInitialInventorySlots(): InventorySlots {
-  return Array.from({ length: 9 }, (_, index) => {
-    if (index === 0) {
-      return {
-        id: "gameboy",
-        name: "Gameboy",
-        spriteUrl: "/assets/gameboy/gameboy.png",
-        quantity: 1,
-      };
-    }
-    if (index === 1) {
-      // Gold key seeded so the player can immediately test the dungeon door
-      // pipeline. Once items can be picked up from scene placements, this
-      // seed should be removed and the key dropped into a scene instead.
-      return {
-        id: "gold-key",
-        name: "Llave dorada",
-        spriteUrl: "/assets/key/gold-key.png",
-        quantity: 1,
-      };
-    }
-    return null;
-  });
-}
 
 function createInitialPlacedItems(sceneId: string): PlacedSceneItem[] {
   return [
@@ -114,31 +92,17 @@ export function useInventoryRuntimeController({
   // Inventory visibility now lives in inventoryStore (wirable via inventory:toggle command)
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
 
-  const [inventorySlots, setInventorySlots] = useState<InventorySlots>(() => {
-    // Try to load from gamePersistence (which handles SSR safely)
-    const saved = loadInventorySlots();
-    if (saved) {
-      return saved;
-    }
-    return createInitialInventorySlots();
-  });
+  // Inventario e ítems colocados viven en los stores del core. gamePersistence los
+  // hidrata al importarse (antes del primer render) y solo guarda desde startGamePersistence.
+  const inventorySlots = useInventoryStateStore((s) => s.slots);
+  const placedItems = usePlacedItemsStateStore((s) => s.items);
   const [draggedStack, setDraggedStack] = useState<RuntimeDraggedStack | null>(
     null,
   );
-  const [placedItems, setPlacedItems] = useState<PlacedSceneItem[]>([]);
   const pickupLockRef = useRef<Set<string>>(new Set());
-  const inventorySlotsRef = useRef(inventorySlots);
-  const setPlacedItemsInStore = usePlacedItemsStore((s) => s.setItems);
 
-  // Keep ref in sync with current state (avoids stale closure in callbacks)
-  useEffect(() => {
-    inventorySlotsRef.current = inventorySlots;
-  });
-
-  // Persist inventory slots via gamePersistence whenever they change
-  useEffect(() => {
-    saveInventorySlots(inventorySlots);
-  }, [inventorySlots]);
+  // Guardado automático de ambos stores (ya hidratados) mientras el hook esté montado.
+  useEffect(() => startGamePersistence(), []);
 
   useEffect(() => {
     if (pickupLockRef.current.size === 0) {
@@ -153,39 +117,18 @@ export function useInventoryRuntimeController({
     }
   }, [placedItems]);
 
-  // Manage placed items: maintain all items in state (persisted to store)
+  // Siembra del trofeo: solo en personalRoom, una vez por partida (escena marcada como
+  // sembrada) y solo si el trofeo no existe ya en ninguna escena. Idempotente (StrictMode).
   useEffect(() => {
-    const { items: storedItems, initialItemsCreated } = usePlacedItemsStore.getState();
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrates local state from external persisted store on scene change; deriving in render would require calling markInitialItemsCreated (store write) during render
-    setPlacedItems((prev) => {
-      // Start with all stored items (already persisted in localStorage)
-      const allItems = storedItems.length > 0 ? storedItems : prev;
-
-      // For personalRoom, create initial spawn items only once per session
-      // Only create if the item doesn't exist in ANY scene (not just this one)
-      if (sceneId === "personalRoom" && !initialItemsCreated) {
-        const trophyTakenOrMovedElsewhere = allItems.some((i) => i.itemId === "trophy");
-        // Only recreate the trophy if it has never left this room
-        // If it exists anywhere, assume it was taken/moved by the player
-        if (!trophyTakenOrMovedElsewhere) {
-          return [...allItems, ...createInitialPlacedItems(sceneId)];
-        }
-      }
-
-      return allItems;
-    });
-
-    // Mark initial items as created AFTER setState
-    if (sceneId === "personalRoom" && !initialItemsCreated) {
-      usePlacedItemsStore.getState().markInitialItemsCreated();
+    if (sceneId !== SEED_SCENE_ID) return;
+    const state = getPlacedItemsState();
+    if (state.isSceneSeeded(SEED_SCENE_ID)) return;
+    const trophyTakenOrMovedElsewhere = state.items.some((i) => i.itemId === "trophy");
+    if (!trophyTakenOrMovedElsewhere) {
+      state.setItems([...state.items, ...createInitialPlacedItems(sceneId)]);
     }
+    state.markSceneSeeded(SEED_SCENE_ID);
   }, [sceneId]);
-
-  // Sync all placed items to localStorage via store
-  useEffect(() => {
-    setPlacedItemsInStore(placedItems);
-  }, [placedItems, setPlacedItemsInStore]);
 
   const handleBoundaryHit = useCallback(
     (phrase: string) => {
@@ -261,13 +204,10 @@ export function useInventoryRuntimeController({
           itemId: payload.stack.id,
           interactionId: interaction.id,
         });
-        setInventorySlots((currentSlots) =>
-          removeOneFromSlot(currentSlots, decision.fromSlotIndex),
+        getInventoryState().setSlots(
+          removeOneFromSlot(getInventoryState().slots, decision.fromSlotIndex),
         );
-        setPlacedItems((currentPlaced) => [
-          ...currentPlaced,
-          { ...decision.placedItem, sceneId }, // Add sceneId to track which scene this item belongs to
-        ]);
+        getPlacedItemsState().addItem({ ...decision.placedItem, sceneId }); // sceneId: escena a la que pertenece
         showSpeechBubble(getRandomPhrase(decision.dialogKey), {
           dialogKey: decision.dialogKey,
         });
@@ -282,8 +222,8 @@ export function useInventoryRuntimeController({
           itemId: payload.stack.id,
           interactionId: interaction.id,
         });
-        setInventorySlots((currentSlots) =>
-          removeOneFromSlot(currentSlots, decision.fromSlotIndex),
+        getInventoryState().setSlots(
+          removeOneFromSlot(getInventoryState().slots, decision.fromSlotIndex),
         );
         showSpeechBubble(getRandomPhrase(decision.dialogKey), {
           dialogKey: decision.dialogKey,
@@ -383,7 +323,7 @@ export function useInventoryRuntimeController({
 
       // Try to add to inventory first, but don't apply state changes yet
       const inventoryResult = addOneToInventory(
-        inventorySlotsRef.current,
+        getInventoryState().slots,
         decision.stack,
       );
 
@@ -395,14 +335,10 @@ export function useInventoryRuntimeController({
 
       // If we get here, inventory has space. Apply both changes atomically:
       // 1. Update inventory
-      setInventorySlots(inventoryResult.slots);
+      getInventoryState().setSlots(inventoryResult.slots);
 
       // 2. Remove from placed items
-      setPlacedItems((currentPlaced) =>
-        currentPlaced.filter(
-          (currentItem) => currentItem.id !== decision.placedItemId,
-        ),
-      );
+      getPlacedItemsState().removeItem(decision.placedItemId);
 
       emitRuntimeEvent(onRuntimeEvent, {
         type: "onDrop",
@@ -417,45 +353,26 @@ export function useInventoryRuntimeController({
 
   const updatePlacedItemPosition = useCallback(
     (id: string, axis: 0 | 1 | 2, value: number) => {
-      setPlacedItems((currentPlaced) =>
-        currentPlaced.map((item) => {
-          if (item.id !== id) return item;
-          const worldPosition = [...item.worldPosition] as [
-            number,
-            number,
-            number,
-          ];
-          worldPosition[axis] = value;
-          return { ...item, worldPosition };
-        }),
-      );
+      getPlacedItemsState().updateItemPosition(id, axis, value);
     },
     [],
   );
 
   const movePlacedItemToPlayer = useCallback(
     (id: string) => {
-      setPlacedItems((currentPlaced) =>
-        currentPlaced.map((item) => {
-          if (item.id !== id) return item;
-          return {
-            ...item,
-            worldPosition: [
-              playerPosition[0],
-              item.worldPosition[1],
-              playerPosition[2],
-            ],
-          };
-        }),
-      );
+      const item = getPlacedItemsState().items.find((i) => i.id === id);
+      if (!item) return;
+      getPlacedItemsState().setItemPosition(id, [
+        playerPosition[0],
+        item.worldPosition[1],
+        playerPosition[2],
+      ]);
     },
     [playerPosition],
   );
 
   const removePlacedItemById = useCallback((id: string) => {
-    setPlacedItems((currentPlaced) =>
-      currentPlaced.filter((item) => item.id !== id),
-    );
+    getPlacedItemsState().removeItem(id);
   }, []);
 
   const handleStartInventoryDrag = useCallback(

@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 // Coordenadas para viewport 1280x720 en la escena personalRoom.
-const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640] };
+const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640], confirmReset: [779, 423] };
 // El bocadillo se cierra solo tras escribir el texto y un tiempo de lectura;
 // mientras está visible no se puede recoger ni interactuar.
 const DIALOG_MS = 10000;
@@ -159,6 +159,35 @@ try {
   check("el inventario guardado se restaura", s.inventory.slice().sort().join() === "gameboy,gold-key,trophy", s.inventory.join());
   check("no reaparecen ítems ya recogidos", s.placed.length === 0, s.placed.join());
   check("tras recargar suena la música de la mazmorra", count(s.plays, "dungeon-loop") === 1, `audio=${music(s.plays)}`);
+
+  // 7. Reiniciar partida: borra el progreso y conserva lo demás.
+  const keptBefore = await page.evaluate(() => {
+    localStorage.setItem("smoke-foreign-key", "keep");
+    return JSON.stringify([localStorage.getItem("i18n-locale"), localStorage.getItem("audio-settings")]);
+  });
+  await page.mouse.click(...POS.backpack);
+  await page.waitForTimeout(1200);
+  await page.getByRole("button", { name: /Reiniciar/i }).first().click();
+  await page.waitForTimeout(800);
+  await Promise.all([
+    page.waitForEvent("load", { timeout: 15000 }).catch(() => {}),
+    page.mouse.click(...POS.confirmReset),
+  ]);
+  await page.waitForTimeout(1500);
+  const afterReset = await page.evaluate(() => ({
+    game: ["inventory-slots", "current-scene-id", "placed-items-state", "door-states"].filter((k) => localStorage.getItem(k) !== null),
+    foreign: localStorage.getItem("smoke-foreign-key"),
+    kept: JSON.stringify([localStorage.getItem("i18n-locale"), localStorage.getItem("audio-settings")]),
+  }));
+  check("reiniciar borra las claves de la partida", afterReset.game.length === 0, afterReset.game.join());
+  check("reiniciar conserva datos ajenos al juego", afterReset.foreign === "keep");
+  check("reiniciar no toca idioma ni ajustes de audio", afterReset.kept === keptBefore, afterReset.kept);
+  check("tras reiniciar se puede volver a entrar", await enterGame());
+  await page.waitForTimeout(3000);
+  s = await state();
+  check("la partida reiniciada arranca en la habitación", s.scene === "personalRoom", `scene=${s.scene}`);
+  check("la partida reiniciada tiene el inventario inicial", s.inventory.join() === "gameboy,gold-key", s.inventory.join());
+  check("la partida reiniciada vuelve a sembrar el trofeo", s.placed.join() === "trophy@personalRoom", s.placed.join());
 
   check("sin errores de página ni de consola", errors.length === 0, errors.slice(0, 3).join(" | "));
 } catch (error) {

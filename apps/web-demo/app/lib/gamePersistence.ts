@@ -13,7 +13,18 @@
  * - Punto único de cambio para migración futura
  */
 
-import type { InventorySlotsState } from "@pointclick-engine/engine-core";
+import {
+  getInventoryState,
+  getPlacedItemsState,
+  loadInventorySlotsState,
+  loadPlacedItemsState,
+  saveInventorySlotsState,
+  savePlacedItemsState,
+  useInventoryStateStore,
+  usePlacedItemsStateStore,
+  type InventorySlotsState,
+  type PersistedPlacedItems,
+} from "@pointclick-engine/engine-core";
 
 import { localStorageAdapter } from "./platform-web";
 
@@ -29,37 +40,129 @@ export const GAME_STORAGE_KEYS = {
   placedItems: "placed-items-state",
 } as const;
 
+/** Escena que sembraba el antiguo flag `initialItemsCreated` de las partidas guardadas. */
+export const LEGACY_SEEDED_SCENE_ID = "personalRoom";
+
 // ============================================================================
-// Persistencia de inventario
+// Persistencia de inventario e ítems colocados (formato y claves heredados)
 // ============================================================================
+
+/** Carga los slots del inventario. Devuelve null si faltan o son inválidos. */
+export function loadInventorySlots(): InventorySlotsState | null {
+  return loadInventorySlotsState(localStorageAdapter, GAME_STORAGE_KEYS.inventorySlots);
+}
+
+/** Guarda los slots del inventario (array JSON plano, como siempre). */
+export function saveInventorySlots(slots: InventorySlotsState): void {
+  saveInventorySlotsState(localStorageAdapter, slots, GAME_STORAGE_KEYS.inventorySlots);
+}
+
+/** Carga ítems colocados; traduce el flag antiguo `initialItemsCreated` a `personalRoom`. */
+export function loadPlacedItems(): PersistedPlacedItems | null {
+  return loadPlacedItemsState(localStorageAdapter, {
+    key: GAME_STORAGE_KEYS.placedItems,
+    legacySeededSceneId: LEGACY_SEEDED_SCENE_ID,
+  });
+}
+
+/** Guarda ítems colocados como envoltorio zustand persist `{state:{...},version:0}`. */
+export function savePlacedItems(data: PersistedPlacedItems): void {
+  savePlacedItemsState(localStorageAdapter, data, GAME_STORAGE_KEYS.placedItems);
+}
+
+/** Inventario de una partida nueva: gameboy y llave dorada (para probar la puerta de la mazmorra). */
+export function createInitialInventorySlots(): InventorySlotsState {
+  return Array.from({ length: 9 }, (_, index) => {
+    if (index === 0) {
+      return {
+        id: "gameboy",
+        name: "Gameboy",
+        spriteUrl: "/assets/gameboy/gameboy.png",
+        quantity: 1,
+      };
+    }
+    if (index === 1) {
+      return {
+        id: "gold-key",
+        name: "Llave dorada",
+        spriteUrl: "/assets/key/gold-key.png",
+        quantity: 1,
+      };
+    }
+    return null;
+  });
+}
+
+// ============================================================================
+// Hidratación y guardado de los stores del core
+// ============================================================================
+
+let hydrated = false;
 
 /**
- * Carga los slots del inventario desde localStorage.
- * Devuelve null si no existen, están vacíos, o fallan al parsear.
+ * Vuelca el progreso guardado en los stores del core. Idempotente. Se ejecuta al importar
+ * este módulo en cliente (antes del primer render que lea los stores) y NO guarda nada:
+ * el guardado solo se activa después, en `startGamePersistence`.
  */
-export function loadInventorySlots(): InventorySlotsState | null {
-  const saved = localStorageAdapter.getItem(GAME_STORAGE_KEYS.inventorySlots);
-  if (!saved) return null;
-
-  try {
-    const parsed = JSON.parse(saved);
-    // Validación básica: debe ser un array
-    if (!Array.isArray(parsed)) return null;
-    return parsed;
-  } catch {
-    return null;
+export function hydrateGameState(): void {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  useInventoryStateStore
+    .getState()
+    .setSlots(loadInventorySlots() ?? createInitialInventorySlots());
+  const placed = loadPlacedItems();
+  if (placed) {
+    const store = usePlacedItemsStateStore.getState();
+    store.setItems(placed.items);
+    store.setSeededSceneIds(placed.seededSceneIds);
   }
 }
 
+hydrateGameState();
+
+let persistenceUsers = 0;
+let unsubscribers: Array<() => void> = [];
+
+function persistInventoryNow(): void {
+  saveInventorySlots(getInventoryState().slots);
+}
+
+function persistPlacedItemsNow(): void {
+  const { items, seededSceneIds } = getPlacedItemsState();
+  savePlacedItems({ items, seededSceneIds });
+}
+
 /**
- * Guarda los slots del inventario en localStorage.
- * Mantiene el mismo formato JSON que la versión anterior (compatibilidad).
+ * Activa el guardado automático de ambos stores (escribe el estado actual, ya hidratado,
+ * y después cada cambio). Con contador de usos para StrictMode. Devuelve la función de baja.
  */
-export function saveInventorySlots(slots: InventorySlotsState): void {
-  localStorageAdapter.setItem(
-    GAME_STORAGE_KEYS.inventorySlots,
-    JSON.stringify(slots),
-  );
+export function startGamePersistence(): () => void {
+  hydrateGameState();
+  if (persistenceUsers === 0) {
+    persistInventoryNow();
+    persistPlacedItemsNow();
+    unsubscribers = [
+      useInventoryStateStore.subscribe((state, prev) => {
+        if (state.slots !== prev.slots) persistInventoryNow();
+      }),
+      usePlacedItemsStateStore.subscribe((state, prev) => {
+        if (state.items !== prev.items || state.seededSceneIds !== prev.seededSceneIds) {
+          persistPlacedItemsNow();
+        }
+      }),
+    ];
+  }
+  persistenceUsers += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    persistenceUsers -= 1;
+    if (persistenceUsers === 0) {
+      unsubscribers.forEach((off) => off());
+      unsubscribers = [];
+    }
+  };
 }
 
 // ============================================================================

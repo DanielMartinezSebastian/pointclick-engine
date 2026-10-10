@@ -1,5 +1,5 @@
 import type { CanLeaveScene } from "@pointclick-engine/engine-renderer-r3f";
-import { usePlacedItemsStore } from "../../../store/placedItemsStore";
+import { getPlacedItemsState } from "@pointclick-engine/engine-core";
 
 /**
  * Regla propia de la demo: no se sale de personalRoom hacia dungeon mientras
@@ -8,8 +8,7 @@ import { usePlacedItemsStore } from "../../../store/placedItemsStore";
  */
 export const canLeaveSceneDemo: CanLeaveScene = ({ fromSceneId, targetSceneId }) => {
   if (fromSceneId === "personalRoom" && targetSceneId === "dungeon") {
-    const trophyStillInRoom = usePlacedItemsStore
-      .getState()
+    const trophyStillInRoom = getPlacedItemsState()
       .items.some((item) => item.itemId === "trophy" && item.sceneId === "personalRoom");
     if (trophyStillInRoom) {
       return {
