@@ -91,6 +91,16 @@ export {
   type LeaveSceneTransition,
   type LeaveSceneBlock,
 } from "./hooks/transitionRules";
+export {
+  useInventoryRuntime,
+  type UseInventoryRuntimeOptions,
+  type SceneEnterApi,
+} from "./hooks/useInventoryRuntime";
+export {
+  seedSceneItems,
+  type GetInitialPlacedItems,
+  type SeedStore,
+} from "./inventory/seedScene";
 export { useClickToMoveController } from "./hooks/useClickToMoveController";
 export { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 export type { KeyboardMovementState } from "./adapters/useKeyboardMovementInput";
