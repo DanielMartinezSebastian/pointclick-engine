@@ -2,7 +2,7 @@
 
 **Objetivo**: dejar el repo en verde verificable (tests, type-check, lint, build, CI) y la doc alineada con el código, antes de tocar arquitectura.
 **Duración estimada**: 2–3 días
-**Estado**: active
+**Estado**: completed (2026-10-10)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: v0.4.1 (sin cambios de API salvo un fix de tipo, ver tarea 01)
 

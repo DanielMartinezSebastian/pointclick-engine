@@ -40,7 +40,7 @@
 - [x] `publicApi.ts` sin imports de `../../store/` ni `../../components/`
 - [x] `useTransitionSystem` sin import de `demo-content`
 - [x] `engine-renderer-r3f` exporta `useClickToMoveController` y `WebKeyboardInput`
-- [ ] Demo funciona end-to-end (manual smoke test) — _parcial: intro, movimiento, recogida y persistencia OK; transición de escena sin verificar_
+- [x] Demo funciona end-to-end (manual smoke test) — _verificado a mano por el owner, 2026-10-10 (intro, movimiento, ítems, transición, puerta, audio, idioma)_
 - [x] ≥ 20 tests nuevos añadidos
 
 ---

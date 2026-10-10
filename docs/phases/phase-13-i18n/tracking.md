@@ -38,9 +38,9 @@
 - [x] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-core/src/` → vacío
 - [x] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-renderer-r3f/src/` → vacío (los hooks NO consumen browser globals directamente)
 - [x] Backward compatibility: `apps/web-demo/demo-content/dialogs/getRandomPhrase.ts` legacy wrapper sigue funcionando
-- [ ] Persistencia del locale verificada (recarga manual mantiene elección) — _sin verificar en navegador_
+- [x] Persistencia del locale verificada (recarga manual mantiene elección) — _verificado a mano por el owner, 2026-10-10_
 - [ ] Detección automática verificada (browser en `en-*` arranca en `en`; resto arranca en `es`) — _sin verificar en navegador_
-- [ ] `<LocaleSwitcher />` montado en `InventoryUI` cambia el idioma del speech bubble en vivo — _montado (InventoryUI.tsx:464); cambio en vivo sin verificar_
+- [x] `<LocaleSwitcher />` montado en `InventoryUI` cambia el idioma del speech bubble en vivo — _verificado a mano por el owner, 2026-10-10_
 - [ ] 3 recetas Next.js documentadas y enlazadas desde el README de la fase — _documentadas en docs/integrations/nextjs-i18n.md; falta el enlace desde el README de la fase_
 - [x] Arquitectura respetada (Core agnóstico, R3F renderer-specific, Platform en demo)
 

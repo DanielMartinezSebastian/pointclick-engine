@@ -15,7 +15,7 @@
 ## Ola 2 — orquestador, tras integrar la ola 1
 
 - [x] [07-untrack-dist](tasks/07-untrack-dist.md) — opus
-- [ ] [09-validation-gate](tasks/09-validation-gate.md) — opus — _pendiente: falta completar el smoke en navegador_
+- [x] [09-validation-gate](tasks/09-validation-gate.md) — opus — _gate técnico por el orquestador; puerta, audio e idioma verificado a mano por el owner, 2026-10-10_
 
 ## Gate final
 
@@ -26,4 +26,4 @@
 - [x] Regla de Oro: grep de imports prohibidos en core vacío
 - [x] `git ls-files packages | grep /dist/` vacío
 - [x] Gates heredados de las fases 11, 12 y 13 revisados y marcados (o anotados como bloqueados)
-- [x] Smoke manual en navegador: mover, recoger ítem, cambiar de escena — _intro, click-to-move, recoger trofeo y persistencia verificados por el orquestador; transición personalRoom→dungeon verificada a mano por el owner (2026-10-10). Sin verificar: puerta con llave, audio, cambio de idioma_
+- [x] Smoke manual en navegador: mover, recoger ítem, cambiar de escena — _intro, movimiento, recogida y persistencia por el orquestador; transición, puerta con llave, audio e idioma verificado a mano por el owner, 2026-10-10_

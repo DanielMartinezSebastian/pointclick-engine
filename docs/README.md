@@ -49,8 +49,8 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-12-architecture-cleanup/`](phases/phase-12-architecture-cleanup/) — ✅ Completed: Core agnosticism & library boundaries
 - [`phases/phase-13-i18n/`](phases/phase-13-i18n/) — ✅ Completed: Localization system (i18n)
 - [`phases/phase-14-multiplayer/`](phases/phase-14-multiplayer/) — 📋 Planning: Multijugador en tiempo real, agnóstico de transporte
-- [`phases/phase-15-green-baseline/`](phases/phase-15-green-baseline/) — 🚧 Active: Base verde (tests, tipos, lint, CI) y docs resincronizadas
-- [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — 📋 Planning: Runtime en los paquetes (core + renderer); la demo pasa a consumidora
+- [`phases/phase-15-green-baseline/`](phases/phase-15-green-baseline/) — ✅ Completed: Base verde (tests, tipos, lint, CI) y docs resincronizadas
+- [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — 🚧 Active: Runtime en los paquetes (core + renderer); la demo pasa a consumidora
 
 ---
 
