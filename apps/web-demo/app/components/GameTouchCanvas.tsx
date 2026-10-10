@@ -21,7 +21,7 @@ import { ITEMS } from "../../demo-content/items";
 import { DAVID } from "../../demo-content/characters/david";
 import { DEMO_AUDIO_DEFAULTS } from "../lib/engine/runtime/useDemoAudio";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
-import { GameTouchSpriteRuntime, SceneTransitions } from "@pointclick-engine/engine-renderer-r3f";
+import { GameTouchSpriteRuntime, SceneTransitions, useAudioSystem } from "@pointclick-engine/engine-renderer-r3f";
 import { useInventoryRuntimeController } from "../lib/engine/runtime/useInventoryRuntimeController";
 import { useInteractionEditorController } from "../lib/engine/runtime/useInteractionEditorController";
 import { useDebugPanelController } from "../lib/engine/runtime/useDebugPanelController";
@@ -30,8 +30,8 @@ import { useSceneRuntimeController } from "../lib/engine/runtime/useSceneRuntime
 import { useDoorSystem } from "../lib/engine/runtime/useDoorSystem";
 import { useTransitionSystem } from "../lib/engine/runtime/useTransitionSystem";
 import { useTransitionEditorController } from "../lib/engine/runtime/useTransitionEditorController";
-import { legacyRuntimeEventToGameEvent, type GameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
-import { getGameRuntime } from "../lib/engine/publicApi";
+import { legacyRuntimeEventToGameEvent, type PlayerWalkingState, type RuntimeEvent, type GameSceneTransition, useSceneStore } from "@pointclick-engine/engine-core";
+import { getGameRuntime, type GameRuntime } from "../lib/engine/publicApi";
 import { webAudioAdapter } from "../lib/platform-web-audio";
 import { audioSettingsStore } from "../store/audio";
 import { useMobileInputStore } from "../store/mobileInputStore";
@@ -51,7 +51,17 @@ const Joystick = dynamic(() => import("./Joystick"), { ssr: false });
 const CAMERA_POSITION: [number, number, number] = [0, 5.4, 25.0];
 const EMPTY_TRANSITIONS: GameSceneTransition[] = [];
 
+// Transiciones de la demo por id (para el sonido declarativo `triggerSoundUrl`).
+const DEMO_TRANSITIONS: Record<string, GameSceneTransition> = Object.fromEntries(
+  Object.values(SCENES).flatMap((sc) => (sc.transitions ?? []).map((t) => [t.id, t] as const)),
+);
+
+// Runtime nulo para pantallas que montan el canvas sin runtime (p.ej. /debug).
+const NOOP_RUNTIME: Parameters<typeof useAudioSystem>[0]["runtime"] = { on: () => () => {} };
+
 type GameTouchCanvasProps = {
+  /** Runtime ya creado (page.tsx lo crea antes de montar el canvas). */
+  runtime?: GameRuntime | null;
   debug?: boolean;
   onRuntimeEvent?: (event: RuntimeEvent) => void;
 };
@@ -68,6 +78,7 @@ function SceneReadyReporter({ onReady }: { onReady: () => void }) {
 }
 
 export default function GameTouchCanvas({
+  runtime,
   debug: debugOverride,
   onRuntimeEvent,
 }: GameTouchCanvasProps = {}) {
@@ -112,6 +123,19 @@ export default function GameTouchCanvas({
     speechCharsPerSecond,
     setSpeechCharsPerSecond,
   } = useDebugPanelController();
+  // IMPORTANTE: debe declararse ANTES de useSceneRuntimeController. Los efectos
+  // de un mismo componente corren en orden de declaracion, y el de la escena
+  // inicial emite `scene:changed`: el audio ya tiene que estar suscrito.
+  useAudioSystem({
+    runtime: runtime ?? NOOP_RUNTIME,
+    port: webAudioAdapter,
+    defaults: DEMO_AUDIO_DEFAULTS,
+    scenes: SCENES,
+    items: ITEMS,
+    transitions: DEMO_TRANSITIONS,
+    settingsStore: audioSettingsStore,
+  });
+
   const {
     sceneId,
     sceneBackground,
@@ -193,20 +217,6 @@ export default function GameTouchCanvas({
     });
   }, [isInventoryOpen]);
 
-  // Scene music (the initial scene is seeded before the runtime exists, so no
-  // `scene:changed` reaches the bus for it; see audio notes in task 16.07).
-  const scene = useSceneStore((s) => s.scene);
-  useEffect(() => {
-    if (scene?.music) {
-      webAudioAdapter.playMusic({
-        id: scene.music.trackUrl,
-        url: scene.music.trackUrl,
-        category: "music",
-        loop: true,
-      }, { fadeMs: scene.music.fadeMs ?? 800 });
-    }
-  }, [scene?.music?.trackUrl]);
-
   // Click sound on canvas for pathfinding
   const playerWalkingState = useSceneStore((s) => s.playerWalkingState);
   const prevWalkingRef = useRef<PlayerWalkingState | null>(null);
@@ -221,56 +231,6 @@ export default function GameTouchCanvas({
     }
     prevWalkingRef.current = playerWalkingState;
   }, [playerWalkingState]);
-
-  // Initialize SFX playback via event bus
-  useEffect(() => {
-    let unsubscribe: (() => void) | null = null;
-
-    const trySubscribe = setInterval(() => {
-      const runtime = getGameRuntime();
-      if (!runtime) return;
-
-      clearInterval(trySubscribe);
-
-      const subs = [
-        runtime.on("item:dropped", (event: Extract<GameEvent, { type: "item:dropped" }>) => {
-          // The core type declares outcome as "consume" | "place" | "return", but
-          // legacy emitters also send "pickup-success"; widen locally (core untouched).
-          const outcome: string = event.outcome;
-          // pickup-success = pickup sound, place = drop sound. Sound URLs come
-          // from item data (ITEMS) with the demo defaults as fallback.
-          const item = ITEMS[event.itemId];
-          if (outcome === "pickup-success") {
-            webAudioAdapter.playSound({
-              id: `pickup-${event.itemId}`,
-              url: item?.pickupSoundUrl ?? DEMO_AUDIO_DEFAULTS.pickupSoundUrl!,
-              category: "sfx",
-            });
-          } else if (outcome === "place") {
-            webAudioAdapter.playSound({
-              id: `drop-${event.itemId}`,
-              url: item?.dropSoundUrl ?? DEMO_AUDIO_DEFAULTS.dropSoundUrl!,
-              category: "sfx",
-            });
-          }
-        }),
-        runtime.on("transition:triggered", () => {
-          webAudioAdapter.playSound({
-            id: "transition-default",
-            url: DEMO_AUDIO_DEFAULTS.transitionSoundUrl!,
-            category: "sfx",
-          });
-        }),
-      ];
-
-      unsubscribe = () => subs.forEach((u) => u?.());
-    }, 50);
-
-    return () => {
-      clearInterval(trySubscribe);
-      unsubscribe?.();
-    };
-  }, []);
 
   // Chain: door system → transition item-drop check
   const handleRuntimeEvent = useMemo(

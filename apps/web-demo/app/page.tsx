@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   createGameRuntime,
+  type GameRuntime,
 } from "./lib/engine/publicApi";
 import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
 import { SCENES } from "../demo-content/scenes/scenes";
@@ -32,8 +33,17 @@ const I18N_CONFIG = {
 };
 
 function Game() {
+  // El runtime se crea en un efecto (con su dispose en el cleanup) y el canvas
+  // solo se monta cuando ya existe: los efectos de los hijos corren antes que
+  // los del padre, y useSceneRuntimeController fija la escena inicial en uno de
+  // ellos. Montando el canvas despues, el `scene:changed` inicial llega al bus
+  // (musica inicial) y no hace falta esperar al runtime con polling.
+  // StrictMode (create -> dispose -> create) es seguro: cada ciclo del efecto
+  // crea su propio runtime y el estado final apunta al ultimo, que sigue vivo.
+  const [runtime, setRuntime] = useState<GameRuntime | null>(null);
+
   useEffect(() => {
-    const runtime = createGameRuntime({
+    const created = createGameRuntime({
       scenes: Object.values(SCENES),
       inventoryAdapter: {
         toggle: () => useInventoryStore.getState().toggle(),
@@ -44,13 +54,16 @@ function Game() {
         hide: () => useDialogStore.getState().dismiss(),
       },
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists (children effects run before the parent's)
+    setRuntime(created);
 
     return () => {
-      runtime.dispose();
+      created.dispose();
+      setRuntime(null);
     };
   }, []);
 
-  return <GameTouchCanvas />;
+  return runtime ? <GameTouchCanvas runtime={runtime} /> : null;
 }
 
 export default function Home() {

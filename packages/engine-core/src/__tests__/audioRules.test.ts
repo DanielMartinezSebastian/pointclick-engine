@@ -178,6 +178,36 @@ describe("audioRules", () => {
       expect(sfxEvent.soundUrl).toBe("/sounds/custom-drop.ogg");
     });
 
+    describe("item:dropped por outcome", () => {
+      const dropCtx: AudioRulesContext = {
+        defaults: { dropSoundUrl: "/sounds/drop.ogg", pickupSoundUrl: "/sounds/pickup.ogg" },
+        items: {},
+        transitions: {},
+      };
+      const dropped = (outcome: string): GameEvent =>
+        ({ type: "item:dropped", itemId: "item1", outcome }) as unknown as GameEvent;
+
+      it("place suena con el sonido de soltar", () => {
+        const result = resolveAudioEvents(dropped("place"), dropCtx);
+        expect(result).toEqual([
+          { type: "audio:sfxRequested", soundUrl: "/sounds/drop.ogg", category: "sfx" },
+        ]);
+      });
+
+      it.each([
+        "return",
+        "consume",
+        "rule-miss",
+        "on-player",
+        "pickup-blocked",
+        "item-interact",
+        "unknown-item",
+        "pickup-success",
+      ])("%s es silencioso", (outcome) => {
+        expect(resolveAudioEvents(dropped(outcome), dropCtx)).toEqual([]);
+      });
+    });
+
     it("transition:triggered with override uses override", () => {
       const ctx: AudioRulesContext = {
         defaults: { transitionSoundUrl: "/sounds/door-default.ogg" },

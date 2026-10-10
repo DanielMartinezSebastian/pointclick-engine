@@ -58,6 +58,10 @@ export function resolveAudioEvents(
     }
 
     case "item:dropped": {
+      // Solo colocar suena. Devolver, consumir y los outcomes legacy que
+      // viajan fuera del tipo (rule-miss, on-player, pickup-blocked...) son
+      // silenciosos.
+      if (event.outcome !== "place") return [];
       const item = ctx.items[event.itemId];
       // Prioridad: interacción específica > item > default
       const url = item?.dropSoundUrl ?? ctx.defaults.dropSoundUrl;

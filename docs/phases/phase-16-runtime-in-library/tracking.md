@@ -22,15 +22,15 @@
 ## Ola C — en paralelo
 
 - [x] [06-unify-inventory-rules](tasks/06-unify-inventory-rules.md) — sonnet
-- [ ] [07-declarative-audio-wiring](tasks/07-declarative-audio-wiring.md) — sonnet — _parcial: sonidos en datos y sin mapa manual; el sistema declarativo no es equivalente todavía_
-- [ ] [07b-enable-declarative-audio](tasks/07b-enable-declarative-audio.md) — sonnet — _opción A elegida por el owner_
+- [x] [07-declarative-audio-wiring](tasks/07-declarative-audio-wiring.md) — sonnet — _completada vía 07b_
+- [x] [07b-enable-declarative-audio](tasks/07b-enable-declarative-audio.md) — sonnet — _opción A; pendiente de prueba de sonido del owner_
 - [x] [09-generic-character-sprite](tasks/09-generic-character-sprite.md) — sonnet
 
 > Smoke tras olas A–C verificado a mano por el owner (2026-10-10): caminar y hablar, colocar/recoger gameboy, devolución fuera de diana, verja con llave, transiciones, música y SFX.
 
 ## Ola D
 
-- [ ] [11-functional-game-viewport](tasks/11-functional-game-viewport.md) — sonnet
+- [ ] [11-functional-game-viewport](tasks/11-functional-game-viewport.md) — sonnet — _troceada en 9 pasos: [11-steps](tasks/11-steps.md)_
 
 ## Ola E
 
