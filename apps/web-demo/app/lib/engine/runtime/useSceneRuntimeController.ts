@@ -1,27 +1,44 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes";
 import { useSceneStore } from "@pointclick-engine/engine-core";
+import {
+  useSceneRuntime,
+  type SceneProgressStorage,
+} from "@pointclick-engine/engine-renderer-r3f";
 import { getGameRuntime } from "../publicApi";
 import {
   loadCurrentSceneId,
   saveCurrentSceneId,
 } from "../../gamePersistence";
 
+const SCENE_STORAGE: SceneProgressStorage = {
+  loadSceneId: loadCurrentSceneId,
+  saveSceneId: saveCurrentSceneId,
+};
+
+const resolveDemoScene = (id: string) => SCENES[id] ?? null;
+
 export function useSceneRuntimeController() {
-  const sceneId = useSceneStore((s) => s.sceneId);
-  const sceneBackground = useSceneStore((s) => s.scene.background);
-  const storeSetScene = useSceneStore((s) => s.setScene);
-  const sceneInteractions = useSceneStore((s) => s.scene.interactions);
-  const requestRespawn = useSceneStore((s) => s.requestRespawn);
-  const playerPosition = useSceneStore((s) => s.playerPosition);
-  const scenePlayerSpawn = useSceneStore((s) => s.scene.playerSpawn);
-  const updateInteraction = useSceneStore((s) => s.updateInteraction);
-  const resetInteractionsFromSceneConfig = useSceneStore(
-    (s) => s.resetInteractionsFromSceneConfig,
-  );
+  const {
+    sceneId,
+    sceneBackground,
+    storeSetScene,
+    sceneInteractions,
+    requestRespawn,
+    playerPosition,
+    scenePlayerSpawn,
+    updateInteraction,
+    resetInteractionsFromSceneConfig,
+  } = useSceneRuntime({
+    initialSceneId: DEFAULT_SCENE_ID,
+    storage: SCENE_STORAGE,
+    // La demo mantiene en el store su escena completa (SCENES), no la
+    // proyeccion del registro del core.
+    resolveScene: resolveDemoScene,
+  });
 
   const sceneOptions = useMemo(
     () => Object.values(SCENES).map((s) => ({ label: s.label, value: s.id })),
@@ -63,36 +80,6 @@ export function useSceneRuntimeController() {
     },
     [storeSetScene],
   );
-
-  // Load default scene on mount if the store is empty (engine-core store
-  // is agnostic and starts blank — the demo is responsible for seeding it).
-  // Try to load last visited scene from gamePersistence, fallback to default.
-  useEffect(() => {
-    if (!useSceneStore.getState().sceneId) {
-      // Try to load from gamePersistence
-      const savedSceneId = loadCurrentSceneId();
-      const initialSceneId = savedSceneId || DEFAULT_SCENE_ID;
-      const initialScene = SCENES[initialSceneId];
-
-      if (initialScene) {
-        storeSetScene(initialSceneId, initialScene);
-      } else {
-        // Fallback to default if saved scene doesn't exist
-        const defaultScene = SCENES[DEFAULT_SCENE_ID];
-        if (defaultScene) {
-          storeSetScene(DEFAULT_SCENE_ID, defaultScene);
-        }
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Persist current scene via gamePersistence whenever it changes
-  useEffect(() => {
-    if (sceneId) {
-      saveCurrentSceneId(sceneId);
-    }
-  }, [sceneId]);
 
   return {
     sceneId,

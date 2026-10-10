@@ -73,6 +73,13 @@ export {
   type AttachAudioSystemOpts,
 } from "./hooks/attachAudioSystem";
 export { useProximityHintController } from "./hooks/useProximityHintController";
+export {
+  useSceneRuntime,
+  resolveInitialSceneId,
+  resolveSceneFromRuntime,
+  type SceneProgressStorage,
+  type UseSceneRuntimeOptions,
+} from "./hooks/useSceneRuntime";
 export { useClickToMoveController } from "./hooks/useClickToMoveController";
 export { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 export type { KeyboardMovementState } from "./adapters/useKeyboardMovementInput";
