@@ -28,6 +28,7 @@ export type GameCommand =
       /** Destino: un hotspot (equivale a hotspot:interact con verb "useItem"). */
       hotspotId?: string;
     }
+  | { type: "inventory:combine"; itemId: string; withItemId: string }
   // Dialog
   | { type: "dialog:trigger"; dialogKey: string; speaker?: string }
   | { type: "dialog:dismiss" }

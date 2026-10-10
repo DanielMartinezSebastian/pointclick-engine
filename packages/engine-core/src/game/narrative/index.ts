@@ -15,6 +15,7 @@ export {
   type ScriptRun,
 } from "./actions";
 export { pickBranch } from "./branches";
+export { resolveCombine, type CombinableItem } from "./combine";
 export {
   getAvailableVerbs,
   getDefaultVerb,

@@ -22,6 +22,7 @@ import {
 } from "./registry";
 import { registerRuntimeExecutors } from "./executors";
 import { createSequencer } from "../narrative/sequencer";
+import { registerCombineCommands } from "../narrative/combine";
 import { registerHotspotCommands } from "../narrative/hotspots";
 import { registerDialogueCommands } from "../narrative/dialogue";
 import { registerInventoryCommands } from "./inventoryExecutors";
@@ -101,6 +102,11 @@ export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
     emit: emitEvent,
     runScript: (s) => sequencer.run(s),
     registerExecutor: (key, executor) => sequencer.registerExecutor(key, executor),
+  });
+  registerCombineCommands(commands, {
+    emit: emitEvent,
+    runScript: (s) => sequencer.run(s),
+    getItem: (id) => itemRegistry.get(id),
   });
   registerInventoryCommands(commands, emitEvent);
 

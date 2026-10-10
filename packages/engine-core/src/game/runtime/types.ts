@@ -13,7 +13,7 @@ import type {
   GameEventHandler,
 } from "../events/types";
 import type { GameCommand } from "../commands/types";
-import type { Script, ScriptRun } from "../narrative/actions";
+import type { Script, ScriptRun, Branch } from "../narrative/actions";
 import type { DialogueDefinition } from "../narrative/dialogueTypes";
 import type { ClockPort } from "../../ports/clock";
 import type { useSceneStore, KeyValueStoragePort } from "../state";
@@ -66,6 +66,8 @@ export type GameItemConfig = {
   dropSoundUrl?: string;
   interactionRules: Record<string, GameItemRule>;
   defaultRule: GameItemRule;
+  /** Ramas condicionales para combinar este ítem con otro por id. */
+  combine?: Record<string, Branch[]>;
 };
 
 /** Regla de texto/diálogo registrable via API pública. */

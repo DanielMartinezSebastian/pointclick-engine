@@ -104,6 +104,8 @@ export type ItemDefinition = {
   pickupSoundUrl?: string;
   /** Override del SFX por defecto al soltar este ítem. */
   dropSoundUrl?: string;
+  /** Ramas condicionales para combinar este ítem con otro por id. */
+  combine?: Record<string, Branch[]>;
 };
 
 // Inventory state

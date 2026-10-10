@@ -90,7 +90,10 @@ export type GameEvent =
       type: "inventory:pickupFailed";
       itemId: string;
       reason: "not-found" | "blocked" | "full" | "unknown-item";
-    };
+    }
+  // Item combination
+  | { type: "item:combined"; itemId: string; withItemId: string }
+  | { type: "item:combineFailed"; itemId: string; withItemId: string };
 
 export type GameEventType = GameEvent["type"];
 
