@@ -6,7 +6,6 @@ import { resolveTransitionFromItemDrop, resolveTransitionFromItemInteraction } f
 import { getGameRuntime } from "../publicApi";
 import { useDialogStore } from "../../../store/dialogStore";
 import { usePlacedItemsStore } from "../../../store/placedItemsStore";
-import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { preloadSceneBackground } from "../../../components/scene/SceneBackgroundPlane";
 import type { RuntimeEvent, GameScene } from "@pointclick-engine/engine-core";
 
@@ -171,10 +170,10 @@ export function useTransitionSystem(opts?: UseTransitionSystemOpts) {
             getGameRuntime()?.emit({
               type: "transition:triggered",
               transitionId: matching.id,
-              targetSceneId: (matching as any).targetSceneId,
+              targetSceneId: matching.targetSceneId,
             });
             // Store transition to trigger after dialog closes
-            pendingTransitionRef.current = { id: matching.id, targetSceneId: (matching as any).targetSceneId };
+            pendingTransitionRef.current = { id: matching.id, targetSceneId: matching.targetSceneId };
           }
         }
 

@@ -254,7 +254,7 @@ export class WebAudioAdapter implements AudioPort {
               resolve();
             };
             audio.addEventListener("canplaythrough", onReady, { once: true });
-            const timeout = setTimeout(() => {
+            setTimeout(() => {
               audio.removeEventListener("canplaythrough", onReady);
               resolve();
             }, 5000);

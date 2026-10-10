@@ -42,10 +42,7 @@ function FakeAudio(this: FakeAudioInstance, url: string) {
 
 function unlockAdapter() {
   // The adapter queues plays until a user gesture. Simulate it.
-  const handlers = (globalThis as any).__windowHandlers as Map<
-    string,
-    Array<EventListenerOrEventListenerObject>
-  >;
+  const handlers = (globalThis as unknown as { __windowHandlers: Map<string, Array<EventListenerOrEventListenerObject>> }).__windowHandlers;
   const pointerHandlers = handlers.get("pointerdown") ?? [];
   for (const h of pointerHandlers) {
     if (typeof h === "function") h(new Event("pointerdown"));
@@ -55,7 +52,7 @@ function unlockAdapter() {
 beforeEach(() => {
   audioInstances.length = 0;
   const handlers = new Map<string, Array<EventListenerOrEventListenerObject>>();
-  (globalThis as any).__windowHandlers = handlers;
+  (globalThis as unknown as { __windowHandlers?: Map<string, Array<EventListenerOrEventListenerObject>> }).__windowHandlers = handlers;
   vi.stubGlobal("window", {
     addEventListener: (name: string, h: EventListenerOrEventListenerObject) => {
       const list = handlers.get(name) ?? [];
