@@ -109,6 +109,10 @@ export {
   ensureEngineTexts,
 } from "./i18n/engineTexts";
 
+// Conversaciones
+export { DialogueChoices, type DialogueChoicesProps } from "./components/DialogueChoices";
+export { useDialogue, type UseDialogueResult, type DialogueChoiceItem } from "./hooks/useDialogue";
+
 // Hooks
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 export { useAudioSystem } from "./hooks/useAudioSystem";

@@ -15,6 +15,8 @@ export type NpcSpeech = {
   trigger: number;
   charsPerSecond: number;
   onDismiss: () => void;
+  persistent?: boolean;
+  onTypingDone?: (trigger: number) => void;
 };
 
 export type NpcSpriteProps = {
@@ -83,6 +85,8 @@ export function NpcSprite({ npc, character, speech, debug = false }: NpcSpritePr
           trigger={speech.trigger}
           charsPerSecond={speech.charsPerSecond}
           onDismiss={speech.onDismiss}
+          persistent={speech.persistent}
+          onTypingDone={speech.onTypingDone}
           anchorPosition={npc.position}
         />
       )}

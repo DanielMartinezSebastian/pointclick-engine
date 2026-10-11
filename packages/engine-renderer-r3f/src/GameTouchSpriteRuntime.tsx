@@ -114,6 +114,8 @@ export function GameTouchSpriteRuntime({
   speechTrigger,
   speechCharsPerSecond,
   onSpeechLetterSound,
+  speechPersistent,
+  onSpeechTypingDone,
   onBoundaryHit,
   onSpeechDismiss,
   onRuntimeEvent,
@@ -158,6 +160,10 @@ export function GameTouchSpriteRuntime({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onSpeechLetterSound?: () => void;
+  /** El bocadillo no se cierra solo (ver `SpeechBubble`). */
+  speechPersistent?: boolean;
+  /** La linea del bocadillo termino de escribirse. */
+  onSpeechTypingDone?: (trigger: number) => void;
   onBoundaryHit: (phrase: string) => void;
   onSpeechDismiss: () => void;
   onRuntimeEvent?: RuntimeEventHandler;
@@ -920,6 +926,8 @@ export function GameTouchSpriteRuntime({
           charsPerSecond={speechCharsPerSecond}
           onDismiss={onSpeechDismiss}
           onLetterRevealed={onSpeechLetterSound}
+          persistent={speechPersistent}
+          onTypingDone={onSpeechTypingDone}
         />
       </RigidBody>
     </>

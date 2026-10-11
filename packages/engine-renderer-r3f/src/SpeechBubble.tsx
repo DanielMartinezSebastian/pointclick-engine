@@ -19,6 +19,10 @@ type SpeechBubbleProps = {
    * origen de su padre: el llamador lo monta dentro del grupo del que habla.
    */
   anchorPosition?: readonly [number, number, number];
+  /** Con `true` el bocadillo no se descarta solo al terminar de leerse (p. ej. nodo con opciones). */
+  persistent?: boolean;
+  /** Se llama (con `trigger`) cuando la linea termina de escribirse, sola o saltada con un click. */
+  onTypingDone?: (trigger: number) => void;
 };
 
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
@@ -81,6 +85,8 @@ export default function SpeechBubble({
   onDismiss,
   onLetterRevealed,
   anchorPosition,
+  persistent = false,
+  onTypingDone,
 }: SpeechBubbleProps) {
   const storePlayerPosition = useSceneStore((state) => state.playerPosition);
   const playerPosition = anchorPosition ?? storePlayerPosition;
@@ -89,6 +95,10 @@ export default function SpeechBubble({
   const [displayedText, setDisplayedText] = useState("");
   const dismissTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   const skipTypingRef = useRef<(() => void) | null>(null);
+  const persistentRef = useRef(persistent);
+  persistentRef.current = persistent;
+  const onTypingDoneRef = useRef(onTypingDone);
+  onTypingDoneRef.current = onTypingDone;
 
   // ── Layout estático: calculado UNA vez por diálogo (dep: normalizedText) ──
   const { bubbleWidth, textMaxWidth, fullBubbleHeight, wrappedText } = useMemo(() => {
@@ -131,7 +141,8 @@ export default function SpeechBubble({
     const timerHolder: { current: ReturnType<typeof globalThis.setInterval> | null } = { current: null };
 
     const startDismissTimer = () => {
-      if (onDismiss) {
+      onTypingDoneRef.current?.(trigger);
+      if (onDismiss && !persistentRef.current) {
         const wordCount = normalizedText.trim().split(/\s+/).filter(Boolean).length;
         const readMs = clamp(wordCount * MS_PER_WORD_READ, MIN_READ_MS, MAX_READ_MS);
         dismissTimerRef.current = globalThis.setTimeout(onDismiss, readMs);

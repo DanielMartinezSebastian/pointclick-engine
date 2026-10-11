@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getGameRuntime,
   legacyRuntimeEventToGameEvent,
   useDialogStore,
+  useDialogueStore,
   useSceneStore,
   type GameScene,
   type GameSceneTransition,
@@ -14,6 +15,8 @@ import {
   type RuntimeEventHandler,
 } from "@pointclick-engine/engine-core";
 
+import { resolveSpeechDismiss, shouldHoldBubble, shouldShowChoices } from "../hooks/dialogueLogic";
+import { useDialogue } from "../hooks/useDialogue";
 import {
   attachAudioSystem,
   type AttachAudioSystemOpts,
@@ -175,6 +178,22 @@ export function useGameViewportController(options: GameViewportControllerOptions
   const speechTrigger = useDialogStore((s) => s.triggerCount);
   const speechSpeaker = useDialogStore((s) => s.speaker);
 
+  // Conversaciones con opciones: la linea queda en el bocadillo hasta elegir; las opciones
+  // salen al terminar de escribirse. Sin conversacion activa nada de esto cambia nada.
+  const dialogue = useDialogue();
+  const lineKey = useDialogueStore((s) => s.lineKey);
+  const [typedTrigger, setTypedTrigger] = useState(-1);
+  const dialogueChoicesVisible = shouldShowChoices({
+    active: dialogue.active,
+    choiceCount: dialogue.choices.length,
+    hasLine: lineKey !== undefined,
+    typedTrigger,
+    triggerCount: speechTrigger,
+  });
+  const speechPersistent = shouldHoldBubble(dialogue.active, dialogue.choices.length);
+  const dialogueRef = useRef(dialogue);
+  dialogueRef.current = dialogue;
+
   const sceneTransitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
 
   // Guardado automatico del host. Va ANTES del hook del inventario: sus efectos
@@ -191,6 +210,14 @@ export function useGameViewportController(options: GameViewportControllerOptions
     onSceneEnter,
     itemContext,
   });
+
+  // Cierre del bocadillo: con conversacion activa se avanza por `dialogue:advance` (el core
+  // emite `dialog:dismissed` y pasa al siguiente nodo); si no, se oculta como siempre.
+  const { hideSpeechBubble: hideBubbleOnly } = inventory;
+  const handleSpeechDismiss = useCallback(() => {
+    if (resolveSpeechDismiss(dialogueRef.current.active) === "advance") dialogueRef.current.advance();
+    else hideBubbleOnly();
+  }, [hideBubbleOnly]);
 
   // Items colocados que se pintan en la escena actual.
   const scenePlacedItems = inventory.placedItems.filter((item) => filterPlacedItems(item, sceneId));
@@ -215,6 +242,13 @@ export function useGameViewportController(options: GameViewportControllerOptions
     speechVisible,
     speechTrigger,
     speechSpeaker,
+    // Cierre del bocadillo (sustituye al de `...inventory`)
+    hideSpeechBubble: handleSpeechDismiss,
+    // Conversaciones
+    dialogue,
+    dialogueChoicesVisible,
+    speechPersistent,
+    onSpeechTypingDone: setTypedTrigger,
     // Eventos y transiciones
     handleRuntimeEvent,
     handleTransitionTriggered,

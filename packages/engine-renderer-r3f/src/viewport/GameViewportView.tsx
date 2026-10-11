@@ -6,6 +6,7 @@ import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 import { useInventoryUiStore } from "@pointclick-engine/engine-core";
 
+import { DialogueChoices, type DialogueChoicesProps } from "../components/DialogueChoices";
 import { VerbMenu, type VerbMenuProps } from "../components/VerbMenu";
 import { GameTouchSpriteRuntime } from "../GameTouchSpriteRuntime";
 import { useHotspotInteractions } from "../hooks/useHotspotInteractions";
@@ -37,6 +38,8 @@ export type GameViewportSpriteRuntimeProps = Partial<
     | "speechTrigger"
     | "onBoundaryHit"
     | "onSpeechDismiss"
+    | "speechPersistent"
+    | "onSpeechTypingDone"
     | "onRuntimeEvent"
   >
 >;
@@ -74,6 +77,8 @@ export type GameViewportViewProps = {
   verbMenu?: ComponentType<VerbMenuProps>;
   /** Clave de i18n de la frase de `hotspot:noAction`. Por defecto, una clave del motor. */
   noActionDialogKey?: string;
+  /** Lista de opciones de las conversaciones. Por defecto, `DialogueChoices` del paquete. */
+  dialogueChoices?: ComponentType<DialogueChoicesProps>;
 };
 
 /**
@@ -103,6 +108,7 @@ export function GameViewportView({
   onSceneReady = noop,
   verbMenu: VerbMenuComponent = VerbMenu,
   noActionDialogKey,
+  dialogueChoices: DialogueChoicesComponent = DialogueChoices,
 }: GameViewportViewProps) {
   const {
     sceneBackground,
@@ -115,6 +121,10 @@ export function GameViewportView({
     speechVisible,
     speechTrigger,
     speechSpeaker,
+    speechPersistent,
+    onSpeechTypingDone,
+    dialogue,
+    dialogueChoicesVisible,
     fadeOverlayRef,
     handleBackgroundReady,
     handleRuntimeEvent,
@@ -204,6 +214,8 @@ export function GameViewportView({
               speechTrigger={speechTrigger}
               onBoundaryHit={handleBoundaryHit}
               onSpeechDismiss={hideSpeechBubble}
+              speechPersistent={speechPersistent}
+              onSpeechTypingDone={onSpeechTypingDone}
               onRuntimeEvent={handleRuntimeEvent}
             />
             <SceneReadyReporter onReady={onSceneReady} />
@@ -216,6 +228,8 @@ export function GameViewportView({
             speechTrigger={speechTrigger}
             speechCharsPerSecond={speechCharsPerSecond}
             onSpeechDismiss={hideSpeechBubble}
+            speechPersistent={speechPersistent}
+            onSpeechTypingDone={onSpeechTypingDone}
             debug={debug}
           />
           <SceneDropTargets
@@ -262,6 +276,10 @@ export function GameViewportView({
           onSelect={hotspotUi.select}
           onClose={hotspotUi.closeMenu}
         />
+      )}
+
+      {dialogueChoicesVisible && (
+        <DialogueChoicesComponent choices={dialogue.choices} onChoose={dialogue.choose} />
       )}
 
       {/* Cortina de transición: siempre en DOM, opacidad 0 en reposo.

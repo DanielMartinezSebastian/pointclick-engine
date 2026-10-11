@@ -43,6 +43,10 @@ export type SceneNpcsProps = {
   speechTrigger?: number;
   speechCharsPerSecond?: number;
   onSpeechDismiss?: () => void;
+  /** El bocadillo del NPC no se cierra solo. */
+  speechPersistent?: boolean;
+  /** La linea del bocadillo termino de escribirse. */
+  onSpeechTypingDone?: (trigger: number) => void;
   debug?: boolean;
 };
 
@@ -57,6 +61,8 @@ export function SceneNpcs({
   speechTrigger = 0,
   speechCharsPerSecond = 28,
   onSpeechDismiss = noop,
+  speechPersistent,
+  onSpeechTypingDone,
   debug = false,
 }: SceneNpcsProps) {
   if (npcs.length === 0) return null;
@@ -70,7 +76,7 @@ export function SceneNpcs({
           debug={debug}
           speech={
             npc.id === speakingNpcId
-              ? { text: speechText, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss }
+              ? { text: speechText, trigger: speechTrigger, charsPerSecond: speechCharsPerSecond, onDismiss: onSpeechDismiss, persistent: speechPersistent, onTypingDone: onSpeechTypingDone }
               : undefined
           }
         />
