@@ -6,8 +6,7 @@ import {
   type GameRuntime,
 } from "./lib/engine/publicApi";
 import { CRTEffectWrapper } from "./lib/components/CRTEffectWrapper";
-import { SCENES } from "../demo-content/scenes/scenes";
-import { ITEMS } from "../demo-content/items";
+import { DEMO_RUNTIME_CONFIG } from "./lib/engine/runtime/demoViewportOptions";
 import GameTouchCanvas from "./components/GameTouchCanvas";
 import { IntroScene } from "./components/intro/IntroScene";
 import { useLocaleDetection } from "@pointclick-engine/engine-renderer-r3f";
@@ -42,10 +41,7 @@ function Game() {
   const [runtime, setRuntime] = useState<GameRuntime | null>(null);
 
   useEffect(() => {
-    const created = createGameRuntime({
-      scenes: Object.values(SCENES),
-      items: Object.values(ITEMS),
-    });
+    const created = createGameRuntime(DEMO_RUNTIME_CONFIG);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists (children effects run before the parent's)
     setRuntime(created);
 

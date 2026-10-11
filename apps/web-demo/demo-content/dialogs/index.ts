@@ -34,6 +34,10 @@ export const demoDictionaries: LocaleDictionaries = {
         "¡Bienvenido! Aquí puedes ser tú mismo, o alguien más.",
       ],
     },
+    // Frase fija (antes un texto en codigo, siempre en castellano): se conserva igual en ambos idiomas.
+    personalRoomLeaveBlocked: {
+      phrases: ["Sería mejor recoger todo lo que pueda del cuarto antes de irme..."],
+    },
     inventoryDropHit: {
       phrases: [
         "¡Exacto! El Gameboy va ahí.",
@@ -266,6 +270,10 @@ export const demoDictionaries: LocaleDictionaries = {
         "Your room, your rules. But don't go overboard.",
         "Welcome! Be yourself here, or someone else.",
       ],
+    },
+    // Frase fija (antes un texto en codigo, siempre en castellano): se conserva igual en ambos idiomas.
+    personalRoomLeaveBlocked: {
+      phrases: ["Sería mejor recoger todo lo que pueda del cuarto antes de irme..."],
     },
     inventoryDropHit: {
       phrases: [

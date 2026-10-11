@@ -5,8 +5,7 @@ import {
   createGameRuntime,
   type GameRuntime,
 } from "../lib/engine/publicApi";
-import { SCENES } from "../../demo-content/scenes/scenes";
-import { ITEMS } from "../../demo-content/items";
+import { DEMO_RUNTIME_CONFIG } from "../lib/engine/runtime/demoViewportOptions";
 import GameTouchCanvas from "../components/GameTouchCanvas";
 import HtmlBridgePanel from "./HtmlBridgePanel";
 
@@ -24,10 +23,7 @@ export default function ExampleBridgePage() {
   const [runtime, setRuntime] = useState<GameRuntime | null>(null);
 
   useEffect(() => {
-    const created = createGameRuntime({
-      scenes: Object.values(SCENES),
-      items: Object.values(ITEMS),
-    });
+    const created = createGameRuntime(DEMO_RUNTIME_CONFIG);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists
     setRuntime(created);
 

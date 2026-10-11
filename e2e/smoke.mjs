@@ -36,16 +36,23 @@ page.on("pageerror", (e) => errors.push(String(e).slice(0, 300)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 300)); });
 page.on("response", (r) => { if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url().slice(0, 120)}`); });
 
-const state = () => page.evaluate(() => {
+// La partida vive en una sola instantánea (`pointclick-save`); las puertas van en `extra.doors`.
+const SAVE_KEY = "pointclick-save";
+const LEGACY_KEYS = ["inventory-slots", "current-scene-id", "placed-items-state", "door-states"];
+const state = () => page.evaluate(([saveKey, legacyKeys]) => {
   const parse = (k) => { try { return JSON.parse(localStorage.getItem(k) ?? "null"); } catch { return null; } };
+  const save = parse(saveKey);
   return {
-    scene: localStorage.getItem("current-scene-id"),
-    inventory: (parse("inventory-slots") ?? []).filter(Boolean).map((s) => s.id),
-    placed: (parse("placed-items-state")?.state?.items ?? []).map((i) => `${i.itemId}@${i.sceneId}`),
-    doors: parse("door-states")?.state?.doorOpenStates ?? {},
+    scene: save?.sceneId ?? null,
+    inventory: (save?.inventory ?? []).filter(Boolean).map((s) => s.id),
+    placed: (save?.placedItems ?? []).map((i) => `${i.itemId}@${i.sceneId}`),
+    doors: save?.extra?.doors ?? {},
+    version: save?.version ?? null,
+    seeded: save?.seededSceneIds ?? [],
+    legacyLeft: legacyKeys.filter((k) => localStorage.getItem(k) !== null),
     plays: window.__plays.slice(),
   };
-});
+}, [SAVE_KEY, LEGACY_KEYS]);
 const waitFor = async (predicate, timeoutMs) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -185,11 +192,11 @@ try {
     page.mouse.click(...POS.confirmReset),
   ]);
   await page.waitForTimeout(1500);
-  const afterReset = await page.evaluate(() => ({
-    game: ["inventory-slots", "current-scene-id", "placed-items-state", "door-states"].filter((k) => localStorage.getItem(k) !== null),
+  const afterReset = await page.evaluate(([saveKey, legacyKeys]) => ({
+    game: [saveKey, ...legacyKeys].filter((k) => localStorage.getItem(k) !== null),
     foreign: localStorage.getItem("smoke-foreign-key"),
     kept: JSON.stringify([localStorage.getItem("i18n-locale"), localStorage.getItem("audio-settings")]),
-  }));
+  }), [SAVE_KEY, LEGACY_KEYS]);
   check("reiniciar borra las claves de la partida", afterReset.game.length === 0, afterReset.game.join());
   check("reiniciar conserva datos ajenos al juego", afterReset.foreign === "keep");
   check("reiniciar no toca idioma ni ajustes de audio", afterReset.kept === keptBefore, afterReset.kept);
@@ -199,6 +206,34 @@ try {
   check("la partida reiniciada arranca en la habitación", s.scene === "personalRoom", `scene=${s.scene}`);
   check("la partida reiniciada tiene el inventario inicial", s.inventory.join() === "gameboy,gold-key", s.inventory.join());
   check("la partida reiniciada vuelve a sembrar el trofeo", s.placed.join() === "trophy@personalRoom", s.placed.join());
+
+  // 9. Una partida guardada con el formato de 0.5.0 (cuatro claves sueltas) se migra al cargar.
+  await page.evaluate(([saveKey]) => {
+    localStorage.removeItem(saveKey);
+    const slots = Array.from({ length: 9 }, () => null);
+    slots[0] = { id: "gold-key", name: "Llave dorada", spriteUrl: "/assets/key/gold-key.png", quantity: 1 };
+    slots[1] = { id: "trophy", name: "Trophy", spriteUrl: "/assets/trophy/trophy.png", quantity: 1 };
+    localStorage.setItem("inventory-slots", JSON.stringify(slots));
+    localStorage.setItem("current-scene-id", "dungeon");
+    localStorage.setItem("placed-items-state", JSON.stringify({
+      state: {
+        items: [{ id: "gameboy-legacy", itemId: "gameboy", interactionId: "legacy-gameboy", name: "Gameboy", spriteUrl: "/assets/gameboy/gameboy.png", worldPosition: [3, -2, 20], canPickup: true, sceneId: "dungeon" }],
+        initialItemsCreated: true,
+      },
+      version: 0,
+    }));
+    localStorage.setItem("door-states", JSON.stringify({ state: { doorOpenStates: { "dungeon-gate-door": true } }, version: 0 }));
+  }, [SAVE_KEY]);
+  check("tras inyectar una partida de 0.5.0 se puede cargar", await enterGame());
+  await page.waitForTimeout(3000);
+  s = await state();
+  check("la partida de 0.5.0 conserva la escena", s.scene === "dungeon", `scene=${s.scene}`);
+  check("la partida de 0.5.0 conserva el inventario", s.inventory.slice().sort().join() === "gold-key,trophy", s.inventory.join());
+  check("la partida de 0.5.0 conserva el ítem colocado", s.placed.join() === "gameboy@dungeon", s.placed.join());
+  check("la partida de 0.5.0 conserva las puertas", s.doors["dungeon-gate-door"] === true, JSON.stringify(s.doors));
+  check("la migración traduce el flag antiguo a escena sembrada", s.seeded.join() === "personalRoom", s.seeded.join());
+  check("existe la instantánea nueva (versión 1) y no quedan claves antiguas", s.version === 1 && s.legacyLeft.length === 0, `version=${s.version} antiguas=${s.legacyLeft.join()}`);
+  check("la partida migrada no resiembra el trofeo", !s.placed.some((p) => p.startsWith("trophy@")), s.placed.join());
 
   check("sin errores de página ni de consola", errors.length === 0, errors.slice(0, 3).join(" | "));
 } catch (error) {

@@ -28,6 +28,20 @@ const SCENE_A: GameSceneConfig = {
   },
   walls: [],
   interactions: [],
+  // Ítem inicial declarado en la propia escena (sin callback del host).
+  initialItems: [
+    {
+      item: {
+        id: "trophy-in-scene-a",
+        itemId: "trophy",
+        interactionId: "trophy-pickup-zone",
+        name: "Trophy",
+        spriteUrl: "/assets/trophy/trophy.png",
+        worldPosition: [6.5, -2.4, 13.4],
+        canPickup: true,
+      },
+    },
+  ],
   transitions: [
     sceneTransitionOnCollision({
       id: "transition-a-to-b",
@@ -132,20 +146,6 @@ function MinimalGame() {
     <GameViewport
       runtime={runtime}
       initialSceneId="minimal-a"
-      getInitialPlacedItems={(sceneId) => {
-        if (sceneId !== "minimal-a") return null;
-        return [
-          {
-            id: "trophy-in-scene-a",
-            itemId: "trophy",
-            interactionId: "trophy-pickup-zone",
-            name: "Trophy",
-            spriteUrl: "/assets/trophy/trophy.png",
-            worldPosition: [6.5, -2.4, 13.4],
-            canPickup: true,
-          },
-        ];
-      }}
       overlay={<StatusOverlay />}
     />
   );

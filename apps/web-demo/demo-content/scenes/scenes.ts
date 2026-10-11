@@ -8,6 +8,9 @@ import type {
   GameSceneWallOpening,
 } from "@pointclick-engine/engine-core";
 import {
+  act,
+  cond,
+  otherwise,
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
   sceneTransitionOnItemInteraction,
@@ -309,6 +312,30 @@ export const SCENES: Record<string, Scene> = {
     label: "Personal Room",
     background: "/assets/background/personalRoom.png",
     playerSpawn: [0, -1.1, 13.44],
+    // Trofeo inicial: solo si no existe ya (colocado en cualquier escena ni en el inventario).
+    // La escena se marca sembrada igualmente, de modo que no vuelve a aparecer.
+    initialItems: [
+      {
+        when: cond.all(
+          cond.not(cond.itemPlaced("trophy")),
+          cond.not(cond.hasItem("trophy")),
+        ),
+        item: {
+          id: "trophy-ground",
+          itemId: "trophy",
+          interactionId: "trophy-ground-pickup",
+          name: "Trophy",
+          spriteUrl: "/assets/trophy/trophy.png",
+          worldPosition: [5.5, -1.3, 22.0],
+          canPickup: true,
+          hasCollision: true,
+          collisionHalfSize: [0.5, 0.8, 0.5],
+          sceneId: "personalRoom",
+        },
+      },
+    ],
+    // Bienvenida: en cada entrada a la habitacion (tambien al recargar), sin flag.
+    onEnter: [otherwise(act.say("personalRoomWelcome"))],
     ground: {
       minX: -16.9,
       maxX: 16.8,
@@ -440,6 +467,9 @@ export const SCENES: Record<string, Scene> = {
         targetSceneId: "dungeon",
         spawnPosition: [1.56, -2.00, 23.80],
         targetPosition: [2.21, -2.00, 7.52],
+        // No se sale a la mazmorra mientras el trofeo siga colocado en la habitacion.
+        when: cond.not(cond.itemPlaced("trophy", { inScene: "personalRoom" })),
+        blocked: [act.say("personalRoomLeaveBlocked")],
       },
     ],
     interactions: [

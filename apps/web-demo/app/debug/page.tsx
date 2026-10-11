@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { createGameRuntime, type GameRuntime } from "../lib/engine/publicApi";
-import { SCENES } from "../../demo-content/scenes/scenes";
-import { ITEMS } from "../../demo-content/items";
+import { DEMO_RUNTIME_CONFIG } from "../lib/engine/runtime/demoViewportOptions";
 import GameTouchCanvas from "../components/GameTouchCanvas";
 
 // Mismo patron que app/page.tsx: el runtime se crea en un efecto (con dispose en
@@ -14,10 +13,7 @@ function DebugGame() {
   const [runtime, setRuntime] = useState<GameRuntime | null>(null);
 
   useEffect(() => {
-    const created = createGameRuntime({
-      scenes: Object.values(SCENES),
-      items: Object.values(ITEMS),
-    });
+    const created = createGameRuntime(DEMO_RUNTIME_CONFIG);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists (children effects run before the parent's)
     setRuntime(created);
 
