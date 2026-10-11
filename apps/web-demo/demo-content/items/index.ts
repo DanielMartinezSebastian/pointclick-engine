@@ -1,3 +1,5 @@
+import { act, otherwise } from "@pointclick-engine/engine-core";
+
 import type { ItemDefinition, ItemInteractionRule } from "./types";
 
 export type { ItemDefinition, ItemInteractionRule };
@@ -8,6 +10,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     name: "Gameboy",
     spriteUrl: "/assets/gameboy/gameboy.png",
     descriptionDialogKey: "item.gameboy.description",
+    pickupSoundUrl: "/assets/audio/sfx/pickup-gameboy.ogg",
     interactionRules: {
       "personal-room-gameboy-drop-target": {
         outcome: "place",
@@ -73,6 +76,46 @@ export const ITEMS: Record<string, ItemDefinition> = {
       outcome: "return",
       missDialogKey: "item.trophy.drop.default.miss",
     },
+  },
+  // --- Combinacion de prueba: mango + paleton dan una llave de bronce (reutilizan el sprite de la llave) ---
+  // Mango: lo entrega el guia de `town` al hablar con el (opcion `once` del dialogo).
+  "key-handle": {
+    id: "key-handle",
+    name: "Mango roto",
+    spriteUrl: "/assets/key/gold-key.png",
+    descriptionDialogKey: "item.key-handle.description",
+    interactionRules: {},
+    defaultRule: { outcome: "return", missDialogKey: "item.key-part.drop.default.miss" },
+    // Se combina con el paleton (esta regla vale en ambos sentidos).
+    combine: {
+      "key-bit": [
+        otherwise(
+          // `say` espera a que se cierre el bocadillo: el resultado va antes que la frase.
+          act.removeItem("key-handle"),
+          act.removeItem("key-bit"),
+          act.giveItem("bronze-key"),
+          act.say("combine.key.done"),
+        ),
+      ],
+    },
+  },
+  // Paleton: esta en el suelo de `town` (initialItems).
+  "key-bit": {
+    id: "key-bit",
+    name: "Paletón roto",
+    spriteUrl: "/assets/key/gold-key.png",
+    descriptionDialogKey: "item.key-bit.description",
+    interactionRules: {},
+    defaultRule: { outcome: "return", missDialogKey: "item.key-part.drop.default.miss" },
+  },
+  // Resultado de la combinacion.
+  "bronze-key": {
+    id: "bronze-key",
+    name: "Llave de bronce",
+    spriteUrl: "/assets/key/gold-key.png",
+    descriptionDialogKey: "item.bronze-key.description",
+    interactionRules: {},
+    defaultRule: { outcome: "return", missDialogKey: "item.key-part.drop.default.miss" },
   },
 };
 

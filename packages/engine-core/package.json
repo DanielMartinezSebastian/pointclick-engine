@@ -1,6 +1,6 @@
 {
   "name": "@pointclick-engine/engine-core",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "description": "Framework-agnostic core for Point & Click Game Engine",
   "type": "module",
   "main": "dist/index.js",
@@ -29,6 +29,10 @@
     "./state": {
       "import": "./dist/game/state/index.js",
       "types": "./dist/game/state/index.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
     }
   },
   "sideEffects": false,
@@ -37,13 +41,17 @@
     "src",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "!src/**/__tests__",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx"
   ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "zustand": "^5.0.13"

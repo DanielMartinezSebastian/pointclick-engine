@@ -8,9 +8,15 @@
   "scripts": {
     "dev": "npm run dev -w apps/web-demo",
     "dev:debug": "npm run dev:debug -w apps/web-demo",
+    "predev": "npm run build:packages",
+    "predev:debug": "npm run build:packages",
+    "build:packages": "npm run build -w packages/engine-core && npm run build -w packages/engine-renderer-r3f",
     "build": "npm run build --workspaces --if-present",
+    "prepare": "npm run build:packages",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "typecheck": "tsc --noEmit -p packages/engine-core && tsc --noEmit -p packages/engine-renderer-r3f && tsc --noEmit -p apps/web-demo",
+    "lint": "npm run lint --workspaces --if-present",
+    "smoke": "node e2e/smoke.mjs && node e2e/smoke-minimal.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

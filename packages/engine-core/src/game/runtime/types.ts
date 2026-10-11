@@ -1,0 +1,179 @@
+import type {
+  GameVec3,
+  GameSceneGround,
+  GameSceneWall,
+  GameSceneInteractionFull,
+  GameSceneTransition,
+  GameSceneHotspot,
+  GameSceneNpc,
+  SceneInitialItem,
+  SceneMusicConfig,
+} from "../types";
+import type {
+  GameEvent,
+  GameEventType,
+  GameEventHandler,
+} from "../events/types";
+import type { GameCommand } from "../commands/types";
+import type { Script, ScriptRun, Branch } from "../narrative/actions";
+import type { DialogueDefinition } from "../narrative/dialogueTypes";
+import type { ClockPort } from "../../ports/clock";
+import type { useSceneStore, KeyValueStoragePort } from "../state";
+
+/** Configuración de escena registrable via API pública. */
+export type GameSceneConfig = {
+  id: string;
+  label: string;
+  background: string;
+  playerSpawn: GameVec3;
+  ground: GameSceneGround;
+  walls: GameSceneWall[];
+  interactions: GameSceneInteractionFull[];
+  /** Zonas de transición declarativas (se conservan al registrar la escena). */
+  transitions?: GameSceneTransition[];
+  music?: SceneMusicConfig;
+  /** Hotspots con verbos narrativos (se conservan al registrar la escena). */
+  hotspots?: GameSceneHotspot[];
+  /** NPCs (se conservan y se proyectan a hotspots al registrar la escena). */
+  npcs?: GameSceneNpc[];
+  /** Items iniciales declarativos (se conservan al registrar la escena). */
+  initialItems?: SceneInitialItem[];
+  /** Ramas de entrada declarativas (se conservan al registrar la escena). */
+  onEnter?: Branch[];
+};
+
+export type GameItemDropOutcome =
+  | "consume"
+  | "place"
+  | "return"
+  | "rule-miss"
+  | "unknown-item"
+  | "on-player"
+  | "pickup-blocked"
+  | "pickup-success";
+
+export type GameItemRule = {
+  outcome: GameItemDropOutcome;
+  hitDialogKey?: string;
+  missDialogKey?: string;
+  placeCanPickup?: boolean;
+  placeHasCollision?: boolean;
+  placeCollisionHalfSize?: GameVec3;
+  pickupSuccessDialogKey?: string;
+  pickupBlockedDialogKey?: string;
+  dropSoundUrl?: string;
+};
+
+/** Configuración de ítem registrable via API pública. */
+export type GameItemConfig = {
+  id: string;
+  name: string;
+  spriteUrl: string;
+  descriptionDialogKey?: string;
+  pickupSoundUrl?: string;
+  dropSoundUrl?: string;
+  interactionRules: Record<string, GameItemRule>;
+  defaultRule: GameItemRule;
+  /** Ramas condicionales para combinar este ítem con otro por id. */
+  combine?: Record<string, Branch[]>;
+};
+
+/** Regla de texto/diálogo registrable via API pública. */
+export type GameRuleConfig = {
+  key: string;
+  phrases: string[];
+};
+
+/** Eventos de runtime (legacy — mantenidos por backwards compat). */
+export type GameRuntimeEvent =
+  | {
+      type: "onMove";
+      position: GameVec3;
+      action: "idle" | "north" | "south" | "west" | "east";
+    }
+  | { type: "onCollide"; reason: "boundary" | "stuck"; position: GameVec3 }
+  | { type: "onDrop"; outcome: string; itemId: string; interactionId?: string }
+  | { type: "onDialog"; text: string; dialogKey?: string; source: string };
+
+export type GameRuntimeEventHandler = (event: GameRuntimeEvent) => void;
+
+export type ScriptHandler = (args: unknown) => void | Promise<void>;
+
+/** Handle de runtime devuelto por createGameRuntime. */
+export type GameRuntime = {
+  getScenes: () => Record<string, GameSceneConfig>;
+  getItems: () => Record<string, GameItemConfig>;
+  getRules: () => Record<string, GameRuleConfig>;
+  getDialogues: () => Record<string, DialogueDefinition>;
+  /**
+   * Envía un comando al motor. Sync, fire-and-forget.
+   * Comandos sin executor registrado loguean warn y no hacen nada.
+   */
+  executeCommand: (cmd: GameCommand) => void;
+  /** Suscribe a un tipo de evento. Devuelve unsubscribe. */
+  on: <T extends GameEventType>(type: T, handler: GameEventHandler<T>) => () => void;
+  /** Emite un evento al bus del runtime. */
+  emit: (event: GameEvent) => void;
+  /** Ejecuta un guion narrativo (cola FIFO; `interrupt` cancela el actual y vacía la cola). */
+  runScript: (script: Script, opts?: { interrupt?: boolean }) => ScriptRun;
+  /** Registra un manejador para la acción `call`. Devuelve la función que lo quita. */
+  registerHandler: (name: string, fn: ScriptHandler) => () => void;
+  /** Libera el bus, los comandos y desactiva las emisiones del store. */
+  dispose: () => void;
+};
+
+export type SceneStoreSnapshot = ReturnType<typeof useSceneStore.getState>;
+
+export type GameState = Pick<
+  SceneStoreSnapshot,
+  "sceneId" | "scene" | "playerPosition" | "respawnSignal"
+>;
+
+export type GameActions = {
+  setScene: (sceneId: string) => void;
+  setPlayerPosition: SceneStoreSnapshot["setPlayerPosition"];
+  requestRespawn: SceneStoreSnapshot["requestRespawn"];
+};
+
+/** Adapter para conectar el engine con la UI de inventario del host. */
+export interface InventoryUIAdapter {
+  toggle(): void;
+  isOpen(): boolean;
+}
+
+/** Adapter para conectar el engine con el sistema de diálogos del host. */
+export interface DialogUIAdapter {
+  show(text: string, dialogKey?: string, speaker?: string): void;
+  hide(): void;
+}
+
+export type GameRuntimeConfig = {
+  scenes?: GameSceneConfig[];
+  items?: GameItemConfig[];
+  rules?: GameRuleConfig[];
+  /** Arboles de dialogo (conversaciones); se registran igual que escenas e items. */
+  dialogues?: DialogueDefinition[];
+  /** Adapter de UI para inventory. Si no se pasa, inventory:toggle usa el store del core (useInventoryUiStore). */
+  inventoryAdapter?: InventoryUIAdapter;
+  /** Adapter de UI para diálogos. Si no se pasa, dialog:trigger/dismiss usan el store del core (useDialogStore) y emiten el evento. */
+  dialogAdapter?: DialogUIAdapter;
+  /** Almacenamiento para game:save / game:load / game:reset. Sin él esos comandos solo avisan. */
+  storage?: KeyValueStoragePort;
+  /** Clave de guardado dentro de `storage` (por defecto `pointclick-save`). */
+  saveKey?: string;
+  /** Reloj para esperas del secuenciador (por defecto `systemClock`). */
+  clock?: ClockPort;
+  /** Si true, `walkTo` de un guion teletransporta y emite `player:walkCompleted` (headless). */
+  instantWalk?: boolean;
+  /**
+   * Validacion del contenido al crear el runtime (`validateContent`).
+   * `true`: avisa por consola con un unico `console.warn` agrupado. `"throw"`: lanza si hay
+   * errores (los avisos van a consola). `false`: no valida. Sin valor: como `true` solo cuando
+   * `NODE_ENV === "development"`, y nada en test o produccion.
+   */
+  validate?: boolean | "throw";
+  /** Claves de dialogo conocidas, para que la validacion compruebe `say`, `line`, `text` y `label`. */
+  dialogKeys?: ReadonlySet<string>;
+  /** Nombres de manejadores `call` que el host registra, para que la validacion los compruebe. */
+  handlerNames?: ReadonlySet<string>;
+};

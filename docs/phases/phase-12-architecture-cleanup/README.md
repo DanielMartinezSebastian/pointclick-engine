@@ -1,6 +1,6 @@
 # Phase 12 — Architecture Cleanup: Core Agnosticism & Library Boundaries
 
-**Status**: Planned | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.2.0
+**Status**: Completed — gate de validación pendiente (ver Phase 15) | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.2.0
 **Planned**: 2026-05-31
 
 ---

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 /**
  * doorStore — estado abierto/cerrado de las puertas de la escena.
@@ -13,7 +12,8 @@ import { persist } from "zustand/middleware";
  * "closed" — the same default used by `SceneDoors` if a scene declares the
  * door without a starting state.
  *
- * Door state is persisted to localStorage so doors remain open after page reload.
+ * Door state is saved inside the game snapshot (`extra.doors`) by
+ * `gamePersistence.ts`, so doors remain open after page reload.
  */
 type DoorStoreState = {
   doorOpenStates: Record<string, boolean>;
@@ -27,26 +27,19 @@ type DoorStoreState = {
   reset: (initial: Record<string, boolean>) => void;
 };
 
-export const useDoorStore = create<DoorStoreState>()(
-  persist(
-    (set, get) => ({
-      doorOpenStates: {},
-      isOpen: (id) => Boolean(get().doorOpenStates[id]),
-      setOpen: (id, isOpen) =>
-        set((s) => ({
-          doorOpenStates: { ...s.doorOpenStates, [id]: isOpen },
-        })),
-      toggle: (id) =>
-        set((s) => ({
-          doorOpenStates: {
-            ...s.doorOpenStates,
-            [id]: !s.doorOpenStates[id],
-          },
-        })),
-      reset: (initial) => set({ doorOpenStates: { ...initial } }),
-    }),
-    {
-      name: "door-states",
-    },
-  ),
-);
+export const useDoorStore = create<DoorStoreState>()((set, get) => ({
+  doorOpenStates: {},
+  isOpen: (id) => Boolean(get().doorOpenStates[id]),
+  setOpen: (id, isOpen) =>
+    set((s) => ({
+      doorOpenStates: { ...s.doorOpenStates, [id]: isOpen },
+    })),
+  toggle: (id) =>
+    set((s) => ({
+      doorOpenStates: {
+        ...s.doorOpenStates,
+        [id]: !s.doorOpenStates[id],
+      },
+    })),
+  reset: (initial) => set({ doorOpenStates: { ...initial } }),
+}));

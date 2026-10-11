@@ -1,86 +1,41 @@
-import type { DialogKey } from "../dialogs/types";
-import type { GameSceneTransition, SceneMusicConfig } from "@pointclick-engine/engine-core";
+import type {
+  GameScene,
+  GameSceneGround,
+  GameSceneInteractionDialogKeys,
+  GameSceneInteractionFull,
+  GameSceneInteractionHintDialogKeys,
+  GameSceneWall,
+  GameSceneWallOpening,
+} from "@pointclick-engine/engine-core";
 import {
+  act,
+  branch,
+  cond,
+  otherwise,
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
   sceneTransitionOnItemInteraction,
 } from "@pointclick-engine/engine-core";
 
-export type SceneWallOpening = {
-  id: string;
-  /** Position in wall-local space relative to wall center */
-  position: [number, number, number];
-  /** Half-extents of the opening: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-};
+import { GUIDE_DIALOGUE_ID } from "../dialogues/guide";
 
-export type SceneWall = {
-  position: [number, number, number];
-  /** Rotation around Y axis in radians */
-  rotationY?: number;
-  /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-  /** Openings (doors/windows) cut into this wall */
-  openings?: SceneWallOpening[];
-  /** Optional texture URL for wall billboard */
-  textureUrl?: string;
-  /** Optional texture position offset [x, y, z] */
-  texturePosition?: [number, number, number];
-};
+// Aliases de compatibilidad: los tipos de geometria/interaccion viven en el core.
+export type SceneWallOpening = GameSceneWallOpening;
+export type SceneWall = GameSceneWall;
+export type SceneInteractionDialogKeys = GameSceneInteractionDialogKeys;
+export type SceneInteractionHintDialogKeys = GameSceneInteractionHintDialogKeys;
+export type SceneGround = GameSceneGround;
 
-export type SceneInteractionDialogKeys = {
-  hit: DialogKey;
-  miss: DialogKey;
-};
-
-export type SceneInteractionHintDialogKeys = {
-  /** Dialog cuando el personaje se acerca o inspecciona el target vacío (sin ítem colocado). */
-  empty: DialogKey;
-  /** Dialog cuando el personaje se acerca o inspecciona el target con un ítem colocado. */
-  occupied: DialogKey;
-};
-
-export type SceneInteraction = {
-  id: string;
-  kind: "drop-target";
-  /** World-space center position [x, y, z] */
-  position: [number, number, number];
-  /** Rotation around Y axis in radians */
-  rotationY?: number;
-  /** Half-extents for CuboidCollider: [halfWidth, halfHeight, halfDepth] */
-  halfSize: [number, number, number];
-  /** If true, character collides and cannot pass through this interaction */
-  hasCollision?: boolean;
+/** Interaccion de la demo: el tipo del core mas campos exclusivos de la demo. */
+export type DemoSceneInteraction = GameSceneInteractionFull & {
   /**
    * Suppress the default drop-target visual (cylinder + box). Use when
    * another renderer (e.g. SceneDoors) already shows the interactable
    * surface. The pick volume + drop logic remain active.
    */
   invisible?: boolean;
-  /** Item ids accepted by this interaction. If omitted, any item can be accepted. */
-  acceptsItemIds?: string[];
-  dialogKeys: SceneInteractionDialogKeys;
-  /**
-   * Diálogos de pista por proximidad/inspección.
-   * Si está presente se muestran cuando el personaje se acerca mucho
-   * o hace click sobre el target sin arrastrar un ítem.
-   */
-  hintDialogKeys?: SceneInteractionHintDialogKeys;
-  label: string;
 };
-
-export type SceneGround = {
-  /** Límite izquierdo (X negativo) */
-  minX: number;
-  /** Límite derecho (X positivo) */
-  maxX: number;
-  /** Límite trasero/lejano (Z negativo) */
-  minZ: number;
-  /** Límite frontal/cercano (Z positivo) */
-  maxZ: number;
-  /** Y position of the ground plane */
-  y: number;
-};
+export type SceneInteraction = DemoSceneInteraction;
 
 /**
  * Door — interactive opening with two visual states driven by two full-wall
@@ -127,21 +82,13 @@ export type SceneDoor = {
   showHintWhenOpen?: boolean;
 };
 
-export type Scene = {
-  id: string;
-  label: string;
-  background: string;
-  playerSpawn: [number, number, number];
-  ground: SceneGround;
-  walls: SceneWall[];
-  interactions: SceneInteraction[];
+/** Escena de la demo: el tipo del core mas `doors` y las interacciones extendidas. */
+export type DemoScene = Omit<GameScene, "interactions"> & {
+  interactions: DemoSceneInteraction[];
   /** Optional interactive doors. */
   doors?: SceneDoor[];
-  /** Declarative scene transitions (collision/item-drop/item-consume). */
-  transitions?: GameSceneTransition[];
-  /** Optional music configuration for this scene. */
-  music?: SceneMusicConfig;
 };
+export type Scene = DemoScene;
 
 export const SCENES: Record<string, Scene> = {
   town: {
@@ -162,6 +109,34 @@ export const SCENES: Record<string, Scene> = {
       fadeMs: 800,
     },
     walls: [],
+    // Paleton roto: esta en el suelo de la plaza (se combina con el mango que da el guia).
+    initialItems: [
+      {
+        item: {
+          id: "key-bit-ground",
+          itemId: "key-bit",
+          interactionId: "key-bit-pickup",
+          name: "Paletón roto",
+          spriteUrl: "/assets/key/gold-key.png",
+          worldPosition: [1.5, -2.4, 20.0],
+          canPickup: true,
+          hasCollision: true,
+          collisionHalfSize: [0.5, 0.8, 0.5],
+          sceneId: "town",
+        },
+      },
+    ],
+    // El guia: reutiliza el sprite de David (personaje "guide", ver `characters/guide.ts`).
+    npcs: [
+      {
+        id: "guide",
+        name: "guide.name",
+        characterId: "guide",
+        position: [-4.0, -2.1, 15.5],
+        facing: "south",
+        dialogueId: GUIDE_DIALOGUE_ID,
+      },
+    ],
     interactions: [
       {
         id: "town-trophy-pedestal",
@@ -363,11 +338,61 @@ export const SCENES: Record<string, Scene> = {
     walls: [],
     interactions: [],
   },
+  // Escena de pruebas (solo desde el selector de debug): fondo "Sci Fi Level" de Jeremy Gooch
+  // (CC-BY 3.0) y el NPC Helix. Ver `public/assets/LICENSES-art.md`.
+  sciFiLab: {
+    id: "sciFiLab",
+    label: "Sci-Fi Lab",
+    background: "/assets/background/sciFiLab.jpg",
+    playerSpawn: [0, -1.1, 13.44],
+    ground: {
+      minX: -17,
+      maxX: 16.8,
+      minZ: -7.6,
+      maxZ: 69.7,
+      y: -2.05,
+    },
+    walls: [],
+    npcs: [
+      {
+        id: "helix",
+        name: "helix.name",
+        characterId: "helix",
+        position: [6, -1.1, 13.44],
+        verbs: { talk: [{ do: [{ say: "helix.hello", speaker: "helix" }] }] },
+      },
+    ],
+    interactions: [],
+  },
   personalRoom: {
     id: "personalRoom",
     label: "Personal Room",
     background: "/assets/background/personalRoom.png",
     playerSpawn: [0, -1.1, 13.44],
+    // Trofeo inicial: solo si no existe ya (colocado en cualquier escena ni en el inventario).
+    // La escena se marca sembrada igualmente, de modo que no vuelve a aparecer.
+    initialItems: [
+      {
+        when: cond.all(
+          cond.not(cond.itemPlaced("trophy")),
+          cond.not(cond.hasItem("trophy")),
+        ),
+        item: {
+          id: "trophy-ground",
+          itemId: "trophy",
+          interactionId: "trophy-ground-pickup",
+          name: "Trophy",
+          spriteUrl: "/assets/trophy/trophy.png",
+          worldPosition: [5.5, -1.3, 22.0],
+          canPickup: true,
+          hasCollision: true,
+          collisionHalfSize: [0.5, 0.8, 0.5],
+          sceneId: "personalRoom",
+        },
+      },
+    ],
+    // Bienvenida: en cada entrada a la habitacion (tambien al recargar), sin flag.
+    onEnter: [otherwise(act.say("personalRoomWelcome"))],
     ground: {
       minX: -16.9,
       maxX: 16.8,
@@ -499,6 +524,29 @@ export const SCENES: Record<string, Scene> = {
         targetSceneId: "dungeon",
         spawnPosition: [1.56, -2.00, 23.80],
         targetPosition: [2.21, -2.00, 7.52],
+        // No se sale a la mazmorra mientras el trofeo siga colocado en la habitacion.
+        when: cond.not(cond.itemPlaced("trophy", { inScene: "personalRoom" })),
+        blocked: [act.say("personalRoomLeaveBlocked")],
+      },
+    ],
+    // Hotspot de prueba: el ordenador del escritorio (mirar, usar y soltar el gameboy encima).
+    hotspots: [
+      {
+        id: "personal-room-computer",
+        label: "hotspot.computer.name",
+        position: [-10.6, 3.0, 10],
+        halfSize: [1.2, 1.0, 0.8],
+        verbs: {
+          look: [otherwise(act.setFlag("computer.seen"), act.say("computer.look"))],
+          use: [
+            branch(cond.flag("computer.gameboyTried"), act.say("computer.use.after")),
+            otherwise(act.say("computer.use")),
+          ],
+        },
+        useItem: {
+          gameboy: [otherwise(act.setFlag("computer.gameboyTried"), act.say("computer.gameboy"))],
+        },
+        useItemDefault: [otherwise(act.say("computer.nothing"))],
       },
     ],
     interactions: [

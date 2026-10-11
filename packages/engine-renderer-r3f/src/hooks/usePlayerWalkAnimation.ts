@@ -3,7 +3,8 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { GameVec3, PlayerWalkingState } from "@pointclick-engine/engine-core";
-import { useSceneStore } from "@pointclick-engine/engine-core";
+import { useSceneStore, getGameRuntime } from "@pointclick-engine/engine-core";
+import { decideWalkEvent } from "./walkEventTransition";
 
 /** World units per second at which the character walks. */
 const WALK_SPEED = 4.5;
@@ -41,6 +42,20 @@ export function usePlayerWalkAnimation(
     durationMs: number;
   } | null>(null);
 
+  // Aviso de fin/interrupción de caminata (solo notifica; no altera la animación).
+  const trackedWalkRef = useRef<string | null>(null);
+  const completedWalkIdRef = useRef<string | null>(null);
+  const abortedByCoreRef = useRef(false);
+  const emittingRef = useRef(false);
+  const subscriptionRef = useRef<{ runtime: unknown; unsubscribe: () => void } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = null;
+    };
+  }, []);
+
   useEffect(() => {
     walkingStateRef.current = walkingState;
     playerPositionRef.current = playerPosition;
@@ -48,16 +63,58 @@ export function usePlayerWalkAnimation(
     _onWalkAbortRef.current = onWalkAbort;
   });
 
+  /** Avanza el seguimiento de la caminata y emite el evento que toque, si alguno. */
+  const trackWalk = (current: string | null, reached: boolean, endPosition: GameVec3 | null) => {
+    const runtime = getGameRuntime();
+    // Escucha los avisos del core para no duplicar `player:stop` (que ya emite walkAborted).
+    if (subscriptionRef.current?.runtime !== runtime) {
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = runtime
+        ? {
+            runtime,
+            unsubscribe: runtime.on("player:walkAborted", (e) => {
+              if (emittingRef.current || e.reason === "unreachable") return;
+              if (trackedWalkRef.current !== null) abortedByCoreRef.current = true;
+            }),
+          }
+        : null;
+    }
+
+    // Tras completar, el estado puede verse un instante más: no re-seguir esa misma caminata.
+    if (current !== null && current === completedWalkIdRef.current) current = null;
+    else if (current !== completedWalkIdRef.current) completedWalkIdRef.current = null;
+
+    const decision = decideWalkEvent({
+      tracked: trackedWalkRef.current,
+      current,
+      reached,
+      endPosition,
+      abortedByCore: abortedByCoreRef.current,
+    });
+    if (decision.tracked !== trackedWalkRef.current) abortedByCoreRef.current = false;
+    trackedWalkRef.current = decision.tracked;
+    if (!decision.event) return;
+    if (decision.event.type === "player:walkCompleted") completedWalkIdRef.current = current;
+    emittingRef.current = true;
+    try {
+      runtime?.emit(decision.event);
+    } finally {
+      emittingRef.current = false;
+    }
+  };
+
   useFrame((_, delta) => {
     const state = walkingStateRef.current;
 
     if (!state?.isActive) {
+      trackWalk(null, false, null);
       animatedPositionRef.current = playerPositionRef.current;
       return;
     }
 
     const { pathPoints, targetPosition } = state;
     if (pathPoints.length < 2) {
+      trackWalk(null, false, null);
       animatedPositionRef.current = playerPositionRef.current;
       return;
     }
@@ -83,6 +140,8 @@ export function usePlayerWalkAnimation(
 
     animatedPositionRef.current = samplePathPosition(pathPoints, distances, total, progress);
     updateWalkProgress(progress);
+
+    trackWalk(walkId, progress >= 1, pathPoints[pathPoints.length - 1] ?? targetPosition);
 
     if (progress >= 1) {
       onWalkCompleteRef.current?.();

@@ -1,6 +1,6 @@
 # Phase 11 — Audio System (música + SFX + mute en inventario)
 
-**Status**: Planned | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.3.0
+**Status**: Completed — gate de validación pendiente (ver Phase 15) | **Owner**: Daniel Martínez Sebastián | **Version target**: v0.3.0
 
 **Planned**: 2026-05-30
 

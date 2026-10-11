@@ -1,7 +1,7 @@
 # Phase 13 — Progress Tracking
 
 **Phase**: 13 — i18n / Localization System
-**Status**: Completed
+**Status**: Completed — gate de validación pendiente (ver Phase 15)
 **Started**: 2026-05-31
 **Completed**: 2026-05-31
 
@@ -32,17 +32,17 @@
 
 ## Post-Phase Checklist
 
-- [ ] All tests passing (`npm run test`)
-- [ ] Type-check passing
-- [ ] Build passing (incluido `apps/web-demo` en modo Next.js build)
-- [ ] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-core/src/` → vacío
-- [ ] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-renderer-r3f/src/` → vacío (los hooks NO consumen browser globals directamente)
-- [ ] Backward compatibility: `apps/web-demo/demo-content/dialogs/getRandomPhrase.ts` legacy wrapper sigue funcionando
-- [ ] Persistencia del locale verificada (recarga manual mantiene elección)
-- [ ] Detección automática verificada (browser en `en-*` arranca en `en`; resto arranca en `es`)
-- [ ] `<LocaleSwitcher />` montado en `InventoryUI` cambia el idioma del speech bubble en vivo
-- [ ] 3 recetas Next.js documentadas y enlazadas desde el README de la fase
-- [ ] Arquitectura respetada (Core agnóstico, R3F renderer-specific, Platform en demo)
+- [x] All tests passing (`npm run test`)
+- [x] Type-check passing
+- [x] Build passing (incluido `apps/web-demo` en modo Next.js build)
+- [x] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-core/src/` → vacío
+- [x] `grep -rE "navigator\.|localStorage|document\.|cookies|next/|next-intl" packages/engine-renderer-r3f/src/` → vacío (los hooks NO consumen browser globals directamente)
+- [x] Backward compatibility: `apps/web-demo/demo-content/dialogs/getRandomPhrase.ts` legacy wrapper sigue funcionando
+- [x] Persistencia del locale verificada (recarga manual mantiene elección) — _verificado a mano por el owner, 2026-10-10_
+- [ ] Detección automática verificada (browser en `en-*` arranca en `en`; resto arranca en `es`) — _sin verificar en navegador_
+- [x] `<LocaleSwitcher />` montado en `InventoryUI` cambia el idioma del speech bubble en vivo — _verificado a mano por el owner, 2026-10-10_
+- [ ] 3 recetas Next.js documentadas y enlazadas desde el README de la fase — _documentadas en docs/integrations/nextjs-i18n.md; falta el enlace desde el README de la fase_
+- [x] Arquitectura respetada (Core agnóstico, R3F renderer-specific, Platform en demo)
 
 ---
 

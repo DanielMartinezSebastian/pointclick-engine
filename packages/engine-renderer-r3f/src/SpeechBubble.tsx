@@ -13,6 +13,16 @@ type SpeechBubbleProps = {
   charsPerSecond?: number;
   onDismiss?: () => void;
   onLetterRevealed?: () => void;
+  /**
+   * Posicion de quien habla, para el lado y la escala del bocadillo. Sin ella,
+   * la del jugador (comportamiento de siempre). El bocadillo se coloca en el
+   * origen de su padre: el llamador lo monta dentro del grupo del que habla.
+   */
+  anchorPosition?: readonly [number, number, number];
+  /** Con `true` el bocadillo no se descarta solo al terminar de leerse (p. ej. nodo con opciones). */
+  persistent?: boolean;
+  /** Se llama (con `trigger`) cuando la linea termina de escribirse, sola o saltada con un click. */
+  onTypingDone?: (trigger: number) => void;
 };
 
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
@@ -74,13 +84,21 @@ export default function SpeechBubble({
   charsPerSecond = 30,
   onDismiss,
   onLetterRevealed,
+  anchorPosition,
+  persistent = false,
+  onTypingDone,
 }: SpeechBubbleProps) {
-  const playerPosition = useSceneStore((state) => state.playerPosition);
+  const storePlayerPosition = useSceneStore((state) => state.playerPosition);
+  const playerPosition = anchorPosition ?? storePlayerPosition;
   const ground = useSceneStore((state) => state.scene.ground);
   const normalizedText = useMemo(() => text.trim(), [text]);
   const [displayedText, setDisplayedText] = useState("");
   const dismissTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   const skipTypingRef = useRef<(() => void) | null>(null);
+  const persistentRef = useRef(persistent);
+  persistentRef.current = persistent;
+  const onTypingDoneRef = useRef(onTypingDone);
+  onTypingDoneRef.current = onTypingDone;
 
   // ── Layout estático: calculado UNA vez por diálogo (dep: normalizedText) ──
   const { bubbleWidth, textMaxWidth, fullBubbleHeight, wrappedText } = useMemo(() => {
@@ -123,7 +141,8 @@ export default function SpeechBubble({
     const timerHolder: { current: ReturnType<typeof globalThis.setInterval> | null } = { current: null };
 
     const startDismissTimer = () => {
-      if (onDismiss) {
+      onTypingDoneRef.current?.(trigger);
+      if (onDismiss && !persistentRef.current) {
         const wordCount = normalizedText.trim().split(/\s+/).filter(Boolean).length;
         const readMs = clamp(wordCount * MS_PER_WORD_READ, MIN_READ_MS, MAX_READ_MS);
         dismissTimerRef.current = globalThis.setTimeout(onDismiss, readMs);

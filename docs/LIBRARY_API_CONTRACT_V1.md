@@ -12,46 +12,48 @@ Este documento define qué superficie está soportada oficialmente para consumid
 
 ### 2.1 Engine public API
 
-Archivo fuente:
+Archivos fuente:
 
-- `app/lib/engine/publicApi.ts`
+- `packages/engine-core/src/game/runtime/` (runtime agnóstico; se re-exporta desde `packages/engine-core/src/index.ts`)
+- `packages/engine-renderer-r3f/src/index.ts` (viewport, hooks y componentes R3F)
+- `apps/web-demo/app/lib/engine/publicApi.ts`: barrel de compatibilidad. Re-exporta ambos paquetes con los nombres del contrato v1; ningún nombre se ha renombrado ni eliminado.
 
-Exports soportados:
+Exports soportados de `@pointclick-engine/engine-core`:
 
 - Tipos de contenido:
-  - `GameVec3`
-  - `GameSceneGround`
-  - `GameSceneWall`
+  - `GameVec3`, `GameSceneGround`, `GameSceneWall`
   - `GameSceneInteractionDialogKeys`
-  - `GameSceneInteraction`
-  - `GameSceneConfig`
-  - `GameItemDropOutcome`
-  - `GameItemRule`
-  - `GameItemConfig`
-  - `GameRuleConfig`
-  - `GameRuntimeConfig`
-  - `GameRuntime`
-  - `GameState`
-  - `GameActions`
-  - `GameRuntimeEvent`
-  - `GameRuntimeEventHandler`
-  - `GameViewportProps`
-- Funciones/componentes:
-  - `registerScene`
-  - `registerItem`
-  - `registerRule`
-  - `createGameRuntime`
-  - `getGameState`
-  - `getGameActions`
-  - `useGameState`
-  - `useGameActions`
-  - `GameViewport`
+  - `GameSceneConfig` (incluye `transitions?` y `music?`)
+  - `GameItemDropOutcome`, `GameItemRule`, `GameItemConfig`, `GameRuleConfig`
+  - `GameRuntimeConfig`, `GameRuntime`, `GameState`, `GameActions`
+  - `GameRuntimeEvent`, `GameRuntimeEventHandler`
+  - `InventoryUIAdapter`, `DialogUIAdapter`
+- Funciones:
+  - `registerScene`, `registerItem`, `registerRule`
+  - `createGameRuntime`, `getGameRuntime`
+  - `getGameState`, `getGameActions`
+  - `toRuntimeScene`, `createInventoryRuleContext`
+- Comandos y eventos: `GameCommand`, `GameCommandType`, `GameEvent`, `GameEventType`, `GameEventHandler`.
+
+Exports soportados de `@pointclick-engine/engine-renderer-r3f`:
+
+- Tipos: `GameViewportProps`, `GameViewportViewProps`, `GameViewportController`, `GameViewportControllerOptions`, `GameViewportAudioOptions`, `CharacterDefinition`, `CharacterClip`, `CharacterDirection`.
+- Componentes: `GameViewport`, `GameViewportView`, `CharacterSprite`.
+- Hooks: `useGameState`, `useGameActions`, `useGameViewportController`, `useSceneRuntime`, `useTransitionSystem`, `useInventoryRuntime`, `useAudioSystem`.
+- Funciones: `attachAudioSystem`.
+
+Notas de la superficie:
+
+- `GameSceneInteraction` en el barrel de la demo es un alias de `GameSceneInteractionFull` del core. En `engine-core` el nombre `GameSceneInteraction` designa la interfaz base.
+- `GameActions.setScene` es `(sceneId: string) => void` (`packages/engine-core/src/game/runtime/types.ts`).
+- `GameViewportProps` = opciones de `useGameViewportController` + props de `GameViewportView` + `debug` + `onRuntimeEvent`. Todas opcionales; ver [`LIBRARY_CONSUMPTION_GUIDE.md`](LIBRARY_CONSUMPTION_GUIDE.md).
+- Superficie i18n (Fase 13): ver [`architecture/02-public-api.md`](architecture/02-public-api.md).
 
 ### 2.2 Platform adapters
 
 Archivo fuente:
 
-- `app/lib/platform-web.ts`
+- `apps/web-demo/app/lib/platform-web.ts`
 
 Puertos soportados:
 
@@ -72,21 +74,49 @@ Adapters y barrel soportados:
 - `browserEnvironmentAdapter`
 - `webPlatform`
 
+### 2.3 Novedades 0.5.0
+
+Solo adiciones, salvo la nota breaking.
+
+- `engine-core`: runtime agnóstico (`createGameRuntime` y registros), `scene:set` con `spawnPosition?`, `player:stop` implementado, stores `useDialogStore`, `useInventoryUiStore`, `useInventoryStateStore`, `usePlacedItemsStateStore` y persistencia por puerto (`gameStatePersistence.ts`).
+- `engine-renderer-r3f`: `GameViewport` jugable con valores por defecto, `useGameViewportController` + `GameViewportView`, `CharacterSprite` / `CharacterDefinition`, `attachAudioSystem`, y las props nuevas de `GameViewport` (`storage`, `canLeaveScene`, `getInitialPlacedItems`, `onSceneEnter`, `audio`, `character`, `children`, `overlay`, entre otras).
+- `GameSceneConfig.transitions` y `music` se conservan al registrar la escena y al ejecutar `scene:set` (`toRuntimeScene`).
+- Obsoletos (siguen exportados): `DavidSprite` y los exports de `sprite/clips.ts`.
+
+**Cambio breaking de comportamiento**: recoger un ítem viaja por el bus como `item:pickedUp`; antes llegaba como `item:dropped` con `outcome: "pickup-success"`. Quien detectaba recogidas por `item:dropped` debe pasar a `item:pickedUp`. El callback legacy `onRuntimeEvent` no cambia. Las reglas de audio solo reproducen el sonido de soltar con `outcome: "place"`.
+
+Limitaciones conocidas en 0.5.0: algunos outcomes legacy viajaban como `item:dropped` fuera del tipo; `inventory:pickup` e `inventory:drop` no tenían executor; `player:stop` no detiene el movimiento manual (sigue igual). Los dos primeros se resuelven en 0.6.0 (ver 2.4).
+
+### 2.4 Novedades 0.6.0 (sin publicar; los paquetes siguen en 0.5.0)
+
+Solo adiciones. Guía de uso: [`authoring/README.md`](authoring/README.md); modelo: [`architecture/10-narrative-model.md`](architecture/10-narrative-model.md).
+
+- `engine-core` (raíz): `cond`, `evaluateCondition`, `getConditionContext`, `act`, `branch`, `otherwise`, `pickBranch`, `dialogue`, `createSequencer`, `validateContent`, `resolveCombine`, `npcToHotspot`, `getAvailableVerbs`, `getDefaultVerb`, `isHotspotVisible`, `resolveInitialItems`, `resolveEnterScript`, `evaluateTransitionGate`, `getSceneRuleContext`, `getDeclaredScene`; tipos `Condition`, `Action`, `Script`, `Branch`, `ScriptRun`, `DialogueDefinition`, `DialogueNode`, `DialogueChoice`, `ContentIssue`, `GameContent`.
+- Tipos de contenido: `Verb`, `GameSceneHotspot`, `GameSceneNpc`, `NpcFacing`, `SceneInitialItem`; campos nuevos opcionales `hotspots`, `npcs`, `initialItems`, `onEnter` (escena), `when` y `blocked` (transición), `combine` (ítem).
+- Estado y guardado: `useWorldStateStore`, `getWorldState`, `useDialogueStore`, `useInputLockStore`, `captureSnapshot`, `applySnapshot`, `saveGame`, `loadGame`, `clearSave`, `resetGameState`, `migrateLegacySave`, `SAVE_FORMAT_VERSION`, `SAVE_STORAGE_KEY`, `GameSnapshot`.
+- Puertos: `ClockPort`, `systemClock`, `HeadlessClock`.
+- Subpath `@pointclick-engine/engine-core/testing`: `createPlaythrough`, `Playthrough`.
+- `GameRuntime`: `runScript`, `registerHandler`, `getDialogues`. `GameRuntimeConfig`: `dialogues`, `storage`, `saveKey`, `clock`, `instantWalk`, `validate`, `dialogKeys`, `handlerNames`. `DialogUIAdapter.show` recibe `speaker?`.
+- Comandos nuevos: `state:setFlag`, `state:clearFlag`, `game:save`, `game:load`, `game:reset`, `script:run`, `script:cancelAll`, `hotspot:interact`, `inventory:combine`, `dialogue:start`, `dialogue:choose`, `dialogue:advance`, `dialogue:end`. Campos opcionales nuevos: `inventory:pickup.placedItemId`, `inventory:drop.interactionId` / `hotspotId`, `dialog:trigger.speaker`.
+- Eventos nuevos: `state:flagChanged`, `game:saved`, `game:loaded`, `game:reset`, `script:started`, `script:finished`, `input:lockChanged`, `custom`, `hotspot:interacted`, `hotspot:noAction`, `dialogue:started`, `dialogue:nodeEntered`, `dialogue:choiceMade`, `dialogue:ended`, `inventory:pickupFailed`, `inventory:full`, `item:removed`, `item:combined`, `item:combineFailed`. `dialog:triggered` gana `speaker?`. `item:dropped.outcome` declara ahora todos sus valores (`rule-miss`, `unknown-item`, `on-player`, y los obsoletos `pickup-blocked`, `item-interact`).
+- `engine-renderer-r3f`: props nuevas de `GameViewport` / `GameViewportView`: `characters`, `verbMenu`, `noActionDialogKey`, `dialogueChoices`. Componentes y hooks: `VerbMenu`, `DialogueChoices`, `SceneHotspots`, `SceneNpcs`, `NpcSprite`, `useDialogue`, `useHotspotInteractions`, `useVisibleHotspots`, `useVisibleNpcs`, `ensureEngineTexts`, `ENGINE_VERB_LABEL_KEYS`, `ENGINE_NO_ACTION_KEY`.
+- Vía avanzada (siguen soportados, se evalúan después de las reglas declarativas): `canLeaveScene`, `onSceneEnter`, `getInitialPlacedItems`.
+
 ## 3. No soportado para consumidores externos
 
 No se garantiza estabilidad en:
 
-- `app/lib/engine/runtime/*`
-- `app/lib/engine/render/*`
-- `app/lib/engine/movement/*`
-- `app/components/*`
-- `app/store/*`
+- `apps/web-demo/app/lib/engine/runtime/*` (incluye `useDoorSystem.ts`: las puertas son de la demo)
+- `apps/web-demo/app/components/*`
+- `apps/web-demo/app/store/*`
+- `packages/engine-core/src/game/runtime/executors.ts` y `registry.ts` (internos; los registros son globales de módulo)
+- Cualquier símbolo de los paquetes no listado en 2.1 o 2.3.
 
 Estos módulos pueden cambiar internamente sin política de compatibilidad para integradores.
 
 ## 4. Reglas de consumo
 
-1. Consumir runtime desde `publicApi`.
+1. Consumir el runtime desde `@pointclick-engine/engine-core` y el viewport desde `@pointclick-engine/engine-renderer-r3f` (o desde el barrel `publicApi`).
 2. Consumir interoperabilidad desde `platform-web`.
 3. No depender de comportamiento implícito de stores internos.
 4. Tratar tipos/eventos públicos como contrato de integración.
@@ -117,9 +147,10 @@ Cambios breaking (requieren plan de migración):
 ## 7. Validación mínima para PRs que toquen contrato
 
 1. Actualizar este documento si cambia la superficie pública.
-2. Mantener tests de contrato de `publicApi` en verde.
+2. Mantener tests de contrato de `publicApi` en verde (`apps/web-demo/app/lib/engine/publicApi.test.ts`).
 3. Mantener tests de `platform-web` en verde.
 4. Ejecutar y validar:
    - `npm run lint`
    - `npm run test`
    - `npm run build`
+5. Con la demo en marcha: `npm run smoke` (`e2e/smoke.mjs` y `e2e/smoke-minimal.mjs`).

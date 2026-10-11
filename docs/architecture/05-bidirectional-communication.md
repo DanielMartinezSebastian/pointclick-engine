@@ -1,6 +1,6 @@
 # Bidirectional Communication
 
-**Estado**: estable v0.4 | **Última revisión**: 2026-05-27
+**Estado**: estable v0.4; catálogo ampliado en 0.6.0 (sin publicar) | **Última revisión**: 2026-10-11
 
 ## TL;DR
 
@@ -14,7 +14,7 @@ Ambos son sincrónicos, fire-and-forget, y **no requieren React**.
 ## Quickstart
 
 ```ts
-import { createGameRuntime } from "@pointclick-engine/engine-renderer-r3f"; // facade re-export
+import { createGameRuntime } from "@pointclick-engine/engine-core";
 
 const runtime = createGameRuntime({ scenes, items, rules });
 
@@ -35,17 +35,36 @@ runtime.dispose();
 
 | Type | Payload | Efecto |
 |------|---------|--------|
-| `scene:set` | `{ sceneId: string }` | Cambia la escena activa |
+| `scene:set` | `{ sceneId: string, spawnPosition? }` | Cambia la escena activa |
 | `scene:respawn` | — | Reinicia player en spawn de la escena actual |
 | `player:move` | `{ position: [x,y,z] }` | Teleporta player (sin pathfinding) |
-| `player:stop` | — | Cancela movimiento en curso *(not yet wired — Phase 5)* |
-| `inventory:toggle` | — | Abre/cierra UI inventario *(not yet wired — Phase 5)* |
-| `inventory:pickup` | `{ itemId: string }` | Mete ítem al inventario *(not yet wired — Phase 5)* |
-| `inventory:drop` | `{ itemId: string, slotIndex: number }` | Suelta ítem *(not yet wired — Phase 5)* |
-| `dialog:trigger` | `{ dialogKey: string }` | Muestra diálogo por clave *(not yet wired — Phase 5)* |
-| `dialog:dismiss` | — | Cierra diálogo activo *(not yet wired — Phase 5)* |
+| `player:stop` | — | Aborta una caminata por ruta (emite `player:walkAborted`) |
+| `inventory:toggle` | — | Abre/cierra UI inventario |
+| `inventory:pickup` | `{ itemId, placedItemId? }` | Recoge un ítem colocado de la escena activa |
+| `inventory:drop` | `{ itemId, slotIndex, interactionId? \| hotspotId? }` | Suelta ítem sobre una interacción o un hotspot |
+| `dialog:trigger` | `{ dialogKey, speaker? }` | Muestra el bocadillo de una clave |
+| `dialog:dismiss` | — | Cierra diálogo activo |
 
-Comandos sin executor real loguean un `console.warn` y no hacen nada. Se cablearán en Phase 5.
+Comandos sin executor registrado loguean un `console.warn` y no hacen nada.
+
+### Comandos nuevos en 0.6.0
+
+Fuente: `packages/engine-core/src/game/commands/types.ts`.
+
+| Type | Payload | Efecto |
+|------|---------|--------|
+| `state:setFlag` | `{ name, value }` | Pone un flag (`boolean \| number \| string`) |
+| `state:clearFlag` | `{ name }` | Borra un flag |
+| `game:save` | `{ extra? }` | Guarda la partida (requiere `storage`) |
+| `game:load` | — | Carga la partida guardada |
+| `game:reset` | — | Vacía la partida y borra el guardado |
+| `script:run` | `{ script, interrupt? }` | Ejecuta un guion |
+| `script:cancelAll` | — | Cancela el guion en curso y la cola |
+| `hotspot:interact` | `{ hotspotId, verb, itemId? }` | Verbo (`look`, `use`, `talk`) o `useItem` sobre un hotspot o NPC |
+| `inventory:combine` | `{ itemId, withItemId }` | Combina dos ítems del inventario |
+| `dialogue:start` | `{ dialogueId }` | Abre una conversación |
+| `dialogue:choose` | `{ index }` | Elige una opción |
+| `dialogue:advance` / `dialogue:end` | — | Cierra la línea / termina la conversación |
 
 ## Catálogo de eventos
 
@@ -57,8 +76,27 @@ Comandos sin executor real loguean un `console.warn` y no hacen nada. Se cablear
 | `player:collided` | `{ reason, position }` | Boundary / stuck |
 | `item:pickedUp` | `{ itemId, quantity }` | Tras pickup exitoso |
 | `item:dropped` | `{ itemId, outcome, interactionId? }` | Tras drop |
-| `dialog:triggered` | `{ text, dialogKey?, source }` | Diálogo mostrado |
+| `dialog:triggered` | `{ text, dialogKey?, source, speaker? }` | Diálogo mostrado |
 | `dialog:dismissed` | `{ dialogKey? }` | Diálogo cerrado |
+
+### Eventos nuevos en 0.6.0
+
+Fuente: `packages/engine-core/src/game/events/types.ts`.
+
+| Type | Payload | Cuándo |
+|------|---------|--------|
+| `state:flagChanged` | `{ name, value?, previous? }` | Cambia o se borra un flag |
+| `game:saved` / `game:reset` | — | Tras guardar / reiniciar |
+| `game:loaded` | `{ found, applied?, extra? }` | Tras `game:load` |
+| `script:started` / `script:finished` | `{ id }` / `{ id, result }` | Un guion empieza / termina (`"finished"` o `"cancelled"`) |
+| `input:lockChanged` | `{ locked }` | Cambia el bloqueo de entrada |
+| `custom` | `{ name, payload? }` | Acción `emit` de un guion |
+| `hotspot:interacted` | `{ hotspotId, verb, itemId? }` | Se aplicó una rama |
+| `hotspot:noAction` | `{ hotspotId, verb, itemId?, reason }` | Sin rama (`not-found`, `hidden`, `missing-item`, `no-rule`) |
+| `dialogue:started` / `nodeEntered` / `choiceMade` / `ended` | ver tipos | Ciclo de una conversación (`ended.reason`: `finished`, `ended`, `cancelled`) |
+| `inventory:pickupFailed` | `{ itemId, reason }` | `not-found`, `blocked`, `full`, `unknown-item` |
+| `inventory:full` / `item:removed` | `{ itemId }` | `giveItem` sin sitio / `removeItem` |
+| `item:combined` / `item:combineFailed` | `{ itemId, withItemId }` | Resultado de `inventory:combine` |
 
 > **Nota sobre `player:moved`**: se emite a ~60Hz. Si el consumer hace operaciones costosas
 > en este handler, añadir throttle/debounce en el callback — nunca en el motor.
@@ -110,7 +148,7 @@ window.addEventListener("message", (msg) => {
 Si no tienes referencia directa al handle (ej. dentro de un componente que no lo creó):
 
 ```ts
-import { getGameRuntime } from "@pointclick-engine/engine-renderer-r3f";
+import { getGameRuntime } from "@pointclick-engine/engine-core";
 const rt = getGameRuntime(); // null si no se ha llamado createGameRuntime todavía
 rt?.executeCommand({ type: "scene:respawn" });
 ```

@@ -2,6 +2,9 @@ import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
+import { useGameViewportController } from "@pointclick-engine/engine-renderer-r3f";
+import type { RuntimeEvent } from "@pointclick-engine/engine-core";
+
 import { DEFAULT_SCENE_ID, SCENES } from "../../../demo-content/scenes/scenes";
 import { useInventoryStore } from "../../store/inventoryStore";
 import { useDialogStore } from "../../store/dialogStore";
@@ -15,6 +18,8 @@ import {
   registerRule,
   registerScene,
   useGameActions,
+  type GameActions,
+  type GameViewportProps,
   type GameItemConfig,
   type GameRuleConfig,
   type GameSceneConfig,
@@ -118,35 +123,54 @@ describe("publicApi", () => {
     Object.values(SCENES).forEach(registerScene);
 
     const sceneIds = Object.keys(SCENES);
-    let actionsFromHook: ReturnType<typeof useGameActions> | null = null;
+    const holder: { actions: GameActions | null } = { actions: null };
 
     function Probe() {
-      actionsFromHook = useGameActions();
+      holder.actions = useGameActions();
       return null;
     }
 
     renderToString(createElement(Probe));
 
-    expect(actionsFromHook).not.toBeNull();
-    expect(typeof actionsFromHook?.setScene).toBe("function");
-    expect(typeof actionsFromHook?.setPlayerPosition).toBe("function");
-    expect(typeof actionsFromHook?.requestRespawn).toBe("function");
+    expect(holder.actions).not.toBeNull();
+    expect(typeof holder.actions?.setScene).toBe("function");
+    expect(typeof holder.actions?.setPlayerPosition).toBe("function");
+    expect(typeof holder.actions?.requestRespawn).toBe("function");
 
     // Test that setScene actually works
-    actionsFromHook?.setScene(sceneIds[0]);
+    holder.actions?.setScene(sceneIds[0]);
     const afterSetScene = getGameState();
     expect(afterSetScene.sceneId).toBe(sceneIds[0]);
   });
 
-  it("GameViewport reenvia debug y onRuntimeEvent al componente base", () => {
-    const onRuntimeEvent = () => {};
-    const element = GameViewport({
-      debug: true,
-      onRuntimeEvent,
-    });
+  it("GameViewport reenvia debug y onRuntimeEvent a su destino", () => {
+    // GameViewport ya no es un envoltorio sin hooks sobre GameCanvasCore: vive en el
+    // renderer y delega en useGameViewportController (+ GameViewportView). Las dos props
+    // del contrato llegan al controlador, que es quien las consume: `onRuntimeEvent`
+    // recibe cada evento (ademas del bus) y `debug` activa el log de eventos.
+    expect(typeof GameViewport).toBe("function");
+    const runtime = createGameRuntime();
+    const busSpy = vi.fn();
+    runtime.on("player:moved", busSpy);
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+    const onRuntimeEvent = vi.fn();
+    const props = { debug: true, onRuntimeEvent } satisfies GameViewportProps;
+    const holder: { handle: ((event: RuntimeEvent) => void) | null } = { handle: null };
 
-    expect(element.props.debug).toBe(true);
-    expect(element.props.onRuntimeEvent).toBe(onRuntimeEvent);
+    function Probe() {
+      holder.handle = useGameViewportController(props).handleRuntimeEvent;
+      return null;
+    }
+    renderToString(createElement(Probe));
+
+    const event: RuntimeEvent = { type: "onMove", position: [1, 0, 2], action: "idle" };
+    holder.handle?.(event);
+
+    expect(onRuntimeEvent).toHaveBeenCalledWith(event);
+    expect(busSpy).toHaveBeenCalledOnce();
+    expect(debugSpy).toHaveBeenCalledWith("[runtime-event]", event);
+    debugSpy.mockRestore();
+    runtime.dispose();
   });
 });
 
@@ -238,6 +262,20 @@ describe("publicApi — bidirectional API (Phase 4)", () => {
 // Phase 5: Wired commands
 // ---------------------------------------------------------------------------
 
+function createWiredRuntime(config: Parameters<typeof createGameRuntime>[0] = {}) {
+  return createGameRuntime({
+    ...config,
+    inventoryAdapter: {
+      toggle: () => useInventoryStore.getState().toggle(),
+      isOpen: () => useInventoryStore.getState().isOpen,
+    },
+    dialogAdapter: {
+      show: (text, key) => useDialogStore.getState().show(text, key),
+      hide: () => useDialogStore.getState().dismiss(),
+    },
+  });
+}
+
 describe("publicApi — wired commands (Phase 5)", () => {
   beforeEach(() => {
     // Reset stores before each test
@@ -250,7 +288,7 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("inventory:toggle toggles inventoryStore.isOpen", () => {
-    const runtime = createGameRuntime();
+    const runtime = createWiredRuntime();
     expect(useInventoryStore.getState().isOpen).toBe(false);
 
     runtime.executeCommand({ type: "inventory:toggle" });
@@ -261,7 +299,7 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("dialog:trigger shows text in dialogStore and emits event", () => {
-    const runtime = createGameRuntime({
+    const runtime = createWiredRuntime({
       rules: [{ key: "test.dialog", phrases: ["Hello world"] }],
     });
     const spy = vi.fn();
@@ -282,13 +320,13 @@ describe("publicApi — wired commands (Phase 5)", () => {
   });
 
   it("dialog:trigger uses dialogKey as fallback when rule not registered", () => {
-    const runtime = createGameRuntime();
+    const runtime = createWiredRuntime();
     runtime.executeCommand({ type: "dialog:trigger", dialogKey: "unregistered.key" });
     expect(useDialogStore.getState().text).toBe("unregistered.key");
   });
 
   it("dialog:dismiss hides dialogStore and emits event", () => {
-    const runtime = createGameRuntime({
+    const runtime = createWiredRuntime({
       rules: [{ key: "test.dismiss", phrases: ["Dismiss me"] }],
     });
     const spy = vi.fn();
@@ -304,5 +342,31 @@ describe("publicApi — wired commands (Phase 5)", () => {
       type: "dialog:dismissed",
       dialogKey: "test.dismiss",
     });
+  });
+
+  it("without adapters, inventory:toggle acts on the default core store and does not throw", () => {
+    const runtime = createGameRuntime();
+    expect(() => runtime.executeCommand({ type: "inventory:toggle" })).not.toThrow();
+    // Los stores de la demo son los del core: el toggle por defecto SI abre el inventario.
+    expect(useInventoryStore.getState().isOpen).toBe(true);
+    runtime.executeCommand({ type: "inventory:toggle" });
+    expect(useInventoryStore.getState().isOpen).toBe(false);
+  });
+
+  it("without adapters, dialog:trigger does not throw and still emits dialog:triggered", () => {
+    const runtime = createGameRuntime({
+      rules: [{ key: "test.noadapter", phrases: ["No adapter"] }],
+    });
+    const spy = vi.fn();
+    runtime.on("dialog:triggered", spy);
+
+    expect(() =>
+      runtime.executeCommand({ type: "dialog:trigger", dialogKey: "test.noadapter" }),
+    ).not.toThrow();
+    // Sin adapter se usa el store por defecto del core (el mismo objeto que el de la demo).
+    expect(useDialogStore.getState().visible).toBe(true);
+    expect(useDialogStore.getState().text).toBe("No adapter");
+    expect(useDialogStore.getState().key).toBe("test.noadapter");
+    expect(spy).toHaveBeenCalledOnce();
   });
 });

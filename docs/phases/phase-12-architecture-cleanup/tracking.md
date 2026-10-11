@@ -1,7 +1,7 @@
 # Phase 12 — Progress Tracking
 
 **Phase**: 12 — Architecture Cleanup: Core Agnosticism & Library Boundaries
-**Status**: Planned
+**Status**: Completed — gate de validación pendiente (ver Phase 15)
 **Started**: —
 **Completed**: —
 
@@ -34,14 +34,14 @@
 
 ## Post-Phase Checklist
 
-- [ ] Todos los tests pasan (`npm run test` en root)
-- [ ] Type-check limpio en `packages/engine-core` y `packages/engine-renderer-r3f`
-- [ ] `grep -rn "window\.\|document\." packages/engine-core/src/` → vacío
-- [ ] `publicApi.ts` sin imports de `../../store/` ni `../../components/`
-- [ ] `useTransitionSystem` sin import de `demo-content`
-- [ ] `engine-renderer-r3f` exporta `useClickToMoveController` y `WebKeyboardInput`
-- [ ] Demo funciona end-to-end (manual smoke test)
-- [ ] ≥ 20 tests nuevos añadidos
+- [x] Todos los tests pasan (`npm run test` en root)
+- [x] Type-check limpio en `packages/engine-core` y `packages/engine-renderer-r3f`
+- [x] `grep -rn "window\.\|document\." packages/engine-core/src/` → vacío
+- [x] `publicApi.ts` sin imports de `../../store/` ni `../../components/`
+- [x] `useTransitionSystem` sin import de `demo-content`
+- [x] `engine-renderer-r3f` exporta `useClickToMoveController` y `WebKeyboardInput`
+- [x] Demo funciona end-to-end (manual smoke test) — _verificado a mano por el owner, 2026-10-10 (intro, movimiento, ítems, transición, puerta, audio, idioma)_
+- [x] ≥ 20 tests nuevos añadidos
 
 ---
 

@@ -4,7 +4,9 @@ export * from "./game/state";
 export * from "./game/commands";
 export * from "./game/events";
 export * from "./game/i18n";
+export * from "./game/runtime";
+export * from "./game/narrative";
 export * from "./events";
 export * from "./ports";
 
-export const VERSION = "0.4.0";
+export const VERSION = "0.6.0";

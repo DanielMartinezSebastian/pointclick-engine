@@ -1,6 +1,6 @@
 # Phase 8 — Scene Transitions as First-Class Engine Primitives
 
-**Status**: Planned | **Owner**: TBD | **Version target**: v0.3.0
+**Status**: completed | **Owner**: TBD | **Version target**: v0.3.0
 
 ---
 

@@ -5,6 +5,9 @@
 export type GameVec3 = [x: number, y: number, z: number];
 export type GameVec2 = [x: number, y: number];
 
+import type { Branch, Script } from "../narrative/actions";
+import type { Condition } from "../narrative/conditions";
+
 // Scene geometry
 export interface GameSceneGround {
   minX: number;
@@ -101,6 +104,8 @@ export type ItemDefinition = {
   pickupSoundUrl?: string;
   /** Override del SFX por defecto al soltar este ítem. */
   dropSoundUrl?: string;
+  /** Ramas condicionales para combinar este ítem con otro por id. */
+  combine?: Record<string, Branch[]>;
 };
 
 // Inventory state
@@ -154,6 +159,13 @@ export interface BaseSceneTransition {
   postTransitionDialogKey?: DialogKey;
   /** Override del SFX por defecto al disparar esta transición. */
   triggerSoundUrl?: string;
+  /**
+   * Condicion para que la transicion ocurra (todos los tipos). Sin ella, siempre ocurre.
+   * Si no se cumple no hay cambio de escena y, si existe, corre `blocked`.
+   */
+  when?: Condition;
+  /** Guion que corre al intentar la transicion sin cumplir `when`. */
+  blocked?: Script;
 }
 
 export interface GameSceneTransitionOnCollision extends BaseSceneTransition {
@@ -206,6 +218,54 @@ export interface PlayerWalkingState {
   isActive: boolean;
 }
 
+// Hotspots (verbos narrativos; ver narrative/hotspots.ts)
+export type Verb = "look" | "use" | "talk";
+
+export interface GameSceneHotspot {
+  id: string;
+  /** Clave de i18n. */
+  label: string;
+  position: GameVec3;
+  halfSize: GameVec3;
+  rotationY?: number;
+  visibleWhen?: Condition;
+  hasCollision?: boolean;
+  /** Punto al que camina el jugador antes de actuar. Sin el, actua desde donde esta. */
+  approach?: GameVec3;
+  verbs?: Partial<Record<Verb, Branch[]>>;
+  /** Ramas por itemId al usar un item del inventario sobre el hotspot. */
+  useItem?: Record<string, Branch[]>;
+  /** Ramas para un item sin regla propia en `useItem`. */
+  useItemDefault?: Branch[];
+}
+
+/** Hacia donde mira un NPC en reposo. */
+export type NpcFacing = "north" | "south" | "west" | "east";
+
+/** Personaje de la escena con el que se puede hablar. Se proyecta a hotspot (`npcToHotspot`). */
+export interface GameSceneNpc {
+  id: string;
+  /** Clave de i18n. */
+  name: string;
+  /** Id de un personaje registrado en el viewport (prop `characters`). */
+  characterId: string;
+  position: GameVec3;
+  facing?: NpcFacing;
+  visibleWhen?: Condition;
+  hasCollision?: boolean;
+  approach?: GameVec3;
+  /**
+   * Caja clicable del NPC: semi-extensiones y desplazamiento de su centro respecto a `position`.
+   * Por defecto cubre un sprite del tamano por defecto, de los pies a la cabeza.
+   */
+  clickBox?: { halfSize: GameVec3; offset?: GameVec3 };
+  /** Atajo: hablar inicia este diálogo. Equivale a `verbs.talk = [{ do: [{ startDialogue }] }]`. */
+  dialogueId?: string;
+  /** Verbos e ítems, igual que un hotspot. `verbs.talk` explícito gana sobre `dialogueId`. */
+  verbs?: Partial<Record<Verb, Branch[]>>;
+  useItem?: Record<string, Branch[]>;
+}
+
 // Scene (full scene with all interactions)
 export interface GameScene {
   id: string;
@@ -219,6 +279,26 @@ export interface GameScene {
   transitions?: GameSceneTransition[];
   /** Music optional associated to this scene. */
   music?: SceneMusicConfig;
+  /** Hotspots con verbos narrativos. */
+  hotspots?: GameSceneHotspot[];
+  /** NPCs de la escena. `toRuntimeScene` los proyecta además a `hotspots`. */
+  npcs?: GameSceneNpc[];
+  /**
+   * Items colocados iniciales, sembrados una vez por escena al entrar. Cada item
+   * se incluye solo si su `when` se cumple en ese momento (sin `when`, siempre).
+   */
+  initialItems?: SceneInitialItem[];
+  /**
+   * Ramas de entrada: en cada entrada a la escena corre el guion de la primera que se cumple.
+   * Al evaluarse, la escena ya cuenta como visitada: para "solo la primera vez" usa un flag
+   * (`not(flag(...))` y `setFlag` en el guion), no `not(visited(...))`.
+   */
+  onEnter?: Branch[];
+}
+
+export interface SceneInitialItem {
+  item: PlacedSceneItem;
+  when?: Condition;
 }
 
 // Editor/Debug modes

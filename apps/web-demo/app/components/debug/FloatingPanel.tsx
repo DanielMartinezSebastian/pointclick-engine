@@ -2,7 +2,6 @@
 
 import {
   useCallback,
-  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -54,9 +53,12 @@ export function FloatingPanel({
   const [isDragging, setIsDragging] = useState(false);
 
   // Sync local state when the store changes externally (e.g. reset).
-  useEffect(() => {
+  // "Adjust state when a prop changes" pattern: done during render, no effect.
+  const [prevStoredPosition, setPrevStoredPosition] = useState(storedPosition);
+  if (storedPosition !== prevStoredPosition) {
+    setPrevStoredPosition(storedPosition);
     if (storedPosition) setPosition(storedPosition);
-  }, [storedPosition]);
+  }
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

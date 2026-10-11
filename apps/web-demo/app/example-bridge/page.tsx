@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   createGameRuntime,
-  type GameSceneConfig,
+  type GameRuntime,
 } from "../lib/engine/publicApi";
-import { SCENES } from "../../demo-content/scenes/scenes";
+import { DEMO_RUNTIME_CONFIG } from "../lib/engine/runtime/demoViewportOptions";
 import GameTouchCanvas from "../components/GameTouchCanvas";
-import { useInventoryStore } from "../store/inventoryStore";
-import { useDialogStore } from "../store/dialogStore";
 import HtmlBridgePanel from "./HtmlBridgePanel";
 
 /**
@@ -20,21 +18,18 @@ import HtmlBridgePanel from "./HtmlBridgePanel";
  * Run: `npm run dev` → http://localhost:3000/example-bridge
  */
 export default function ExampleBridgePage() {
+  // Mismo patrón que app/page.tsx: el canvas se monta cuando el runtime ya
+  // existe, para que reciba los eventos desde el primer scene:changed.
+  const [runtime, setRuntime] = useState<GameRuntime | null>(null);
+
   useEffect(() => {
-    const runtime = createGameRuntime({
-      scenes: Object.values(SCENES) as GameSceneConfig[],
-      inventoryAdapter: {
-        toggle: () => useInventoryStore.getState().toggle(),
-        isOpen: () => useInventoryStore.getState().isOpen,
-      },
-      dialogAdapter: {
-        show: (text, key) => useDialogStore.getState().show(text, key),
-        hide: () => useDialogStore.getState().dismiss(),
-      },
-    });
+    const created = createGameRuntime(DEMO_RUNTIME_CONFIG);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the external runtime handle so children mount only once it exists
+    setRuntime(created);
 
     return () => {
-      runtime.dispose();
+      created.dispose();
+      setRuntime(null);
     };
   }, []);
 
@@ -48,7 +43,7 @@ export default function ExampleBridgePage() {
       }}
     >
       <div style={{ position: "relative" }}>
-        <GameTouchCanvas />
+        {runtime ? <GameTouchCanvas runtime={runtime} /> : null}
       </div>
       <HtmlBridgePanel />
     </div>

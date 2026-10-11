@@ -7,7 +7,15 @@ import type { Collider as RapierCollider } from "@dimforge/rapier3d-compat";
 import { MathUtils, Mesh, Vector2, Vector3 } from "three";
 
 import SpeechBubble from "./SpeechBubble";
-import DavidSprite, { type DavidSpriteHandle } from "./sprite/DavidSprite";
+import { detectSlideBlock, NO_SLIDE_BLOCK, type SlideBlock } from "./hooks/wallSlide";
+import CharacterSprite, { type CharacterSpriteHandle } from "./sprite/CharacterSprite";
+import {
+  DEFAULT_CHARACTER_SIZE,
+  listCharacterAnimations,
+  resolveCharacterSprites,
+  speakingBaseFrames,
+  type CharacterDefinition,
+} from "./sprite/character";
 import {
   DAVE_IDLE_SPEAKING,
   GAME_CHARACTER_SPRITES,
@@ -15,14 +23,15 @@ import {
   type GameDirection,
 } from "./sprite/clips";
 import { buildSpeakingAnimation } from "./sprite/speakingAnimation";
+import { DEPTH_FAR_Z, DEPTH_NEAR_Z } from "./sprite/depthScale";
 import { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 
-import { findPath, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
+import { findPath, getInputLockState, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
 import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
-import { useClickToMoveController } from "./hooks/useClickToMoveController";
+import { clampVelocityToRemaining, useClickToMoveController } from "./hooks/useClickToMoveController";
 import { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
 
 // ── Main runtime component ───────────────────────────────────────────────────
@@ -36,10 +45,6 @@ type WallInteraction =
   | null;
 
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
-const DEPTH_FAR_Z = -16;
-const DEPTH_NEAR_Z = 8;
-const SPRITE_MIN_SCALE = 1.4;
-const SPRITE_MAX_SCALE = 2.94;
 const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;
@@ -94,6 +99,8 @@ function projectDistance(originX: number, originZ: number, pointX: number, point
 
 export function GameTouchSpriteRuntime({
   activeCharacter,
+  character,
+  collisionSphere = null,
   debug,
   showDebugGround,
   showDebugWalls,
@@ -107,6 +114,8 @@ export function GameTouchSpriteRuntime({
   speechTrigger,
   speechCharsPerSecond,
   onSpeechLetterSound,
+  speechPersistent,
+  onSpeechTypingDone,
   onBoundaryHit,
   onSpeechDismiss,
   onRuntimeEvent,
@@ -121,6 +130,16 @@ export function GameTouchSpriteRuntime({
   getEffectiveClickGoal,
 }: {
   activeCharacter: GameCharacterName;
+  /**
+   * Custom character definition. When omitted, the embedded David character
+   * selected by `activeCharacter` is used (legacy behaviour).
+   */
+  character?: CharacterDefinition;
+  /**
+   * Esfera física suelta para probar colisiones. No se pinta por defecto; el
+   * host puede activarla y darle una textura propia.
+   */
+  collisionSphere?: { textureUrl?: string } | null;
   debug: boolean;
   showDebugGround: boolean;
   showDebugWalls: boolean;
@@ -141,6 +160,10 @@ export function GameTouchSpriteRuntime({
   speechTrigger: number;
   speechCharsPerSecond: number;
   onSpeechLetterSound?: () => void;
+  /** El bocadillo no se cierra solo (ver `SpeechBubble`). */
+  speechPersistent?: boolean;
+  /** La linea del bocadillo termino de escribirse. */
+  onSpeechTypingDone?: (trigger: number) => void;
   onBoundaryHit: (phrase: string) => void;
   onSpeechDismiss: () => void;
   onRuntimeEvent?: RuntimeEventHandler;
@@ -200,7 +223,7 @@ export function GameTouchSpriteRuntime({
     playerZ: number,
   ) => { x: number; z: number } | null | undefined;
 }) {
-  const spriteRef = useRef<DavidSpriteHandle | null>(null);
+  const spriteRef = useRef<CharacterSpriteHandle | null>(null);
   const meshRef = useRef<Mesh>(null);
   const characterBodyRef = useRef<RapierRigidBody>(null);
   const characterColliderRef = useRef<RapierCollider | null>(null);
@@ -225,6 +248,7 @@ export function GameTouchSpriteRuntime({
   // along the unblocked axis instead of pressing into the wall.
   const prevBodyPositionRef = useRef<{ x: number; z: number } | null>(null);
   const prevBodyVelSetRef = useRef<{ vx: number; vz: number }>({ vx: 0, vz: 0 });
+  const slideBlockRef = useRef<SlideBlock>(NO_SLIDE_BLOCK);
 
   const playerSpawn = useSceneStore((s) => s.scene.playerSpawn);
   const playerPosition = useSceneStore((s) => s.playerPosition);
@@ -286,6 +310,8 @@ export function GameTouchSpriteRuntime({
 
   const handleClickWorld = useCallback((x: number, z: number) => {
     if (wallInteractionRef.current) return;
+    // Un guion con lockInput activo bloquea el click-to-move (no la herramienta de muros de debug).
+    if (getInputLockState().inputLocked && !(debug && wallToolMode === "points")) return;
 
     if (debug && wallToolMode === "points") {
       const clamped = clampToPlayableArea(x, z);
@@ -469,19 +495,30 @@ export function GameTouchSpriteRuntime({
   }, [clampToPlayableArea, debug, wallPointResetSignal, wallToolMode]);
 
   const characterClips = useMemo(
-    () => GAME_CHARACTER_SPRITES[activeCharacter],
-    [activeCharacter],
+    () =>
+      character
+        ? resolveCharacterSprites(character)
+        : GAME_CHARACTER_SPRITES[activeCharacter],
+    [character, activeCharacter],
   );
   const characterAnimations = useMemo(
-    () => [...Object.values(characterClips), DAVE_IDLE_SPEAKING],
-    [characterClips],
+    () =>
+      character
+        ? listCharacterAnimations(character)
+        : [...Object.values(characterClips), DAVE_IDLE_SPEAKING],
+    [character, characterClips],
   );
+  const speakingFrames = useMemo(
+    () => (character ? speakingBaseFrames(character) : undefined),
+    [character],
+  );
+  const [spriteMinScale, spriteMaxScale] = character?.size ?? DEFAULT_CHARACTER_SIZE;
   const activeAnimation = useMemo(
     () =>
       speechVisible && action === "idle"
-        ? buildSpeakingAnimation(speechTrigger, speechCharsPerSecond)
+        ? buildSpeakingAnimation(speechTrigger, speechCharsPerSecond, speakingFrames)
         : characterClips[action],
-    [speechVisible, action, characterClips, speechTrigger, speechCharsPerSecond],
+    [speechVisible, action, characterClips, speechTrigger, speechCharsPerSecond, speakingFrames],
   );
 
   useEffect(() => {
@@ -559,27 +596,28 @@ export function GameTouchSpriteRuntime({
     // relative to what was expected, a rigid-body is blocking it — suppress
     // that component this frame so the character slides along the free axis
     // rather than sticking against the obstacle surface.
+    // A frame with no physics step in between keeps the previous result (see
+    // `detectSlideBlock`).
     const frameStartPos = body.translation();
-    let slideBlockX = false;
-    let slideBlockZ = false;
-    {
-      const pp = prevBodyPositionRef.current;
-      const { vx: pvx, vz: pvz } = prevBodyVelSetRef.current;
-      if (pp && (Math.abs(pvx) > 0.3 || Math.abs(pvz) > 0.3)) {
-        const adx = frameStartPos.x - pp.x;
-        const adz = frameStartPos.z - pp.z;
-        // Expected displacement (approximated with current delta — consecutive
-        // frame durations are close enough for this heuristic).
-        const edx = pvx * delta;
-        const edz = pvz * delta;
-        if (Math.abs(edx) > 0.002) slideBlockX = Math.abs(adx) < Math.abs(edx) * 0.25;
-        if (Math.abs(edz) > 0.002) slideBlockZ = Math.abs(adz) < Math.abs(edz) * 0.25;
-      }
-    }
+    const slideBlock = detectSlideBlock(
+      prevBodyPositionRef.current,
+      frameStartPos,
+      prevBodyVelSetRef.current,
+      delta,
+      slideBlockRef.current,
+    );
+    slideBlockRef.current = slideBlock;
+    const slideBlockX = slideBlock.x;
+    const slideBlockZ = slideBlock.z;
 
-    const { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed } = getKeyboardMovement();
+    const keyboardMovement = getKeyboardMovement();
+    // Con `inputLocked` (guion con lockInput) teclado y joystick se ignoran.
+    const inputLocked = getInputLockState().inputLocked;
+    const { moveLeft, moveRight, moveUp, moveDown } = keyboardMovement;
+    const anyKeyPressed = keyboardMovement.anyKeyPressed && !inputLocked;
 
-    const joystick = getMobileInput();
+    const rawJoystick = getMobileInput();
+    const joystick = inputLocked ? { ...rawJoystick, active: false } : rawJoystick;
     // Block input during walk animation
     const inputBlocked = isWalking;
     const manualInputActive = (anyKeyPressed || joystick.active) && !inputBlocked;
@@ -610,6 +648,7 @@ export function GameTouchSpriteRuntime({
 
     let horizontal = 0;
     let vertical = 0;
+    let autoMoveRemaining: { x: number; z: number } | null = null;
 
     // During walk animation, ignore all input (joystick, keyboard, auto-move)
     if (!inputBlocked) {
@@ -629,6 +668,7 @@ export function GameTouchSpriteRuntime({
         );
         horizontal = autoMove.horizontal;
         vertical = autoMove.vertical;
+        autoMoveRemaining = autoMove.remaining ?? null;
 
         if (autoMove.snapToTarget) {
           body.setTranslation(
@@ -650,6 +690,10 @@ export function GameTouchSpriteRuntime({
     // into it again this frame.  The perpendicular axis is kept intact so the
     // character slides along the surface.  Only suppress when *trying* to move
     // in the blocked direction (same sign), not when already idle on that axis.
+    // The animation follows the intended direction, not the suppressed one:
+    // the wall-slide heuristic can toggle an axis from one frame to the next,
+    // and the clip would flicker between directions (or to idle) with it.
+    const intendedAction = resolveAction(horizontal, vertical);
     if (slideBlockX && horizontal !== 0) horizontal = 0;
     if (slideBlockZ && vertical !== 0) vertical = 0;
 
@@ -662,7 +706,7 @@ export function GameTouchSpriteRuntime({
       const dz = targetPos[1] - currentPos[1];
       nextAction = resolveAction(dx, dz);
     } else {
-      nextAction = resolveAction(horizontal, vertical);
+      nextAction = intendedAction;
     }
 
     if (currentActionRef.current !== nextAction) {
@@ -688,7 +732,10 @@ export function GameTouchSpriteRuntime({
     if (horizontal === 0 && vertical === 0) {
       body.setLinvel({ x: 0, y: currentVelocity.y, z: 0 }, true);
     } else {
-      body.setLinvel(targetVelocity, true);
+      const planar = autoMoveRemaining
+        ? clampVelocityToRemaining(targetVelocity, autoMoveRemaining, delta)
+        : targetVelocity;
+      body.setLinvel({ x: planar.x, y: targetVelocity.y, z: planar.z }, true);
     }
 
     const currentPosition = body.translation();
@@ -768,9 +815,9 @@ export function GameTouchSpriteRuntime({
       });
     }
 
-    const spriteScale = MathUtils.lerp(SPRITE_MIN_SCALE, SPRITE_MAX_SCALE, depthFactor);
+    const spriteScale = MathUtils.lerp(spriteMinScale, spriteMaxScale, depthFactor);
     if (meshRef.current) {
-      const flipX = action === "west" ? -1 : 1;
+      const flipX = characterClips[action]?.flipX ? -1 : 1;
       meshRef.current.scale.set(spriteScale * flipX, spriteScale, 1);
       meshRef.current.position.y = spriteScale - 0.95;
     }
@@ -836,7 +883,7 @@ export function GameTouchSpriteRuntime({
       {debug && wallToolMode === "points" && (
         <SceneWallPointPreview preview={wallPointPreview} groundY={ground.y} />
       )}
-      <SceneCollisionSphere />
+      {collisionSphere ? <SceneCollisionSphere textureUrl={collisionSphere.textureUrl} /> : null}
       <RigidBody
         ref={characterBodyRef}
         type="dynamic"
@@ -863,12 +910,12 @@ export function GameTouchSpriteRuntime({
             <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.85} />
           </mesh>
         )}
-        <DavidSprite
+        <CharacterSprite
           ref={spriteRef}
           meshRef={meshRef}
           animation={activeAnimation}
           preloadAnimations={characterAnimations}
-          scale={[SPRITE_MIN_SCALE, SPRITE_MIN_SCALE, 1]}
+          scale={[spriteMinScale, spriteMinScale, 1]}
           isPaused={false}
         />
         <SpeechBubble
@@ -879,6 +926,8 @@ export function GameTouchSpriteRuntime({
           charsPerSecond={speechCharsPerSecond}
           onDismiss={onSpeechDismiss}
           onLetterRevealed={onSpeechLetterSound}
+          persistent={speechPersistent}
+          onTypingDone={onSpeechTypingDone}
         />
       </RigidBody>
     </>

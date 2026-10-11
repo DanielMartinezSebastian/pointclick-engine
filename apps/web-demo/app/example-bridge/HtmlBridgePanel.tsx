@@ -117,7 +117,7 @@ export default function HtmlBridgePanel() {
         style={btnStyle}
         onClick={() => dispatch({ type: "player:stop" })}
       >
-        player:stop (deferred v0.2.0)
+        player:stop
       </button>
 
       <strong style={{ color: "#aaa", fontSize: 11, marginTop: 8 }}>Inventory commands</strong>

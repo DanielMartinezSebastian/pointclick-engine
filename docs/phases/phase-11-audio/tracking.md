@@ -1,7 +1,7 @@
 # Phase 11 — Progress Tracking
 
 **Phase**: 11 — Audio System
-**Status**: Planned
+**Status**: Completed — gate de validación pendiente (ver Phase 15)
 **Started**: —
 **Completed**: —
 
@@ -30,15 +30,15 @@
 
 ## Post-Phase Checklist
 
-- [ ] All tests passing (`npm run test`)
-- [ ] Type-check passing
-- [ ] Build passing
-- [ ] `grep -r "new Audio\|AudioContext\|window\.\|document\." packages/engine-core/src/` → vacío
-- [ ] Backward compatibility: escenas/items sin audio funcionan
-- [ ] Persistencia de mute/volumen verificada (recarga manual)
-- [ ] Demo: 2+ escenas con música, 1+ ítem con SFX custom, 1+ transición con SFX
-- [ ] `LICENSES.md` de audio creado con atribuciones
-- [ ] Arquitectura respetada (Core agnóstico, R3F renderer-specific, UI presentación)
+- [x] All tests passing (`npm run test`)
+- [x] Type-check passing
+- [x] Build passing
+- [x] `grep -r "new Audio\|AudioContext\|window\.\|document\." packages/engine-core/src/` → vacío
+- [ ] Backward compatibility: escenas/items sin audio funcionan — _sin verificar en navegador_
+- [ ] Persistencia de mute/volumen verificada (recarga manual) — _sin verificar en navegador_
+- [x] Demo: 2+ escenas con música, 1+ ítem con SFX custom, 1+ transición con SFX — _validado 2026-10-10 por `npm run smoke` tras la tarea 16.07b: música por escena, `pickup-gameboy.ogg` declarado en el ítem, sonido de transición_
+- [x] `LICENSES.md` de audio creado con atribuciones
+- [x] Arquitectura respetada (Core agnóstico, R3F renderer-specific, UI presentación) — _la demo usa `useAudioSystem` desde la tarea 16.07b_
 
 ---
 

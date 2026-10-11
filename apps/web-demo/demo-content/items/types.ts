@@ -1,23 +1,5 @@
-import type { DialogKey } from "../dialogs/types";
+import type { ItemDefinition, ItemInteractionRule } from "@pointclick-engine/engine-core";
 
-export type ItemDropOutcome = "consume" | "place" | "return";
+export type { ItemDefinition, ItemInteractionRule };
 
-export type ItemInteractionRule = {
-  outcome: ItemDropOutcome;
-  hitDialogKey?: DialogKey;
-  missDialogKey?: DialogKey;
-  placeCanPickup?: boolean;
-  placeHasCollision?: boolean;
-  placeCollisionHalfSize?: [number, number, number];
-  pickupSuccessDialogKey?: DialogKey;
-  pickupBlockedDialogKey?: DialogKey;
-};
-
-export type ItemDefinition = {
-  id: string;
-  name: string;
-  spriteUrl: string;
-  descriptionDialogKey?: DialogKey;
-  interactionRules: Record<string, ItemInteractionRule>;
-  defaultRule: ItemInteractionRule;
-};
+export type ItemDropOutcome = ItemInteractionRule["outcome"];
