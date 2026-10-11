@@ -1,7 +1,8 @@
-import { useDialogStore } from "@pointclick-engine/engine-core";
+import { npcToHotspot, useDialogStore } from "@pointclick-engine/engine-core";
 import type {
   DialogUIAdapter,
   GameRuntimeConfig,
+  GameScene,
   GameSceneTransition,
   PlacedSceneItem,
 } from "@pointclick-engine/engine-core";
@@ -14,6 +15,7 @@ import { SCENES, DEFAULT_SCENE_ID } from "../../../../demo-content/scenes/scenes
 import { ITEMS } from "../../../../demo-content/items";
 import { getRandomPhrase } from "../../../../demo-content/dialogs/getRandomPhrase";
 import { demoDictionaries } from "../../../../demo-content/dialogs";
+import { demoDialogues } from "../../../../demo-content/dialogues/guide";
 import { localStorageAdapter } from "../../platform-web";
 import { webAudioAdapter } from "../../platform-web-audio";
 import { audioSettingsStore } from "../../../store/audio";
@@ -38,12 +40,24 @@ const DEMO_TRANSITIONS: Record<string, GameSceneTransition> = Object.fromEntries
 const filterDemoPlacedItems = (item: PlacedSceneItem, sceneId: string): boolean =>
   item.sceneId === sceneId || (item.sceneId === undefined && sceneId === "personalRoom");
 
+/**
+ * La demo mantiene en el store su escena completa (SCENES) y no la proyeccion del registro del
+ * core (`toRuntimeScene`), asi que proyecta ella los NPC a hotspots: `hotspot:interact` los
+ * busca en `scene.hotspots` de la escena activa.
+ */
+function resolveDemoScene(id: string): GameScene | null {
+  const scene = SCENES[id];
+  if (!scene) return null;
+  if (!scene.npcs?.length) return scene;
+  return { ...scene, hotspots: [...(scene.hotspots ?? []), ...scene.npcs.map(npcToHotspot)] };
+}
+
 /** Opciones propias de la demo para `useGameViewportController` (datos y callbacks de su juego). */
 export const DEMO_VIEWPORT_OPTIONS: GameViewportControllerOptions = {
   initialSceneId: DEFAULT_SCENE_ID,
   storage: SCENE_STORAGE,
   // La demo mantiene en el store su escena completa (SCENES), no la proyeccion del registro del core.
-  resolveScene: (id) => SCENES[id] ?? null,
+  resolveScene: resolveDemoScene,
   // Los diccionarios de la demo se registran en su getRandomPhrase.
   getPhrase: (key) => getRandomPhrase(key),
   filterPlacedItems: filterDemoPlacedItems,
@@ -82,6 +96,7 @@ const DEMO_DIALOG_KEYS: ReadonlySet<string> = new Set(
 export const DEMO_RUNTIME_CONFIG: GameRuntimeConfig = {
   scenes: Object.values(SCENES),
   items: Object.values(ITEMS),
+  dialogues: demoDialogues,
   storage: localStorageAdapter,
   dialogAdapter: DEMO_DIALOG_ADAPTER,
   dialogKeys: DEMO_DIALOG_KEYS,

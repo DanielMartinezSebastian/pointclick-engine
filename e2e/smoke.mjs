@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 // Coordenadas para viewport 1280x720 en la escena personalRoom.
-const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640], confirmReset: [779, 423], dungeonGate: [615, 330] };
+const POS = { trophy: [846, 575], doorstep: [570, 455], introTap: [640, 600], backpack: [82, 640], gameboyPad: [763, 566], emptyFloor: [420, 640], confirmReset: [779, 423], dungeonGate: [615, 330], computer: [270, 315], guide: [397, 470], keyBit: [601, 598] };
 // El bocadillo se cierra solo tras escribir el texto y un tiempo de lectura;
 // mientras está visible no se puede recoger ni interactuar.
 const DIALOG_MS = 10000;
@@ -49,6 +49,7 @@ const state = () => page.evaluate(([saveKey, legacyKeys]) => {
     doors: save?.extra?.doors ?? {},
     version: save?.version ?? null,
     seeded: save?.seededSceneIds ?? [],
+    flags: save?.flags ?? {},
     legacyLeft: legacyKeys.filter((k) => localStorage.getItem(k) !== null),
     plays: window.__plays.slice(),
   };
@@ -87,6 +88,33 @@ const dragFromInventory = async (label, target) => {
   await page.mouse.up();
   return true;
 };
+// Arrastra el ítem del slot `from` y lo suelta sobre el slot `to` (combinar). Devuelve false si falta alguno.
+const dragSlotOntoSlot = async (from, to) => {
+  await page.mouse.click(...POS.backpack);
+  await page.waitForTimeout(1200);
+  const a = await page.getByRole("button", { name: from }).first().boundingBox();
+  const b = await page.getByRole("button", { name: to }).first().boundingBox();
+  if (!a || !b) return false;
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 20 });
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+  return true;
+};
+// Partida en el formato de la instantánea nueva (versión 1), inyectada antes de cargar la página.
+const injectSave = (overrides) => page.evaluate(([saveKey, o]) => {
+  const slots = Array.from({ length: 9 }, () => null);
+  (o.items ?? []).forEach((it, i) => { slots[i] = { id: it.id, name: it.name, spriteUrl: it.spriteUrl, quantity: 1 }; });
+  localStorage.setItem(saveKey, JSON.stringify({
+    version: 1, sceneId: o.sceneId, playerPosition: [0, 0, 0], inventory: slots, placedItems: [],
+    seededSceneIds: ["personalRoom"], flags: {}, visitedSceneIds: ["personalRoom"], extra: { doors: {} },
+  }));
+}, [SAVE_KEY, overrides]);
+const GAMEBOY = { id: "gameboy", name: "Gameboy", spriteUrl: "/assets/gameboy/gameboy.png" };
+const TROPHY = { id: "trophy", name: "Trophy", spriteUrl: "/assets/trophy/trophy.png" };
+const optionTexts = () => page.locator('[role="option"]').allTextContents();
+const waitForOptions = (timeoutMs) => page.waitForSelector('[role="listbox"]', { timeout: timeoutMs }).then(() => true, () => false);
 const count = (plays, name) => plays.filter((p) => p.includes(name)).length;
 const music = (plays) => plays.filter((p) => !p.startsWith("speak") && !p.startsWith("click")).join(",");
 // Camina hasta el umbral de la puerta central y empuja hacia el norte: la
@@ -234,6 +262,74 @@ try {
   check("la migración traduce el flag antiguo a escena sembrada", s.seeded.join() === "personalRoom", s.seeded.join());
   check("existe la instantánea nueva (versión 1) y no quedan claves antiguas", s.version === 1 && s.legacyLeft.length === 0, `version=${s.version} antiguas=${s.legacyLeft.join()}`);
   check("la partida migrada no resiembra el trofeo", !s.placed.some((p) => p.startsWith("trophy@")), s.placed.join());
+
+  // 10. Hotspot de personalRoom: menú de verbos, mirar y soltar un ítem encima (useItem).
+  await injectSave({ sceneId: "personalRoom", items: [GAMEBOY] });
+  check("tras inyectar una partida en personalRoom se puede cargar", await enterGame());
+  await page.waitForTimeout(3000);
+  s = await state();
+  check("la partida inyectada arranca en personalRoom sin flags", s.scene === "personalRoom" && Object.keys(s.flags).length === 0, `scene=${s.scene} flags=${JSON.stringify(s.flags)}`);
+  await page.waitForTimeout(DIALOG_MS); // bienvenida
+  await page.mouse.click(...POS.computer);
+  await page.waitForTimeout(800);
+  const verbs = await page.getByRole("menuitem").allTextContents();
+  check("clic en un hotspot con dos verbos abre el menú de verbos (traducido)", verbs.join() === "Usar,Mirar", verbs.join());
+  await page.getByRole("menuitem", { name: /Mirar/ }).click();
+  s = await waitFor((x) => x.flags["computer.seen"] === true, 8000);
+  check("mirar el hotspot ejecuta su guion (flag en la partida guardada)", s.flags["computer.seen"] === true, JSON.stringify(s.flags));
+  await page.waitForTimeout(DIALOG_MS);
+  await dragFromInventory(/Gameboy/i, POS.computer);
+  s = await waitFor((x) => x.flags["computer.gameboyTried"] === true, 8000);
+  check("soltar el gameboy sobre el hotspot ejecuta su regla useItem", s.flags["computer.gameboyTried"] === true, JSON.stringify(s.flags));
+  check("la regla useItem no quita el gameboy ni lo deja colocado", s.inventory.join() === "gameboy" && s.placed.length === 0, `inv=${s.inventory.join()} placed=${s.placed.join()}`);
+  await page.waitForTimeout(DIALOG_MS);
+
+  // 11. NPC de town: conversación con opciones (when / once), efecto con flag e ítem, y combinar ítems.
+  await injectSave({ sceneId: "town", items: [GAMEBOY] });
+  check("tras inyectar una partida en town se puede cargar", await enterGame());
+  await page.waitForTimeout(3000);
+  s = await state();
+  check("la partida inyectada arranca en town y siembra el paletón", s.scene === "town" && s.placed.includes("key-bit@town"), `scene=${s.scene} placed=${s.placed.join()}`);
+  await page.mouse.click(...POS.guide);
+  check("clic en el NPC abre las opciones de diálogo", await waitForOptions(15000));
+  let options = await optionTexts();
+  check("sin trofeo la opción condicionada al trofeo no aparece", options.length === 3 && !options.some((o) => /trofeo/i.test(o)), options.join(" | "));
+  await page.getByRole("option", { name: /Hasta luego/ }).click();
+  await page.waitForTimeout(DIALOG_MS); // la despedida se cierra sola
+  check("elegir la despedida cierra las opciones", (await page.locator('[role="listbox"]').count()) === 0);
+
+  await injectSave({ sceneId: "town", items: [GAMEBOY, TROPHY] });
+  await enterGame();
+  await page.waitForTimeout(3000);
+  await page.mouse.click(...POS.guide);
+  await waitForOptions(15000);
+  options = await optionTexts();
+  check("con el trofeo aparece la opción condicionada (4 opciones)", options.length === 4 && options.some((o) => /trofeo/i.test(o)), options.join(" | "));
+  await page.getByRole("option", { name: /ayudarme/ }).click();
+  s = await waitFor((x) => x.inventory.includes("key-handle"), 8000);
+  check("la opción entrega el ítem (mango roto en el inventario)", s.inventory.includes("key-handle"), s.inventory.join());
+  check("la opción pone su flag en la partida guardada", s.flags["guide.helped"] === true, JSON.stringify(s.flags));
+  check("la opción once deja constancia en la partida (dlg.guide-talk.root.2)", s.flags["dlg.guide-talk.root.2"] === true, JSON.stringify(s.flags));
+  await waitForOptions(20000); // el guía responde y vuelve a las opciones
+  options = await optionTexts();
+  check("la opción once ya no se vuelve a ofrecer", options.length === 3 && !options.some((o) => /ayudarme/.test(o)), options.join(" | "));
+  await page.getByRole("option", { name: /Hasta luego/ }).click();
+  await page.waitForTimeout(DIALOG_MS);
+  await page.mouse.click(...POS.keyBit);
+  s = await waitFor((x) => x.inventory.includes("key-bit"), 15000);
+  check("recoger el paletón del suelo lo mete en el inventario", s.inventory.includes("key-bit"), s.inventory.join());
+  await page.waitForTimeout(DIALOG_MS);
+
+  check("se puede arrastrar un ítem sobre otro slot", await dragSlotOntoSlot(/Gameboy/i, /Trophy/i));
+  await page.waitForTimeout(2500);
+  s = await state();
+  check("combinar ítems sin receta no pierde ninguno", s.inventory.slice().sort().join() === "gameboy,key-bit,key-handle,trophy", s.inventory.join());
+  await page.waitForTimeout(DIALOG_MS);
+  await dragSlotOntoSlot(/Mango/i, /Palet/i);
+  s = await waitFor((x) => x.inventory.includes("bronze-key"), 8000);
+  check("soltar el mango sobre el paletón produce la llave de bronce", s.inventory.includes("bronze-key"), s.inventory.join());
+  check("la combinación consume los dos ingredientes y no toca los demás", s.inventory.slice().sort().join() === "bronze-key,gameboy,trophy", s.inventory.join());
+  await page.waitForTimeout(DIALOG_MS);
 
   check("sin errores de página ni de consola", errors.length === 0, errors.slice(0, 3).join(" | "));
 } catch (error) {

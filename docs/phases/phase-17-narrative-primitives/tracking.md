@@ -38,7 +38,7 @@
 
 ## Ola F
 
-- [ ] [16-demo-migration](tasks/16-demo-migration.md) — sonnet
+- [x] [16-demo-migration](tasks/16-demo-migration.md) — sonnet
 - [x] [17-headless-walkthrough](tasks/17-headless-walkthrough.md) — sonnet
 
 ## Ola G

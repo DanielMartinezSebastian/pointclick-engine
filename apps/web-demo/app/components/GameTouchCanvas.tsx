@@ -7,7 +7,7 @@ import {
   GameViewportView,
   useGameViewportController,
 } from "@pointclick-engine/engine-renderer-r3f";
-import { useSceneStore, type RuntimeEvent } from "@pointclick-engine/engine-core";
+import { getGameRuntime, useSceneStore, type RuntimeEvent } from "@pointclick-engine/engine-core";
 
 import { PixelLoader } from "./PixelLoader";
 import { DraggedInventoryGhost, InventoryUI } from "./InventoryUI";
@@ -15,7 +15,9 @@ import { FreeCameraController } from "./scene/FreeCameraController";
 import { SceneDoors } from "./scene/SceneDoors";
 import { DebugOverlayRuntimePanel } from "./debug/DebugOverlayRuntimePanel";
 import { SCENES } from "../../demo-content/scenes/scenes";
+import { getRandomPhrase } from "../../demo-content/dialogs/getRandomPhrase";
 import { DAVID } from "../../demo-content/characters/david";
+import { DEMO_NPC_CHARACTERS } from "../../demo-content/characters/guide";
 import type { GameRuntime } from "../lib/engine/publicApi";
 import { DEMO_VIEWPORT_OPTIONS } from "../lib/engine/runtime/demoViewportOptions";
 import { useDemoUiSounds } from "../lib/engine/runtime/useDemoAudio";
@@ -96,6 +98,34 @@ export default function GameTouchCanvas({
   const getEffectiveClickGoal = useDoorClickGoal(currentScene);
   const handleSpeechLetterSound = useDemoUiSounds();
 
+  // Soltar un ítem sobre OTRO slot ocupado los combina (`inventory:combine`). Con un slot vacío,
+  // el mismo ítem o la escena, la suelta sigue su camino de siempre. El arrastre no quita nada
+  // del inventario: si la combinación falla no se pierde ningún ítem.
+  const { draggedStack, inventorySlots, clearDrag, showSpeechBubble } = controller;
+  const handleDropOnSlot = useCallback(
+    (slotIndex: number): boolean => {
+      const target = inventorySlots[slotIndex];
+      if (!draggedStack || !target) return false;
+      if (slotIndex === draggedStack.fromSlotIndex || target.id === draggedStack.stack.id) return false;
+      (runtime ?? getGameRuntime())?.executeCommand({
+        type: "inventory:combine",
+        itemId: draggedStack.stack.id,
+        withItemId: target.id,
+      });
+      clearDrag();
+      return true;
+    },
+    [clearDrag, draggedStack, inventorySlots, runtime],
+  );
+  // Combinación imposible: la demo lo explica con una frase (los ítems siguen donde estaban).
+  useEffect(() => {
+    const target = runtime ?? getGameRuntime();
+    if (!target) return;
+    return target.on("item:combineFailed", () => {
+      showSpeechBubble(getRandomPhrase("inventoryCombineFailed"), { dialogKey: "inventoryCombineFailed" });
+    });
+  }, [runtime, showSpeechBubble]);
+
   const isInventoryOpen = useInventoryStore((s) => s.isOpen);
   const toggleInventory = useInventoryStore((s) => s.toggle);
 
@@ -128,6 +158,8 @@ export default function GameTouchCanvas({
         slots={controller.inventorySlots}
         onToggle={toggleInventory}
         onStartDrag={controller.handleStartInventoryDrag}
+        isDragging={controller.draggedStack !== null}
+        onDropOnSlot={handleDropOnSlot}
       />
       {controller.draggedStack && (
         <DraggedInventoryGhost
@@ -169,6 +201,7 @@ export default function GameTouchCanvas({
     <GameViewportView
       controller={controller}
       character={DAVID}
+      characters={DEMO_NPC_CHARACTERS}
       debug={runtimeDebug}
       cameraMode={cameraMode}
       canPickupItems={!disableClickToMove}

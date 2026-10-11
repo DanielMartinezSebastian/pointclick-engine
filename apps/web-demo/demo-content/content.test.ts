@@ -8,6 +8,7 @@ describe("contenido de la demo", () => {
     const issues = validateContent({
       scenes: DEMO_RUNTIME_CONFIG.scenes ?? [],
       items: DEMO_RUNTIME_CONFIG.items ?? [],
+      ...(DEMO_RUNTIME_CONFIG.dialogues ? { dialogues: DEMO_RUNTIME_CONFIG.dialogues } : {}),
       ...(DEMO_RUNTIME_CONFIG.dialogKeys ? { dialogKeys: DEMO_RUNTIME_CONFIG.dialogKeys } : {}),
     });
     const errors = issues.filter((i) => i.severity === "error");

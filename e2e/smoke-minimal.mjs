@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const PAGE_PATH = process.env.SMOKE_PATH ?? "/example-minimal";
 const TROPHY = [789, 540]; // viewport 1280x720, escena minimal-a
+const NOTICE = [770, 340]; // hotspot `notice` (cartel de la pared), mismo viewport
 const checks = [];
 const check = (name, ok, detail = "") => {
   checks.push(Boolean(ok));
@@ -38,6 +39,12 @@ try {
   await page.waitForSelector("canvas", { timeout: 30000 });
   check("arranca en la escena inicial con el ítem sembrado", await waitForStatus(/escena: minimal-a \| inventario: 0 \| en escena: 1/, 20000), await status());
   await page.waitForTimeout(4000);
+
+  check("el hotspot empieza sin ver", /cartel: sin ver/.test(await status()), await status());
+  await page.mouse.click(...NOTICE);
+  check("mirar el hotspot (un solo verbo, sin menú) ejecuta su guion", await waitForStatus(/cartel: visto/, 8000), await status());
+  check("el hotspot con un solo verbo no abre menú", (await page.getByRole("menu").count()) === 0);
+  await page.waitForTimeout(9000); // el bocadillo del hotspot se cierra solo
 
   await page.mouse.click(...TROPHY);
   check("recoger el ítem con un click lo mete en el inventario", await waitForStatus(/inventario: 1 \| en escena: 0/, 15000), await status());

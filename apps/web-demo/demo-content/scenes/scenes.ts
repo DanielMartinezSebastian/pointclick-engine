@@ -9,12 +9,15 @@ import type {
 } from "@pointclick-engine/engine-core";
 import {
   act,
+  branch,
   cond,
   otherwise,
   sceneTransitionOnCollision,
   sceneTransitionOnItemDrop,
   sceneTransitionOnItemInteraction,
 } from "@pointclick-engine/engine-core";
+
+import { GUIDE_DIALOGUE_ID } from "../dialogues/guide";
 
 // Aliases de compatibilidad: los tipos de geometria/interaccion viven en el core.
 export type SceneWallOpening = GameSceneWallOpening;
@@ -106,6 +109,34 @@ export const SCENES: Record<string, Scene> = {
       fadeMs: 800,
     },
     walls: [],
+    // Paleton roto: esta en el suelo de la plaza (se combina con el mango que da el guia).
+    initialItems: [
+      {
+        item: {
+          id: "key-bit-ground",
+          itemId: "key-bit",
+          interactionId: "key-bit-pickup",
+          name: "Paletón roto",
+          spriteUrl: "/assets/key/gold-key.png",
+          worldPosition: [1.5, -2.4, 20.0],
+          canPickup: true,
+          hasCollision: true,
+          collisionHalfSize: [0.5, 0.8, 0.5],
+          sceneId: "town",
+        },
+      },
+    ],
+    // El guia: reutiliza el sprite de David (personaje "guide", ver `characters/guide.ts`).
+    npcs: [
+      {
+        id: "guide",
+        name: "guide.name",
+        characterId: "guide",
+        position: [-4.0, -2.1, 15.5],
+        facing: "south",
+        dialogueId: GUIDE_DIALOGUE_ID,
+      },
+    ],
     interactions: [
       {
         id: "town-trophy-pedestal",
@@ -470,6 +501,26 @@ export const SCENES: Record<string, Scene> = {
         // No se sale a la mazmorra mientras el trofeo siga colocado en la habitacion.
         when: cond.not(cond.itemPlaced("trophy", { inScene: "personalRoom" })),
         blocked: [act.say("personalRoomLeaveBlocked")],
+      },
+    ],
+    // Hotspot de prueba: el ordenador del escritorio (mirar, usar y soltar el gameboy encima).
+    hotspots: [
+      {
+        id: "personal-room-computer",
+        label: "hotspot.computer.name",
+        position: [-10.6, 3.0, 10],
+        halfSize: [1.2, 1.0, 0.8],
+        verbs: {
+          look: [otherwise(act.setFlag("computer.seen"), act.say("computer.look"))],
+          use: [
+            branch(cond.flag("computer.gameboyTried"), act.say("computer.use.after")),
+            otherwise(act.say("computer.use")),
+          ],
+        },
+        useItem: {
+          gameboy: [otherwise(act.setFlag("computer.gameboyTried"), act.say("computer.gameboy"))],
+        },
+        useItemDefault: [otherwise(act.say("computer.nothing"))],
       },
     ],
     interactions: [

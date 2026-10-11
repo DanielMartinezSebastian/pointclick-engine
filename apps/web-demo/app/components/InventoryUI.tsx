@@ -64,11 +64,20 @@ export function InventoryUI({
   slots,
   onToggle,
   onStartDrag,
+  isDragging = false,
+  onDropOnSlot,
 }: {
   isOpen: boolean;
   slots: InventorySlots;
   onToggle: () => void;
   onStartDrag: (slotIndex: number, clientX: number, clientY: number) => void;
+  /** Hay un ítem arrastrado: el panel se queda visible para poder soltarlo sobre otro slot. */
+  isDragging?: boolean;
+  /**
+   * Se suelta el ítem arrastrado sobre un slot. Devuelve `true` si lo ha consumido (combinación);
+   * con `false` la suelta sigue su camino de siempre (slot vacío, el mismo slot o la escena).
+   */
+  onDropOnSlot?: (slotIndex: number) => boolean;
 }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isBackpackHovered, setIsBackpackHovered] = useState(false);
@@ -88,6 +97,8 @@ export function InventoryUI({
   const panelTweenRef = useRef<gsap.core.Tween | null>(null);
 
   const { t } = useI18n();
+  // Al empezar un arrastre el motor cierra la mochila; el panel sigue a la vista hasta soltar.
+  const isPanelOpen = isOpen || isDragging;
 
   useEffect(() => {
     const media = browserEnvironmentAdapter.matchMedia("(max-width: 768px)");
@@ -264,7 +275,7 @@ export function InventoryUI({
   }, [slots, startBackpackSpin]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isPanelOpen) {
       if (!isPanelRendered) {
         const animationFrameId: AnimationFrameHandle = browserEnvironmentAdapter.requestAnimationFrame(() => {
           setIsPanelRendered(true);
@@ -282,7 +293,7 @@ export function InventoryUI({
     if (isPanelRendered) {
       animatePanel(false);
     }
-  }, [animatePanel, isOpen, isPanelRendered]);
+  }, [animatePanel, isPanelOpen, isPanelRendered]);
 
   useEffect(() => {
     return () => {
@@ -503,6 +514,11 @@ export function InventoryUI({
                   key={`slot-${index}`}
                   type="button"
                   onPointerDown={(event) => handlePointerDown(event, index)}
+                  onPointerUp={(event) => {
+                    // Soltar sobre otro slot ocupado combina; el evento no debe llegar al
+                    // "suelta fuera de una diana" de la escena (escucha en window).
+                    if (onDropOnSlot?.(index)) event.nativeEvent.stopPropagation();
+                  }}
                   style={slotStyle(Boolean(stack))}
                   aria-label={stack ? `Slot ${index + 1}: ${stack.name}` : t("ui.slot.empty", { vars: { n: index + 1 } })}
                 >

@@ -6,6 +6,9 @@ import {
   useSceneStore,
   useInventoryStateStore,
   usePlacedItemsStateStore,
+  useWorldStateStore,
+  act,
+  otherwise,
   type GameRuntime,
   type GameSceneConfig,
   type GameItemConfig,
@@ -28,6 +31,19 @@ const SCENE_A: GameSceneConfig = {
   },
   walls: [],
   interactions: [],
+  // Hotspot declarado en la propia escena: con un solo verbo (`look`), un click lo ejecuta
+  // directamente (sin menú). El guion pone un flag y dice una frase.
+  hotspots: [
+    {
+      id: "notice",
+      label: "notice.label",
+      position: [6.0, 2.6, 13.4],
+      halfSize: [0.7, 1.2, 0.5],
+      verbs: {
+        look: [otherwise(act.setFlag("notice.seen"), act.say("notice.look"))],
+      },
+    },
+  ],
   // Ítem inicial declarado en la propia escena (sin callback del host).
   initialItems: [
     {
@@ -98,6 +114,7 @@ function StatusOverlay() {
   const inventorySlots = useInventoryStateStore((s) => s.slots);
   const inventoryCount = inventorySlots.filter((slot) => slot !== null).length;
   const placedCount = usePlacedItemsStateStore((s) => s.items.length);
+  const noticeSeen = useWorldStateStore((s) => s.flags["notice.seen"] === true);
 
   return (
     <div
@@ -115,7 +132,7 @@ function StatusOverlay() {
         zIndex: 100,
       }}
     >
-      escena: {sceneId} | inventario: {inventoryCount} | en escena: {placedCount}
+      escena: {sceneId} | inventario: {inventoryCount} | en escena: {placedCount} | cartel: {noticeSeen ? "visto" : "sin ver"}
     </div>
   );
 }
@@ -128,6 +145,8 @@ function MinimalGame() {
     const created = createGameRuntime({
       scenes: [SCENE_A, SCENE_B],
       items: [TROPHY_ITEM],
+      // Texto de la frase del hotspot (reglas de diálogo del core).
+      rules: [{ key: "notice.look", phrases: ["Un cartel de la plaza: 'SE BUSCA... un buen guía.'"] }],
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- publishes the runtime so child hooks can access it before mounting the viewport
     setRuntime(created);
