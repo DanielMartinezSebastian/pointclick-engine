@@ -165,4 +165,15 @@ export type GameRuntimeConfig = {
   clock?: ClockPort;
   /** Si true, `walkTo` de un guion teletransporta y emite `player:walkCompleted` (headless). */
   instantWalk?: boolean;
+  /**
+   * Validacion del contenido al crear el runtime (`validateContent`).
+   * `true`: avisa por consola con un unico `console.warn` agrupado. `"throw"`: lanza si hay
+   * errores (los avisos van a consola). `false`: no valida. Sin valor: como `true` solo cuando
+   * `NODE_ENV === "development"`, y nada en test o produccion.
+   */
+  validate?: boolean | "throw";
+  /** Claves de dialogo conocidas, para que la validacion compruebe `say`, `line`, `text` y `label`. */
+  dialogKeys?: ReadonlySet<string>;
+  /** Nombres de manejadores `call` que el host registra, para que la validacion los compruebe. */
+  handlerNames?: ReadonlySet<string>;
 };

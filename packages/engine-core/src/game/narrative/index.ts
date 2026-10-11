@@ -48,3 +48,4 @@ export {
 } from "./dialogue";
 export { createSequencer, type Sequencer, type SequencerEnvInput } from "./sequencer";
 export type { ActionContext, ActionExecutor, SequencerEnv } from "./actionExecutors";
+export { validateContent, type ContentIssue, type GameContent } from "./validateContent";

@@ -27,6 +27,32 @@ import { registerHotspotCommands } from "../narrative/hotspots";
 import { registerDialogueCommands } from "../narrative/dialogue";
 import { registerInventoryCommands } from "./inventoryExecutors";
 import { systemClock } from "../../ports/clock";
+import { validateContent, type ContentIssue } from "../narrative/validateContent";
+
+const isDevelopment = (): boolean =>
+  typeof process !== "undefined" && process.env?.NODE_ENV === "development";
+
+const formatIssue = (i: ContentIssue): string =>
+  `  [${i.severity}] ${i.code} @ ${i.where}: ${i.message}`;
+
+/** Valida el contenido de `config` segun `config.validate` (ver `GameRuntimeConfig.validate`). */
+function runContentValidation(config: GameRuntimeConfig): void {
+  const mode = config.validate ?? (isDevelopment() ? true : false);
+  if (mode === false) return;
+  if (!config.scenes?.length && !config.items?.length && !config.dialogues?.length) return;
+  const issues = validateContent({
+    scenes: config.scenes ?? [],
+    items: config.items ?? [],
+    ...(config.dialogues ? { dialogues: config.dialogues } : {}),
+    ...(config.dialogKeys ? { dialogKeys: config.dialogKeys } : {}),
+    ...(config.handlerNames ? { handlers: config.handlerNames } : {}),
+  });
+  if (issues.length === 0) return;
+  const errors = issues.filter((i) => i.severity === "error");
+  const text = `[validateContent] ${errors.length} error(es), ${issues.length - errors.length} aviso(s):\n${issues.map(formatIssue).join("\n")}`;
+  if (mode === "throw" && errors.length > 0) throw new Error(text);
+  console.warn(text);
+}
 
 /**
  * Cablea el estado de mundo con el bus (los stores no se conocen entre sí ni al bus):
@@ -71,6 +97,7 @@ let runtimeHandle: GameRuntime | null = null;
  * (`executeCommand`, `on`, `emit`, `dispose`), guardado como singleton.
  */
 export function createGameRuntime(config: GameRuntimeConfig = {}): GameRuntime {
+  runContentValidation(config);
   for (const scene of config.scenes ?? []) registerScene(scene);
   for (const item of config.items ?? []) registerItem(item);
   for (const rule of config.rules ?? []) registerRule(rule);

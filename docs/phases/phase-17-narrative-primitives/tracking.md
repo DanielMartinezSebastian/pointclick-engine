@@ -31,7 +31,7 @@
 
 ## Ola E — en paralelo
 
-- [ ] [12-content-validator](tasks/12-content-validator.md) — sonnet
+- [x] [12-content-validator](tasks/12-content-validator.md) — sonnet
 - [ ] [13-renderer-hotspots](tasks/13-renderer-hotspots.md) — sonnet
 - [x] [14-renderer-npcs](tasks/14-renderer-npcs.md) — sonnet
 - [ ] [15-renderer-dialogue-ui](tasks/15-renderer-dialogue-ui.md) — sonnet
