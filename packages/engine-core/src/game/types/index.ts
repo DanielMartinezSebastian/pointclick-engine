@@ -264,6 +264,8 @@ export interface GameSceneNpc {
   /** Verbos e ítems, igual que un hotspot. `verbs.talk` explícito gana sobre `dialogueId`. */
   verbs?: Partial<Record<Verb, Branch[]>>;
   useItem?: Record<string, Branch[]>;
+  /** Ramas para un item sin regla propia en `useItem`, igual que en un hotspot. */
+  useItemDefault?: Branch[];
 }
 
 // Scene (full scene with all interactions)

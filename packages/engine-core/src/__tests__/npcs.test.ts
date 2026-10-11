@@ -169,4 +169,9 @@ describe("hotspot:interact con un NPC", () => {
     rt.executeCommand({ type: "dialog:dismiss" });
     await flush();
   });
+  it("proyecta useItemDefault para los items sin regla propia", () => {
+    const fallback = [{ do: [{ emit: "nope" }] }];
+    const h = npcToHotspot({ id: "n", name: "n", characterId: "c", position: [0, 0, 0], useItemDefault: fallback });
+    expect(h.useItemDefault).toBe(fallback);
+  });
 });

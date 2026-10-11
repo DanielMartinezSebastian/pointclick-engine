@@ -30,5 +30,6 @@ export function npcToHotspot(npc: GameSceneNpc): GameSceneHotspot {
     ...(npc.approach !== undefined ? { approach: npc.approach } : {}),
     ...(verbs !== undefined ? { verbs } : {}),
     ...(npc.useItem !== undefined ? { useItem: npc.useItem } : {}),
+    ...(npc.useItemDefault !== undefined ? { useItemDefault: npc.useItemDefault } : {}),
   };
 }
