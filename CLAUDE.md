@@ -1,6 +1,6 @@
 # Point & Click Game Engine
 
-**Versión**: 0.5.0 | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
+**Versión**: 0.6.0 | **Estado**: Desarrollo activo | **Owner**: Daniel Martínez Sebastián
 
 Librería agnóstica al framework para juegos point-and-click 2D/2.5D, con primera implementación en R3F. La demo R3F vive en `apps/web-demo/` dentro del monorepo para evaluar engine y demo en paralelo.
 
@@ -114,7 +114,8 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 - **v0.2.x**: `engine-core` extraído del monorepo
 - **v0.3.x**: Renderer abstraction (interfaces agnósticas)
 - **v0.4.x**: Bidireccionalidad web ↔ juego
-- **v0.5.x**: Runtime en los paquetes, `GameViewport` jugable (actual)
+- **v0.5.x**: Runtime en los paquetes, `GameViewport` jugable
+- **v0.6.x**: Narrativa declarativa: hotspots, NPCs, diálogos, guardado único (actual)
 - **v1.0.0**: Publicación en npm
 
 ---
@@ -155,7 +156,8 @@ Ver: `docs/workflow/pre-commit-checklist.md`
 | Delegar subagentes | `docs/workflow/how-to-spawn-subagent.md` |
 | Hacer commit | `docs/workflow/commit-convention.md` |
 | Decisiones tomadas | `docs/decisions/` (ADRs) |
-| Fase activa | `docs/phases/phase-17-narrative-primitives/` |
+| Escribir contenido (escenas, diálogos, ítems) | `docs/authoring/README.md` |
+| Fase activa | `docs/phases/phase-18-story-demo/` |
 
 ---
 

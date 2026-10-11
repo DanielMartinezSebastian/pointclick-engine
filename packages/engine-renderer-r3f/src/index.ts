@@ -1,4 +1,4 @@
-export const RENDERER_VERSION = "0.5.0";
+export const RENDERER_VERSION = "0.6.0";
 
 // Canvas core
 export { GameCanvasCore } from "./components/GameCanvasCore";

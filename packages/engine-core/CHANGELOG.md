@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] — Unreleased
 
 Phase 17: narrative primitives (ADR-0010, [authoring guide](../../docs/authoring/README.md)).
-Additive over 0.5.0. `package.json` and `VERSION` still read `0.5.0`.
+Additive over 0.5.0.
 
 ### Added
 

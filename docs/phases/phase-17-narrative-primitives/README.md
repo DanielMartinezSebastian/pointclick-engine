@@ -2,7 +2,7 @@
 
 **Objetivo**: que una aventura completa se pueda describir con datos y jugarse de principio a fin, también en headless.
 **Duración estimada**: 2–3 semanas
-**Estado**: active (ADR-0010 aceptado el 2026-10-10)
+**Estado**: completed (2026-10-11; 0.6.0 lista, sin publicar)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: v0.6.0 (solo adiciones sobre 0.5.0)
 
@@ -61,3 +61,23 @@ Olas: **A** = 02, 03, 11 · **B** = 04, 10 · **C** = 05 · **D** = 06, 07, 08, 
 - Historia, arte y contenido definitivo de la demo → [Fase 18](../phase-18-story-demo/).
 - Cinemáticas con cámara, editor visual de contenido, adaptador de Ink/Yarn.
 - Multijugador → Fase 14, después de esta.
+
+## Retrospectiva (2026-10-11)
+
+**Resultado**: las 20 tareas integradas. Una mini-aventura de tres escenas escrita solo con datos se resuelve en un test sin renderer, y la demo usa NPC, hotspot con verbos, diálogo con opciones y combinación de ítems, cubiertos por el smoke (69 + 8 comprobaciones). Evidencia del gate en [tracking.md](tracking.md).
+
+**Lo que destapó la integración** (ningún test unitario lo veía):
+- Nadie emitía `player:walkCompleted`; un `walkTo` de guion se habría colgado en el navegador (tarea 05b).
+- El bocadillo se cerraba sin emitir `dialog:dismissed`; un `say` de guion se habría colgado igual.
+- La caja clicable de un NPC solo cubría los pies, y el menú de verbos mostraba claves sin traducir.
+- El validador daba por error la etiqueta libre `interactionId` de un ítem colocado.
+
+**Qué quedó fuera o como deuda** (entrada para la Fase 18):
+- Las reglas declarativas de escena (`initialItems`, `onEnter`, `when`/`blocked`) las cablean por separado el renderer y `createPlaythrough`; deberían vivir en el core.
+- El texto de `say` se resuelve por reglas registradas o por un `dialogAdapter` del host; el viewport no lo traduce solo con su i18n.
+- `validateContent` no avisa de un `speaker` que no es el id de ningún NPC.
+- Combinar ítems arrastrando solo existe en la `InventoryUI` de la demo, no en el renderer.
+- Un host con `resolveScene` propio debe proyectar él los NPCs a hotspots.
+- Los NPCs no caminan ni tienen clip de habla obligatorio; no hay cámara que siga al jugador (el fondo Sci Fi Level completo la necesitaría).
+- Sigue habiendo dos sistemas de movimiento (click en el suelo y `player:walkTo`) y registros globales de módulo.
+- Sin verificar en móvil real: la corrección del temblor del sprite al caminar y la UI de opciones de diálogo en táctil.

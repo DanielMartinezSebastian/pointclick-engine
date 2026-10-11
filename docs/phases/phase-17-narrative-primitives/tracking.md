@@ -44,15 +44,18 @@
 ## Ola G
 
 - [x] [18-authoring-docs](tasks/18-authoring-docs.md) — haiku
-- [ ] [19-validation-gate](tasks/19-validation-gate.md) — opus
+- [x] [19-validation-gate](tasks/19-validation-gate.md) — opus
 
-## Gate final
+## Gate final (ejecutado el 2026-10-11)
 
-- [ ] Gate técnico verde desde `dist/` limpio
-- [ ] `coreAgnosticism.test.ts` verde
-- [ ] Ningún export, comando ni evento de 0.5.0 cambia de forma
-- [ ] Recorrido headless de la mini-aventura resuelto solo con comandos
-- [ ] La demo no usa `canLeaveScene`, `onSceneEnter` ni `getInitialPlacedItems`
-- [ ] `npm run smoke` verde, ampliado con NPC, diálogo con opciones, hotspot y combinación
-- [ ] Una partida guardada con 0.5.0 carga con 0.6.0
-- [ ] Guía de autoría publicada; CHANGELOG y versión 0.6.0
+- [x] Gate técnico verde desde `dist/` limpio — build de paquetes, tests (core 718, renderer 159, demo 47), typecheck, lint (0 errores) y `next build`
+- [x] `coreAgnosticism.test.ts` verde; `grep "demo-content|apps/web-demo" packages/*/src` vacío
+- [x] Ningún export, comando ni evento de 0.5.0 cambia de forma — exports: core 176 → 259, renderer 94 → 130, ninguno perdido; `GameCommand` y `GameEvent` de 0.5.0 asignables a los actuales (comprobación de tipos); `/example-minimal` de 0.5.0 sin tocar compila y pasa sus 5 comprobaciones
+- [x] Recorrido headless de la mini-aventura resuelto solo con comandos (14 tests; recorrido completo en ~13 ms)
+- [x] La demo no usa `canLeaveScene`, `onSceneEnter` ni `getInitialPlacedItems` (grep vacío)
+- [x] `npm run smoke` verde, ampliado con NPC, diálogo con opciones, hotspot y combinación — 69/69 y 8/8
+- [x] Una partida guardada con 0.5.0 carga con 0.6.0 — comprobación del smoke con las cuatro claves antiguas inyectadas: escena, inventario, ítem colocado y puertas intactos, y sin resembrar el trofeo
+- [x] Consumo real: `npm pack` de ambos paquetes instalado en un proyecto Next.js fuera del monorepo; build y smoke del ejemplo 8/8
+- [x] Guía de autoría publicada (`docs/authoring/`); CHANGELOG y versión 0.6.0
+
+Pendiente del owner: push de la rama, publicar 0.6.0 en npm.

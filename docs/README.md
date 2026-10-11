@@ -66,8 +66,8 @@ Trabajo actual y futuro. Una fase = un directorio con tareas modulares.
 - [`phases/phase-14-multiplayer/`](phases/phase-14-multiplayer/) — 📋 Planning: Multijugador en tiempo real, agnóstico de transporte
 - [`phases/phase-15-green-baseline/`](phases/phase-15-green-baseline/) — ✅ Completed: Base verde (tests, tipos, lint, CI) y docs resincronizadas
 - [`phases/phase-16-runtime-in-library/`](phases/phase-16-runtime-in-library/) — ✅ Completed: Runtime en los paquetes (core + renderer); la demo es consumidora (0.5.0)
-- [`phases/phase-17-narrative-primitives/`](phases/phase-17-narrative-primitives/) — 🚧 Active: Flags, condiciones, acciones, hotspots con verbos, NPCs, diálogos con opciones, guardado único (0.6.0)
-- [`phases/phase-18-story-demo/`](phases/phase-18-story-demo/) — 📋 Outline: Aventura corta con historia, de principio a fin
+- [`phases/phase-17-narrative-primitives/`](phases/phase-17-narrative-primitives/) — ✅ Completed: Flags, condiciones, acciones, hotspots con verbos, NPCs, diálogos con opciones, guardado único (0.6.0)
+- [`phases/phase-18-story-demo/`](phases/phase-18-story-demo/) — 📋 Next: Aventura corta con historia, de principio a fin
 
 ---
 

@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] — Unreleased
 
 Phase 17: narrative primitives in the viewport. Requires
-`@pointclick-engine/engine-core` ^0.6.0. Additive over 0.5.0. The package
-version still reads `0.5.0` until the release. Guide:
+`@pointclick-engine/engine-core` ^0.6.0. Additive over 0.5.0. Guide:
 [`docs/authoring/`](../../docs/authoring/README.md).
 
 ### Added — Hotspots, NPCs and conversations
