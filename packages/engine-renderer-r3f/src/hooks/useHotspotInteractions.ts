@@ -141,7 +141,12 @@ export function useHotspotInteractions({
     [menu, run],
   );
   const closeMenu = useCallback(() => setMenu(null), []);
-  const labels = useMemo(() => buildVerbLabels(t), [t]);
+  // Los textos del motor se registran antes de traducir: en el primer render el efecto de
+  // arriba aun no ha corrido y las etiquetas saldrian como claves crudas.
+  const labels = useMemo(() => {
+    ensureEngineTexts();
+    return buildVerbLabels(t);
+  }, [t]);
 
   return { hotspots, menu, labels, activate, dropItem, select, closeMenu };
 }

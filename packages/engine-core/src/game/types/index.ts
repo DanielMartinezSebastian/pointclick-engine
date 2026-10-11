@@ -254,6 +254,11 @@ export interface GameSceneNpc {
   visibleWhen?: Condition;
   hasCollision?: boolean;
   approach?: GameVec3;
+  /**
+   * Caja clicable del NPC: semi-extensiones y desplazamiento de su centro respecto a `position`.
+   * Por defecto cubre un sprite del tamano por defecto, de los pies a la cabeza.
+   */
+  clickBox?: { halfSize: GameVec3; offset?: GameVec3 };
   /** Atajo: hablar inicia este diálogo. Equivale a `verbs.talk = [{ do: [{ startDialogue }] }]`. */
   dialogueId?: string;
   /** Verbos e ítems, igual que un hotspot. `verbs.talk` explícito gana sobre `dialogueId`. */

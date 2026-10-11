@@ -46,7 +46,7 @@ describe("npcToHotspot", () => {
     expect(h).toMatchObject({
       id: "guard",
       label: "npc.guard",
-      position: [2, 0, 3],
+      position: [2, 2, 3],
       hasCollision: true,
       approach: [1, 0, 1],
       visibleWhen: { flag: "x" },
