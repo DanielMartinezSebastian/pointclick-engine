@@ -101,7 +101,7 @@ function validateScene(ctx: ValidationCtx, scene: GameSceneConfig): void {
     refItem(ctx, item.itemId, `${at}.item`, "initialItems");
     if (typeof item.itemId === "string") ctx.provided.add(item.itemId);
     refScene(ctx, item.sceneId, `${at}.item`, "initialItems");
-    refInteraction(ctx, item.sceneId ?? scene.id, item.interactionId, `${at}.item`, "initialItems");
+    // `interactionId` de un item colocado es una etiqueta libre (p. ej. la de su recogida): no se valida.
   });
   scanBranches(ctx, scene.onEnter, `${base} > onEnter`, scope);
   validateTransitions(ctx, scene, base);

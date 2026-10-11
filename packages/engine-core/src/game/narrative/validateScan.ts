@@ -74,7 +74,6 @@ function placedChecks(ctx: ValidationCtx, scope: ScanScope, placed: unknown, whe
   refItem(ctx, p.itemId, where, "placeItem");
   if (str(p.itemId)) ctx.provided.add(p.itemId);
   refScene(ctx, p.sceneId, where, "placeItem");
-  refInteraction(ctx, str(p.sceneId) ? p.sceneId : scope.sceneId, p.interactionId, where, "placeItem");
 }
 
 function makeVisitor(ctx: ValidationCtx, scope: ScanScope): WalkVisitor {

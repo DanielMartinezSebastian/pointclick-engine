@@ -146,9 +146,9 @@ describe("validateContent", () => {
       const issue = find(validateContent({ scenes: [s], items: [] }), "unknown-dialogue")[0];
       expect(issue.where).toBe("scene:a > npc:n > dialogueId");
     });
-    it("unknown-interaction: placeItem con una interaccion que no existe en la escena", () => {
+    it("placeItem: el interactionId del item es una etiqueta libre y no se valida", () => {
       const a: Action = { placeItem: { id: "p", itemId: "i", interactionId: "ghost", name: "", spriteUrl: "", worldPosition: [0, 0, 0], canPickup: true } };
-      expect(codes(withAction(a))).toContain("unknown-interaction");
+      expect(codes(withAction(a))).not.toContain("unknown-interaction");
     });
     it("unknown-interaction: condicion itemPlaced.at", () => {
       const c: Condition = { itemPlaced: "i", inScene: "a", at: "ghost" };
@@ -159,9 +159,9 @@ describe("validateContent", () => {
       const t = { id: "t", kind: "item-interaction" as const, requiresItemId: "i", requiresInteractionId: "ghost", targetSceneId: "a", position: [0, 0, 0] as [number, number, number], halfSize: [1, 1, 1] as [number, number, number] };
       expect(codes({ scenes: [scene("a", { transitions: [t] })], items: [item("i")] })).toContain("unknown-interaction");
     });
-    it("unknown-interaction: initialItems", () => {
+    it("initialItems: el interactionId del item es una etiqueta libre y no se valida", () => {
       const s = scene("a", { initialItems: [{ item: { id: "p", itemId: "i", interactionId: "ghost", name: "", spriteUrl: "", worldPosition: [0, 0, 0], canPickup: true } }] });
-      expect(codes({ scenes: [s], items: [item("i")] })).toContain("unknown-interaction");
+      expect(codes({ scenes: [s], items: [item("i")] })).not.toContain("unknown-interaction");
     });
     it("referencias en condiciones: hasItem, inScene, visited, anidadas", () => {
       const c: Condition = { all: [{ hasItem: "ghost" }, { any: [{ not: { inScene: "ghost" } }, { visited: "ghost" }] }] };
