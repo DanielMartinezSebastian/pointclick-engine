@@ -27,6 +27,9 @@ export {
 } from "./sprite/character";
 export * from "./sprite/clips";
 export { buildSpeakingAnimation } from "./sprite/speakingAnimation";
+export { NpcSprite, type NpcSpriteProps, type NpcSpeech } from "./sprite/NpcSprite";
+export { selectNpcAnimation } from "./sprite/npcAnimation";
+export { spriteScaleAtDepth, DEPTH_FAR_Z, DEPTH_NEAR_Z } from "./sprite/depthScale";
 
 // Scene
 export { SceneGround } from "./scene/SceneGround";
@@ -37,6 +40,8 @@ export { computeWallSegments } from "./scene/wallSegments";
 export type { WallSegment } from "./scene/wallSegments";
 export { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
+export { SceneNpcs, useVisibleNpcs, type SceneNpcsProps } from "./scene/SceneNpcs";
+export { filterVisibleNpcs, resolveSpeakingNpcId } from "./scene/visibleNpcs";
 export { SceneTransitions } from "./scene/SceneTransitions";
 export {
   SceneBackgroundPlane,

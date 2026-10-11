@@ -13,6 +13,12 @@ type SpeechBubbleProps = {
   charsPerSecond?: number;
   onDismiss?: () => void;
   onLetterRevealed?: () => void;
+  /**
+   * Posicion de quien habla, para el lado y la escala del bocadillo. Sin ella,
+   * la del jugador (comportamiento de siempre). El bocadillo se coloca en el
+   * origen de su padre: el llamador lo monta dentro del grupo del que habla.
+   */
+  anchorPosition?: readonly [number, number, number];
 };
 
 const SPRITE_HALF_WIDTH_WORLD = 0.62;
@@ -74,8 +80,10 @@ export default function SpeechBubble({
   charsPerSecond = 30,
   onDismiss,
   onLetterRevealed,
+  anchorPosition,
 }: SpeechBubbleProps) {
-  const playerPosition = useSceneStore((state) => state.playerPosition);
+  const storePlayerPosition = useSceneStore((state) => state.playerPosition);
+  const playerPosition = anchorPosition ?? storePlayerPosition;
   const ground = useSceneStore((state) => state.scene.ground);
   const normalizedText = useMemo(() => text.trim(), [text]);
   const [displayedText, setDisplayedText] = useState("");

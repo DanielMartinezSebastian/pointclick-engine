@@ -5,6 +5,7 @@ import type {
   GameSceneInteractionFull,
   GameSceneTransition,
   GameSceneHotspot,
+  GameSceneNpc,
   SceneInitialItem,
   SceneMusicConfig,
 } from "../types";
@@ -33,6 +34,8 @@ export type GameSceneConfig = {
   music?: SceneMusicConfig;
   /** Hotspots con verbos narrativos (se conservan al registrar la escena). */
   hotspots?: GameSceneHotspot[];
+  /** NPCs (se conservan y se proyectan a hotspots al registrar la escena). */
+  npcs?: GameSceneNpc[];
   /** Items iniciales declarativos (se conservan al registrar la escena). */
   initialItems?: SceneInitialItem[];
   /** Ramas de entrada declarativas (se conservan al registrar la escena). */

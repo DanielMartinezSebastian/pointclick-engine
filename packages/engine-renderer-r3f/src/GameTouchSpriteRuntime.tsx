@@ -23,6 +23,7 @@ import {
   type GameDirection,
 } from "./sprite/clips";
 import { buildSpeakingAnimation } from "./sprite/speakingAnimation";
+import { DEPTH_FAR_Z, DEPTH_NEAR_Z } from "./sprite/depthScale";
 import { SceneCollisionSphere } from "./scene/SceneCollisionSphere";
 import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
@@ -44,8 +45,6 @@ type WallInteraction =
   | null;
 
 const VERTICAL_ANGLE_THRESHOLD = 55 * (Math.PI / 180);
-const DEPTH_FAR_Z = -16;
-const DEPTH_NEAR_Z = 8;
 const MIN_WALL_HALF_EXTENT = 0.15;
 const PLAYER_BOUND_MARGIN = 1.55;
 const BOUNDARY_HIT_COOLDOWN_MS = 4000;

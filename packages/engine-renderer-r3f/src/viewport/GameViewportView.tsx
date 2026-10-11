@@ -12,6 +12,8 @@ import { SceneDropTargets } from "../inventory/SceneDropTargets";
 import { CAMERA_POSITION, CAMERA_ROTATION, WORLD_VIEW_HEIGHT } from "../scene/cameraConstants";
 import { SceneBackgroundPlane } from "../scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "../scene/SceneCameraControllers";
+import { SceneNpcs, useVisibleNpcs } from "../scene/SceneNpcs";
+import { resolveSpeakingNpcId } from "../scene/visibleNpcs";
 import { SceneTransitions } from "../scene/SceneTransitions";
 import type { CharacterDefinition } from "../sprite/character";
 import type { GameViewportController } from "./useGameViewportController";
@@ -40,6 +42,8 @@ export type GameViewportViewProps = {
   controller: GameViewportController;
   /** Definicion del personaje. Por defecto, el personaje incluido. */
   character?: CharacterDefinition;
+  /** Personajes de los NPCs de la escena por `characterId` (ver `GameSceneNpc`). */
+  characters?: Record<string, CharacterDefinition>;
   /** Depuracion del sprite y de las zonas de transicion. Por defecto, la del controlador. */
   debug?: boolean;
   /**
@@ -80,6 +84,7 @@ const noop = () => {};
 export function GameViewportView({
   controller,
   character,
+  characters,
   debug = controller.debug,
   cameraMode = "fixed",
   spriteRuntimeProps,
@@ -99,6 +104,7 @@ export function GameViewportView({
     speechText,
     speechVisible,
     speechTrigger,
+    speechSpeaker,
     fadeOverlayRef,
     handleBackgroundReady,
     handleRuntimeEvent,
@@ -112,6 +118,11 @@ export function GameViewportView({
     handlePickupPlacedItem,
     handleItemInteract,
   } = controller;
+
+  // Si habla un NPC visible, el bocadillo (y el gesto de hablar) es suyo y no del jugador.
+  const visibleNpcs = useVisibleNpcs();
+  const speakingNpcId = resolveSpeakingNpcId(visibleNpcs, speechSpeaker, speechVisible);
+  const speechCharsPerSecond = spriteRuntimeProps?.speechCharsPerSecond ?? 28;
 
   return (
     <div style={{ position: "fixed", inset: 0, width: "100dvw", height: "100dvh", overflow: "hidden" }}>
@@ -154,7 +165,7 @@ export function GameViewportView({
               character={character}
               debug={debug}
               speechText={speechText}
-              speechVisible={speechVisible}
+              speechVisible={speechVisible && speakingNpcId === null}
               speechTrigger={speechTrigger}
               onBoundaryHit={handleBoundaryHit}
               onSpeechDismiss={hideSpeechBubble}
@@ -162,6 +173,16 @@ export function GameViewportView({
             />
             <SceneReadyReporter onReady={onSceneReady} />
           </Suspense>
+          <SceneNpcs
+            npcs={visibleNpcs}
+            characters={characters}
+            speakingNpcId={speakingNpcId}
+            speechText={speechText}
+            speechTrigger={speechTrigger}
+            speechCharsPerSecond={speechCharsPerSecond}
+            onSpeechDismiss={hideSpeechBubble}
+            debug={debug}
+          />
           <SceneDropTargets
             targets={sceneInteractions}
             draggedStack={draggedStack ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex } : null}

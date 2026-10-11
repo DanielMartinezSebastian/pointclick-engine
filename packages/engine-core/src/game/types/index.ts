@@ -239,6 +239,28 @@ export interface GameSceneHotspot {
   useItemDefault?: Branch[];
 }
 
+/** Hacia donde mira un NPC en reposo. */
+export type NpcFacing = "north" | "south" | "west" | "east";
+
+/** Personaje de la escena con el que se puede hablar. Se proyecta a hotspot (`npcToHotspot`). */
+export interface GameSceneNpc {
+  id: string;
+  /** Clave de i18n. */
+  name: string;
+  /** Id de un personaje registrado en el viewport (prop `characters`). */
+  characterId: string;
+  position: GameVec3;
+  facing?: NpcFacing;
+  visibleWhen?: Condition;
+  hasCollision?: boolean;
+  approach?: GameVec3;
+  /** Atajo: hablar inicia este diálogo. Equivale a `verbs.talk = [{ do: [{ startDialogue }] }]`. */
+  dialogueId?: string;
+  /** Verbos e ítems, igual que un hotspot. `verbs.talk` explícito gana sobre `dialogueId`. */
+  verbs?: Partial<Record<Verb, Branch[]>>;
+  useItem?: Record<string, Branch[]>;
+}
+
 // Scene (full scene with all interactions)
 export interface GameScene {
   id: string;
@@ -254,6 +276,8 @@ export interface GameScene {
   music?: SceneMusicConfig;
   /** Hotspots con verbos narrativos. */
   hotspots?: GameSceneHotspot[];
+  /** NPCs de la escena. `toRuntimeScene` los proyecta además a `hotspots`. */
+  npcs?: GameSceneNpc[];
   /**
    * Items colocados iniciales, sembrados una vez por escena al entrar. Cada item
    * se incluye solo si su `when` se cumple en ese momento (sin `when`, siempre).

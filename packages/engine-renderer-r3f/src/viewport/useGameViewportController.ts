@@ -173,6 +173,7 @@ export function useGameViewportController(options: GameViewportControllerOptions
   const speechText = useDialogStore((s) => s.text);
   const speechVisible = useDialogStore((s) => s.visible);
   const speechTrigger = useDialogStore((s) => s.triggerCount);
+  const speechSpeaker = useDialogStore((s) => s.speaker);
 
   const sceneTransitions = useSceneStore((s) => s.scene.transitions ?? EMPTY_TRANSITIONS);
 
@@ -213,6 +214,7 @@ export function useGameViewportController(options: GameViewportControllerOptions
     speechText,
     speechVisible,
     speechTrigger,
+    speechSpeaker,
     // Eventos y transiciones
     handleRuntimeEvent,
     handleTransitionTriggered,

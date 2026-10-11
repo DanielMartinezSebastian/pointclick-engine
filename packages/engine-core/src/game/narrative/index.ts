@@ -32,6 +32,7 @@ export {
   registerHotspotCommands,
   type HotspotCommandDeps,
 } from "./hotspots";
+export { npcToHotspot, NPC_HOTSPOT_HALF_SIZE } from "./npcs";
 export {
   dialogue,
   type DialogueChoice,

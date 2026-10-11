@@ -1,4 +1,5 @@
 import type { GameScene } from "../types";
+import { npcToHotspot } from "../narrative/npcs";
 import type { DialogueDefinition } from "../narrative/dialogueTypes";
 import type {
   GameSceneConfig,
@@ -37,6 +38,11 @@ export function registerDialogue(def: DialogueDefinition): void {
  * Único punto de conversión: conserva `transitions` y `music`.
  */
 export function toRuntimeScene(config: GameSceneConfig): GameScene {
+  // Un NPC es un hotspot con sprite: se anade a `hotspots` para que `hotspot:interact` lo vea.
+  // Sin NPCs, `hotspots` es la misma referencia de la config.
+  const hotspots = config.npcs?.length
+    ? [...(config.hotspots ?? []), ...config.npcs.map(npcToHotspot)]
+    : config.hotspots;
   return {
     id: config.id,
     label: config.label,
@@ -47,7 +53,8 @@ export function toRuntimeScene(config: GameSceneConfig): GameScene {
     interactions: config.interactions,
     transitions: config.transitions,
     music: config.music,
-    hotspots: config.hotspots,
+    hotspots,
+    npcs: config.npcs,
     initialItems: config.initialItems,
     onEnter: config.onEnter,
   };
