@@ -216,6 +216,9 @@ export function useGameViewportController(options: GameViewportControllerOptions
   const { hideSpeechBubble: hideBubbleOnly } = inventory;
   const handleSpeechDismiss = useCallback(() => {
     if (resolveSpeechDismiss(dialogueRef.current.active) === "advance") dialogueRef.current.advance();
+    // Sin conversacion se cierra con el comando `dialog:dismiss`, que emite `dialog:dismissed`:
+    // una accion `say` de un guion espera ese evento y sin el se quedaria colgada.
+    else if (getGameRuntime()) getGameRuntime()!.executeCommand({ type: "dialog:dismiss" });
     else hideBubbleOnly();
   }, [hideBubbleOnly]);
 
