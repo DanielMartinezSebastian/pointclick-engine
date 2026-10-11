@@ -338,6 +338,32 @@ export const SCENES: Record<string, Scene> = {
     walls: [],
     interactions: [],
   },
+  // Escena de pruebas (solo desde el selector de debug): fondo "Sci Fi Level" de Jeremy Gooch
+  // (CC-BY 3.0) y el NPC Helix. Ver `public/assets/LICENSES-art.md`.
+  sciFiLab: {
+    id: "sciFiLab",
+    label: "Sci-Fi Lab",
+    background: "/assets/background/sciFiLab.jpg",
+    playerSpawn: [0, -1.1, 13.44],
+    ground: {
+      minX: -17,
+      maxX: 16.8,
+      minZ: -7.6,
+      maxZ: 69.7,
+      y: -2.05,
+    },
+    walls: [],
+    npcs: [
+      {
+        id: "helix",
+        name: "helix.name",
+        characterId: "helix",
+        position: [6, -1.1, 13.44],
+        verbs: { talk: [{ do: [{ say: "helix.hello", speaker: "helix" }] }] },
+      },
+    ],
+    interactions: [],
+  },
   personalRoom: {
     id: "personalRoom",
     label: "Personal Room",
