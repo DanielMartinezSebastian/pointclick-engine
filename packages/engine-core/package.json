@@ -29,6 +29,10 @@
     "./state": {
       "import": "./dist/game/state/index.js",
       "types": "./dist/game/state/index.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
     }
   },
   "sideEffects": false,
