@@ -43,6 +43,17 @@ export { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 export { SceneNpcs, useVisibleNpcs, type SceneNpcsProps } from "./scene/SceneNpcs";
 export { filterVisibleNpcs, resolveSpeakingNpcId } from "./scene/visibleNpcs";
 export { SceneTransitions } from "./scene/SceneTransitions";
+export { SceneHotspots, type SceneHotspotsProps } from "./scene/SceneHotspots";
+export {
+  filterVisibleHotspots,
+  planHotspotClick,
+  buildVerbLabels,
+  resolveDropOwner,
+  pointInVolume,
+  clampMenuPosition,
+  type HotspotClickPlan,
+  type VolumeLike,
+} from "./scene/hotspotLogic";
 export {
   SceneBackgroundPlane,
   preloadSceneBackground,
@@ -83,6 +94,20 @@ export {
 // Runtime
 export { GameTouchSpriteRuntime } from "./GameTouchSpriteRuntime";
 export { default as SpeechBubble } from "./SpeechBubble";
+
+// Hotspots y verbos
+export { VerbMenu, type VerbMenuProps } from "./components/VerbMenu";
+export {
+  useHotspotInteractions,
+  useVisibleHotspots,
+  type HotspotMenuState,
+  type UseHotspotInteractionsOptions,
+} from "./hooks/useHotspotInteractions";
+export {
+  ENGINE_VERB_LABEL_KEYS,
+  ENGINE_NO_ACTION_KEY,
+  ensureEngineTexts,
+} from "./i18n/engineTexts";
 
 // Hooks
 export { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";

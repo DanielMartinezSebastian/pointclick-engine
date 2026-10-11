@@ -1,17 +1,21 @@
 "use client";
 
-import { Suspense, useEffect, useRef, type ComponentProps, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useRef, type ComponentProps, type ComponentType, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 import { useInventoryUiStore } from "@pointclick-engine/engine-core";
 
+import { VerbMenu, type VerbMenuProps } from "../components/VerbMenu";
 import { GameTouchSpriteRuntime } from "../GameTouchSpriteRuntime";
+import { useHotspotInteractions } from "../hooks/useHotspotInteractions";
+import type { DraggedInventoryPayload } from "../inventory/inventoryRuntimeTypes";
 import { PlacedSceneItems } from "../inventory/PlacedSceneItems";
 import { SceneDropTargets } from "../inventory/SceneDropTargets";
 import { CAMERA_POSITION, CAMERA_ROTATION, WORLD_VIEW_HEIGHT } from "../scene/cameraConstants";
 import { SceneBackgroundPlane } from "../scene/SceneBackgroundPlane";
 import { CameraController, CameraFitHeight } from "../scene/SceneCameraControllers";
+import { SceneHotspots } from "../scene/SceneHotspots";
 import { SceneNpcs, useVisibleNpcs } from "../scene/SceneNpcs";
 import { resolveSpeakingNpcId } from "../scene/visibleNpcs";
 import { SceneTransitions } from "../scene/SceneTransitions";
@@ -66,6 +70,10 @@ export type GameViewportViewProps = {
   overlay?: ReactNode;
   /** Se llama una vez cuando los assets del personaje han resuelto. */
   onSceneReady?: () => void;
+  /** Menu de verbos de los hotspots con varios verbos. Por defecto, `VerbMenu` del paquete. */
+  verbMenu?: ComponentType<VerbMenuProps>;
+  /** Clave de i18n de la frase de `hotspot:noAction`. Por defecto, una clave del motor. */
+  noActionDialogKey?: string;
 };
 
 /**
@@ -93,6 +101,8 @@ export function GameViewportView({
   children,
   overlay,
   onSceneReady = noop,
+  verbMenu: VerbMenuComponent = VerbMenu,
+  noActionDialogKey,
 }: GameViewportViewProps) {
   const {
     sceneBackground,
@@ -117,7 +127,32 @@ export function GameViewportView({
     handleInventoryDropOnPlayer,
     handlePickupPlacedItem,
     handleItemInteract,
+    showSpeechBubble,
+    clearDrag,
   } = controller;
+
+  // Hotspots (y NPCs proyectados): click, menu de verbos y suelta de items.
+  const hotspotUi = useHotspotInteractions({ showSpeechBubble, clearDrag, noActionDialogKey });
+  // La suelta sobre un hotspot no debe disparar ademas el "miss" global de las dianas.
+  const hotspotDropRef = useRef(false);
+  const handleHotspotDrop = useCallback(
+    (hotspot: Parameters<typeof hotspotUi.dropItem>[0], itemId: string) => {
+      hotspotDropRef.current = true;
+      setTimeout(() => { hotspotDropRef.current = false; }, 0);
+      hotspotUi.dropItem(hotspot, itemId);
+    },
+    [hotspotUi.dropItem], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const handleDropMiss = useCallback(
+    (...args: Parameters<typeof handleInventoryDropMiss>) => {
+      if (hotspotDropRef.current) return;
+      handleInventoryDropMiss(...args);
+    },
+    [handleInventoryDropMiss],
+  );
+  const draggedPayload: DraggedInventoryPayload | null = draggedStack
+    ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex }
+    : null;
 
   // Si habla un NPC visible, el bocadillo (y el gesto de hablar) es suyo y no del jugador.
   const visibleNpcs = useVisibleNpcs();
@@ -185,14 +220,22 @@ export function GameViewportView({
           />
           <SceneDropTargets
             targets={sceneInteractions}
-            draggedStack={draggedStack ? { stack: draggedStack.stack, fromSlotIndex: draggedStack.fromSlotIndex } : null}
+            draggedStack={draggedPayload}
             onDropHit={handleInventoryDropHit}
-            onDropMiss={handleInventoryDropMiss}
+            onDropMiss={handleDropMiss}
             onInspect={handleInteractionInspect}
             playerDropTarget={{
               position: playerPosition,
               onDrop: handleInventoryDropOnPlayer,
             }}
+          />
+          <SceneHotspots
+            hotspots={hotspotUi.hotspots}
+            draggedStack={draggedPayload}
+            dropTargets={sceneInteractions}
+            onActivate={hotspotUi.activate}
+            onDropItem={handleHotspotDrop}
+            debug={debug}
           />
           <PlacedSceneItems
             items={scenePlacedItems}
@@ -209,6 +252,17 @@ export function GameViewportView({
       </Canvas>
 
       {overlay}
+
+      {hotspotUi.menu && (
+        <VerbMenuComponent
+          hotspot={hotspotUi.menu.hotspot}
+          verbs={hotspotUi.menu.verbs}
+          position={hotspotUi.menu.position}
+          labels={hotspotUi.labels}
+          onSelect={hotspotUi.select}
+          onClose={hotspotUi.closeMenu}
+        />
+      )}
 
       {/* Cortina de transición: siempre en DOM, opacidad 0 en reposo.
           Se activa/desactiva via ref para evitar el batching de React. */}

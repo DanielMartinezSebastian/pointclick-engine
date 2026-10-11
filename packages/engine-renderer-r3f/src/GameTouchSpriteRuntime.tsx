@@ -29,7 +29,7 @@ import { SceneGround } from "./scene/SceneGround";
 import { SceneWallPointPreview } from "./scene/SceneWallPointPreview";
 import { SceneWalls, type WallResizeHandle } from "./scene/SceneWalls";
 
-import { findPath, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
+import { findPath, getInputLockState, useSceneStore, emitRuntimeEvent, resolveTransitionFromClickOnCollider, type RuntimeEventHandler, type GameSceneWall, type WallToolMode } from "@pointclick-engine/engine-core";
 import { usePlayerWalkAnimation } from "./hooks/usePlayerWalkAnimation";
 import { clampVelocityToRemaining, useClickToMoveController } from "./hooks/useClickToMoveController";
 import { useKeyboardMovementInput } from "./adapters/useKeyboardMovementInput";
@@ -304,6 +304,8 @@ export function GameTouchSpriteRuntime({
 
   const handleClickWorld = useCallback((x: number, z: number) => {
     if (wallInteractionRef.current) return;
+    // Un guion con lockInput activo bloquea el click-to-move (no la herramienta de muros de debug).
+    if (getInputLockState().inputLocked && !(debug && wallToolMode === "points")) return;
 
     if (debug && wallToolMode === "points") {
       const clamped = clampToPlayableArea(x, z);
@@ -602,9 +604,14 @@ export function GameTouchSpriteRuntime({
     const slideBlockX = slideBlock.x;
     const slideBlockZ = slideBlock.z;
 
-    const { moveLeft, moveRight, moveUp, moveDown, anyKeyPressed } = getKeyboardMovement();
+    const keyboardMovement = getKeyboardMovement();
+    // Con `inputLocked` (guion con lockInput) teclado y joystick se ignoran.
+    const inputLocked = getInputLockState().inputLocked;
+    const { moveLeft, moveRight, moveUp, moveDown } = keyboardMovement;
+    const anyKeyPressed = keyboardMovement.anyKeyPressed && !inputLocked;
 
-    const joystick = getMobileInput();
+    const rawJoystick = getMobileInput();
+    const joystick = inputLocked ? { ...rawJoystick, active: false } : rawJoystick;
     // Block input during walk animation
     const inputBlocked = isWalking;
     const manualInputActive = (anyKeyPressed || joystick.active) && !inputBlocked;

@@ -298,6 +298,9 @@ export function useInventoryRuntime({
     };
   }, [sceneId, showSpeechBubble]);
 
+  /** Cancela el arrastre en curso sin mostrar frase (lo usa la suelta sobre un hotspot). */
+  const clearDrag = useCallback(() => setDraggedStack(null), []);
+
   const handleItemInteract = useCallback(
     (item: PlacedSceneItem) => {
       // Emit item interaction event — useTransitionSystem listens for this
@@ -330,5 +333,6 @@ export function useInventoryRuntime({
     removePlacedItemById,
     handleStartInventoryDrag,
     handleItemInteract,
+    clearDrag,
   };
 }
