@@ -12,16 +12,22 @@ describe("legacyRuntimeEventToGameEvent: recogida", () => {
     expect(ge).toEqual({ type: "item:pickedUp", itemId: "gameboy", quantity: 1 });
   });
 
-  it.each(["place", "return", "consume", "rule-miss", "pickup-blocked"])(
-    "onDrop %s sigue siendo item:dropped",
-    (outcome) => {
-      const ge = legacyRuntimeEventToGameEvent({
-        type: "onDrop",
-        outcome,
-        itemId: "gameboy",
-      });
-      expect(ge.type).toBe("item:dropped");
-      if (ge.type === "item:dropped") expect(ge.outcome).toBe(outcome);
-    },
-  );
+  it.each([
+    "place",
+    "return",
+    "consume",
+    "rule-miss",
+    "unknown-item",
+    "on-player",
+    "pickup-blocked",
+    "item-interact",
+  ])("onDrop %s sigue siendo item:dropped", (outcome) => {
+    const ge = legacyRuntimeEventToGameEvent({
+      type: "onDrop",
+      outcome,
+      itemId: "gameboy",
+    });
+    expect(ge.type).toBe("item:dropped");
+    if (ge.type === "item:dropped") expect(ge.outcome).toBe(outcome);
+  });
 });

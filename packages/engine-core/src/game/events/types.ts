@@ -20,7 +20,32 @@ export type GameEvent =
   | {
       type: "item:dropped";
       itemId: string;
-      outcome: "consume" | "place" | "return";
+      /**
+       * Outcome of the drop interaction.
+       *
+       * Rule results:
+       * - "consume": Item was consumed by the rule
+       * - "place": Item was placed in the world
+       * - "return": Item returned to inventory (fallback)
+       *
+       * No matching rule:
+       * - "rule-miss": Drop target exists but no rule matched
+       * - "unknown-item": Item not registered in the system
+       * - "on-player": Item was dropped on the player character
+       *
+       * @deprecated Legacy outcomes (do not use in new code):
+       * - "pickup-blocked": Attempted pickup was blocked (use `inventory:pickupFailed` instead)
+       * - "item-interact": Item click (use `hotspot:interacted` instead)
+       */
+      outcome:
+        | "consume"
+        | "place"
+        | "return"
+        | "rule-miss"
+        | "unknown-item"
+        | "on-player"
+        | "pickup-blocked"
+        | "item-interact";
       interactionId?: string;
     }
   | { type: "item:removed"; itemId: string }

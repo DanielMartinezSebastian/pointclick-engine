@@ -30,7 +30,7 @@ export function legacyRuntimeEventToGameEvent(ev: RuntimeEvent): GameEvent {
       return {
         type: "item:dropped",
         itemId: ev.itemId,
-        outcome: ev.outcome as "consume" | "place" | "return",
+        outcome: ev.outcome,
         interactionId: ev.interactionId,
       };
     case "onDialog":
