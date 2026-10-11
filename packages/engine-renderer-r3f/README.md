@@ -128,6 +128,16 @@ import { GameCanvasCore, CharacterSprite, SceneGround } from "@pointclick-engine
 | `useR3FGameLoop` | `GameLoopPort` implementation — delegates to R3F `useFrame` |
 | `WebKeyboardInput` | `InputPort` implementation — browser `KeyboardEvent` listener |
 
+### Narrative (0.6.0, unreleased)
+
+| Export | Description |
+|--------|-------------|
+| `SceneHotspots`, `useHotspotInteractions`, `VerbMenu` | Clickable hotspots with a verb menu |
+| `SceneNpcs`, `NpcSprite` | NPCs drawn as sprites; pass their characters in the `characters` prop of `GameViewport` |
+| `DialogueChoices`, `useDialogue` | Conversation choices UI and its hook |
+
+Other new `GameViewport` props: `verbMenu`, `dialogueChoices`, `noActionDialogKey`. The advanced callbacks `canLeaveScene`, `onSceneEnter` and `getInitialPlacedItems` keep working; prefer the declarative scene data. See the [authoring guide](https://github.com/DanielMartinezSebastian/pointclick-engine/blob/main/docs/authoring/README.md).
+
 ## Known limitations
 
 - Doors are not part of the engine (the monorepo demo implements them).

@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] — Unreleased
+
+Phase 17: narrative primitives (ADR-0010, [authoring guide](../../docs/authoring/README.md)).
+Additive over 0.5.0. `package.json` and `VERSION` still read `0.5.0`.
+
+### Added
+
+- World state (`useWorldStateStore`, flags, visited scenes), conditions
+  (`Condition`, `evaluateCondition`, `cond`) and actions (`Action`, `Script`,
+  `Branch`, `pickBranch`, `act`, `branch`, `otherwise`), with `createSequencer`,
+  `GameRuntime.runScript` / `registerHandler` / `getDialogues`, commands
+  `state:*` and `script:*`, and events `state:flagChanged`, `script:*`,
+  `input:lockChanged`, `custom`.
+- Hotspots with verbs (`Verb`, `GameSceneHotspot`, `hotspot:interact`), NPCs
+  (`GameSceneNpc`, `npcToHotspot`; `toRuntimeScene` projects them), dialogue
+  trees (`DialogueDefinition`, `dialogue`, `dialogue:*`) and item combination
+  (`combine`, `inventory:combine`), with their events.
+- Declarative scene rules: `initialItems` (with `when`), `onEnter`, and
+  `when` / `blocked` on transitions (`resolveInitialItems`,
+  `resolveEnterScript`, `evaluateTransitionGate`).
+- `validateContent`, run by `createGameRuntime` per `validate` (dev only by default).
+- Single versioned save (`GameSnapshot`, `saveGame`, `loadGame`,
+  `migrateLegacySave` for the 0.5.0 keys), commands `game:save|load|reset`,
+  config `storage` / `saveKey`.
+- `ClockPort`, `systemClock`, `HeadlessClock`; config `clock`, `instantWalk`;
+  subpath `engine-core/testing` with `createPlaythrough`.
+- Executors for `inventory:pickup` / `inventory:drop`; events
+  `inventory:pickupFailed`, `inventory:full`, `item:removed`.
+
+### Changed
+
+- `item:dropped.outcome` declares every value that can travel (`rule-miss`,
+  `unknown-item`, `on-player`, and the `@deprecated` `pickup-blocked` and
+  `item-interact`).
+- `dialog:trigger`, `dialog:triggered` and `DialogUIAdapter.show` accept `speaker`.
+
 ## [0.5.0] — Unreleased
 
 Phase 16: the game runtime moves into this package. `createGameRuntime` and

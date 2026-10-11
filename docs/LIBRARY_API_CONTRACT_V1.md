@@ -85,7 +85,22 @@ Solo adiciones, salvo la nota breaking.
 
 **Cambio breaking de comportamiento**: recoger un ítem viaja por el bus como `item:pickedUp`; antes llegaba como `item:dropped` con `outcome: "pickup-success"`. Quien detectaba recogidas por `item:dropped` debe pasar a `item:pickedUp`. El callback legacy `onRuntimeEvent` no cambia. Las reglas de audio solo reproducen el sonido de soltar con `outcome: "place"`.
 
-Limitaciones conocidas: algunos outcomes legacy siguen viajando como `item:dropped` fuera del tipo; `inventory:pickup` e `inventory:drop` siguen sin executor; `player:stop` no detiene el movimiento manual.
+Limitaciones conocidas en 0.5.0: algunos outcomes legacy viajaban como `item:dropped` fuera del tipo; `inventory:pickup` e `inventory:drop` no tenían executor; `player:stop` no detiene el movimiento manual (sigue igual). Los dos primeros se resuelven en 0.6.0 (ver 2.4).
+
+### 2.4 Novedades 0.6.0 (sin publicar; los paquetes siguen en 0.5.0)
+
+Solo adiciones. Guía de uso: [`authoring/README.md`](authoring/README.md); modelo: [`architecture/10-narrative-model.md`](architecture/10-narrative-model.md).
+
+- `engine-core` (raíz): `cond`, `evaluateCondition`, `getConditionContext`, `act`, `branch`, `otherwise`, `pickBranch`, `dialogue`, `createSequencer`, `validateContent`, `resolveCombine`, `npcToHotspot`, `getAvailableVerbs`, `getDefaultVerb`, `isHotspotVisible`, `resolveInitialItems`, `resolveEnterScript`, `evaluateTransitionGate`, `getSceneRuleContext`, `getDeclaredScene`; tipos `Condition`, `Action`, `Script`, `Branch`, `ScriptRun`, `DialogueDefinition`, `DialogueNode`, `DialogueChoice`, `ContentIssue`, `GameContent`.
+- Tipos de contenido: `Verb`, `GameSceneHotspot`, `GameSceneNpc`, `NpcFacing`, `SceneInitialItem`; campos nuevos opcionales `hotspots`, `npcs`, `initialItems`, `onEnter` (escena), `when` y `blocked` (transición), `combine` (ítem).
+- Estado y guardado: `useWorldStateStore`, `getWorldState`, `useDialogueStore`, `useInputLockStore`, `captureSnapshot`, `applySnapshot`, `saveGame`, `loadGame`, `clearSave`, `resetGameState`, `migrateLegacySave`, `SAVE_FORMAT_VERSION`, `SAVE_STORAGE_KEY`, `GameSnapshot`.
+- Puertos: `ClockPort`, `systemClock`, `HeadlessClock`.
+- Subpath `@pointclick-engine/engine-core/testing`: `createPlaythrough`, `Playthrough`.
+- `GameRuntime`: `runScript`, `registerHandler`, `getDialogues`. `GameRuntimeConfig`: `dialogues`, `storage`, `saveKey`, `clock`, `instantWalk`, `validate`, `dialogKeys`, `handlerNames`. `DialogUIAdapter.show` recibe `speaker?`.
+- Comandos nuevos: `state:setFlag`, `state:clearFlag`, `game:save`, `game:load`, `game:reset`, `script:run`, `script:cancelAll`, `hotspot:interact`, `inventory:combine`, `dialogue:start`, `dialogue:choose`, `dialogue:advance`, `dialogue:end`. Campos opcionales nuevos: `inventory:pickup.placedItemId`, `inventory:drop.interactionId` / `hotspotId`, `dialog:trigger.speaker`.
+- Eventos nuevos: `state:flagChanged`, `game:saved`, `game:loaded`, `game:reset`, `script:started`, `script:finished`, `input:lockChanged`, `custom`, `hotspot:interacted`, `hotspot:noAction`, `dialogue:started`, `dialogue:nodeEntered`, `dialogue:choiceMade`, `dialogue:ended`, `inventory:pickupFailed`, `inventory:full`, `item:removed`, `item:combined`, `item:combineFailed`. `dialog:triggered` gana `speaker?`. `item:dropped.outcome` declara ahora todos sus valores (`rule-miss`, `unknown-item`, `on-player`, y los obsoletos `pickup-blocked`, `item-interact`).
+- `engine-renderer-r3f`: props nuevas de `GameViewport` / `GameViewportView`: `characters`, `verbMenu`, `noActionDialogKey`, `dialogueChoices`. Componentes y hooks: `VerbMenu`, `DialogueChoices`, `SceneHotspots`, `SceneNpcs`, `NpcSprite`, `useDialogue`, `useHotspotInteractions`, `useVisibleHotspots`, `useVisibleNpcs`, `ensureEngineTexts`, `ENGINE_VERB_LABEL_KEYS`, `ENGINE_NO_ACTION_KEY`.
+- Vía avanzada (siguen soportados, se evalúan después de las reglas declarativas): `canLeaveScene`, `onSceneEnter`, `getInitialPlacedItems`.
 
 ## 3. No soportado para consumidores externos
 

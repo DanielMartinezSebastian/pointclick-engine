@@ -80,6 +80,7 @@ import type { GameEvent }    from "@pointclick-engine/engine-core/events";
 import type { GameLoopPort } from "@pointclick-engine/engine-core/ports";
 import type { GameVec3 }     from "@pointclick-engine/engine-core/types";
 import { useSceneStore }     from "@pointclick-engine/engine-core/state";
+import { createPlaythrough } from "@pointclick-engine/engine-core/testing"; // headless playthroughs (0.6.0, unreleased)
 ```
 
 ## What's inside
@@ -92,9 +93,14 @@ import { useSceneStore }     from "@pointclick-engine/engine-core/state";
 | `/ports`      | `GameLoopPort`, `InputPort`, `ViewportPort`, `AudioPort`, `I18nPort` and headless adapters |
 | `/types`      | `GameVec3`, `GameScene`, `GameSceneWall`, `GameSceneInteraction`, `GameSceneTransition`, `PlacedSceneItem`, `ItemDefinition`, `SoundDefinition`, `SceneMusicConfig`, `AudioSettings`, `Locale`, `DialogEntry`, `I18nConfig`, `I18nState` |
 | `/state`      | `useSceneStore`, `useDialogStore`, `useInventoryUiStore`, `useInventoryStateStore`, `usePlacedItemsStateStore`, `createAudioSettingsStore`, `createI18nStore`, persistence helpers (`loadInventorySlotsState`, `savePlacedItemsState`, ...) |
+| `/testing`    | `createPlaythrough`: runs an adventure without a renderer (0.6.0, unreleased) |
 | `(root only)` | `createGameRuntime`, `getGameRuntime`, `registerScene`, `registerItem`, `registerRule`, `getGameState`, `getGameActions`, `toRuntimeScene`, `createInventoryRuleContext`, `EventBus`, `findPath`, `sceneTransitionOnCollision`, `resolveAudioEvents`, `registerDictionary`, `translate`, `getRandomPhrase`, `matchLocale`, `registerI18nExecutors` |
 
 The runtime registries (scenes, items, rules) are module-global: one game per page.
+
+### Narrative (0.6.0, unreleased)
+
+Scenes can declare `hotspots`, `npcs`, `initialItems` and `onEnter`; transitions take `when` / `blocked`; items take `combine`; conversations are `dialogues`. Conditions (`cond`), actions (`act`), the sequencer, the single save (`game:save` / `game:load`) and `validateContent` are exported from the root. See the [authoring guide](https://github.com/DanielMartinezSebastian/pointclick-engine/blob/main/docs/authoring/README.md).
 
 ### Ports
 

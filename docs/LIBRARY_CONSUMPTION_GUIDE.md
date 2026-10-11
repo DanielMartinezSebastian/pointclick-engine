@@ -1,6 +1,6 @@
 # Library Consumption Guide
 
-Guía para integrar el Point & Click Game Engine en una aplicación host (paquetes 0.5.0). Ejemplo verificable: `apps/web-demo/app/example-minimal/page.tsx`.
+Guía para integrar el Point & Click Game Engine en una aplicación host (paquetes 0.5.0; las novedades 0.6.0, sin publicar, se marcan como tales). Ejemplo verificable: `apps/web-demo/app/example-minimal/page.tsx`. Para escribir escenas, puzzles y diálogos: [`authoring/README.md`](authoring/README.md).
 
 ## 1. Paquetes
 
@@ -40,6 +40,16 @@ const SCENE_A: GameSceneConfig = {
   playerSpawn: [3.08, 1.05, 13.44],
   ground: { minX: -12, maxX: 17, minZ: -15, maxZ: 30, y: -3.25 },
   walls: [], interactions: [],
+  // Ítem inicial declarado en la propia escena (sin callback del host).
+  initialItems: [
+    {
+      item: {
+        id: "trophy-in-scene-a", itemId: "trophy", interactionId: "trophy-pickup-zone",
+        name: "Trophy", spriteUrl: "/assets/trophy/trophy.png",
+        worldPosition: [6.5, -2.4, 13.4], canPickup: true,
+      },
+    },
+  ],
   transitions: [
     sceneTransitionOnCollision({
       id: "transition-a-to-b",
@@ -52,18 +62,14 @@ const SCENE_A: GameSceneConfig = {
 
 // Resumida: el ejemplo real añade la transición de vuelta B -> A.
 const SCENE_B: GameSceneConfig = {
-  id: "minimal-b",
-  label: "Minimal Scene B",
-  background: "/assets/background/mazmorra.jpg",
+  id: "minimal-b", label: "Minimal Scene B", background: "/assets/background/mazmorra.jpg",
   playerSpawn: [0, -1.1, 13.44],
   ground: { minX: -14.4, maxX: 15.8, minZ: -20.6, maxZ: 60.6, y: -3.15 },
   walls: [], interactions: [],
 };
 
 const TROPHY_ITEM: GameItemConfig = {
-  id: "trophy",
-  name: "Trophy",
-  spriteUrl: "/assets/trophy/trophy.png",
+  id: "trophy", name: "Trophy", spriteUrl: "/assets/trophy/trophy.png",
   interactionRules: {}, defaultRule: { outcome: "return" },
 };
 
@@ -79,24 +85,7 @@ export default function MinimalGame() {
   }, []);
 
   if (!runtime) return null;
-  return (
-    <GameViewport
-      runtime={runtime}
-      initialSceneId="minimal-a"
-      getInitialPlacedItems={(sceneId) =>
-        sceneId !== "minimal-a"
-          ? null
-          : [
-              {
-                id: "trophy-in-scene-a", itemId: "trophy",
-                interactionId: "trophy-pickup-zone", name: "Trophy", spriteUrl: "/assets/trophy/trophy.png",
-                worldPosition: [6.5, -2.4, 13.4],
-                canPickup: true,
-              },
-            ]
-      }
-    />
-  );
+  return <GameViewport runtime={runtime} initialSceneId="minimal-a" />;
 }
 ```
 
@@ -109,7 +98,8 @@ Con estos valores por defecto el juego es jugable: personaje incluido, inventari
 | Para... | Opciones |
 |---------|----------|
 | **Escena inicial y persistencia** | `initialSceneId` (escena si no hay guardada), `storage` (`SceneProgressStorage`: `loadSceneId`/`saveSceneId`), `startPersistence` (arranca el guardado de inventario e ítems; devuelve su limpieza), `resolveScene` (por defecto, el registro del runtime) |
-| **Reglas del juego** | `canLeaveScene` (`true` deja salir; `{ text, dialogKey? }` bloquea y muestra el diálogo), `getInitialPlacedItems(sceneId, allItems)` (array = siembra; `null` = no marca la escena como sembrada), `onSceneEnter(sceneId, { showDialog })`, `getPhrase(key)`, `itemContext`, `filterPlacedItems`, `canPickupItems` |
+| **Reglas del juego** | `getPhrase(key)`, `itemContext`, `filterPlacedItems`, `canPickupItems`. Vía avanzada (0.6.0 prefiere los datos de escena, ver sección 5b): `canLeaveScene` (`true` deja salir; `{ text, dialogKey? }` bloquea), `getInitialPlacedItems(sceneId, allItems)` (array = siembra; `null` = no marca la escena como sembrada), `onSceneEnter(sceneId, { showDialog })` |
+| **Narrativa (0.6.0)** | `characters` (`Record<string, CharacterDefinition>` para los `characterId` de los NPC), `verbMenu` (sustituye `VerbMenu`), `dialogueChoices` (sustituye `DialogueChoices`), `noActionDialogKey` (frase de `hotspot:noAction`) |
 | **Audio** | `audio`: `{ port, defaults, items, transitions, settingsStore, scenes? }`. Sin `audio` no hay sonido. Los sonidos se declaran en datos (`pickupSoundUrl`/`dropSoundUrl` del ítem, `music` de la escena). Solo `outcome: "place"` reproduce el sonido de soltar |
 | **Personaje** | `character: CharacterDefinition` (por defecto, el incluido), `spriteRuntimeProps` |
 | **Extensión** | `children` (dentro de `<Physics>`, p. ej. puertas), `canvasChildren` (en el Canvas, fuera de `<Physics>`), `overlay` (HTML sobre el canvas), `cameraMode` (`"fixed"` por defecto), `onSceneReady` |
@@ -148,8 +138,18 @@ unsub?.();
 
 - `scene:set` acepta `spawnPosition?`; `transition:activate` respeta el `spawnPosition` de la transición.
 - `player:stop` aborta una caminata por ruta (emite `player:walkAborted`); **no** detiene el movimiento manual por teclado/joystick.
-- Texto de diálogos: `registerRule({ key, phrases })` (o `rules` en `createGameRuntime`). Sin regla, `dialog:trigger` muestra la propia clave.
+- Texto de diálogos: `registerRule({ key, phrases })` (o `rules` en `createGameRuntime`) o un `dialogAdapter` propio que traduzca la clave. Sin ninguno, `dialog:trigger` muestra la propia clave.
 - Catálogo completo de comandos y eventos: [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md).
+
+## 5b. Narrativa declarativa (0.6.0, sin publicar)
+
+Escenas con `hotspots`, `npcs`, `initialItems` y `onEnter`, transiciones con `when`/`blocked`, ítems con `combine` y árboles de diálogo (`dialogues` en la config) son datos: ver [`authoring/`](authoring/README.md) y [`architecture/10-narrative-model.md`](architecture/10-narrative-model.md).
+
+- Comandos nuevos: `hotspot:interact`, `inventory:combine`, `dialogue:start|choose|advance|end`, `script:run`, `script:cancelAll`, `state:setFlag|clearFlag`, `game:save|load|reset`. Eventos: `hotspot:interacted|noAction`, `dialogue:*`, `item:combined|combineFailed`, `script:started|finished`, `state:flagChanged`, `game:saved|loaded|reset`. Lista en [`LIBRARY_API_CONTRACT_V1.md`](LIBRARY_API_CONTRACT_V1.md) (2.4).
+- Guardado: `storage` (y `saveKey`) en `createGameRuntime` activan `game:save` / `game:load`. Una partida de 0.5.0 se migra con `migrateLegacySave`.
+- `call` en un guion invoca lo que registres con `runtime.registerHandler(name, fn)`. `validate` en la config valida el contenido (solo en desarrollo por defecto); `dialogKeys` y `handlerNames` amplían la comprobación.
+- Si sobrescribes `resolveScene` con tus propias escenas, proyecta tú los NPC con `npcToHotspot` (`toRuntimeScene` lo hace solo para el registro).
+- Tests sin renderer: `createPlaythrough` de `@pointclick-engine/engine-core/testing`. Los outcomes `pickup-blocked` e `item-interact` de `item:dropped` son obsoletos.
 
 ## 6. Leer estado desde la UI
 
@@ -169,7 +169,7 @@ export function SceneSwitcher() {
 
 `GameState` = `sceneId`, `scene`, `playerPosition`, `respawnSignal`. `GameActions` también trae `setPlayerPosition` y `requestRespawn`. `GameActions.setScene` es `(sceneId: string) => void`.
 
-Stores reactivos del core (selector de zustand, como en el ejemplo): `useSceneStore`, `useInventoryStateStore` (`slots`), `usePlacedItemsStateStore` (`items`), `useDialogStore`, `useInventoryUiStore`. La persistencia del inventario va por puerto (`KeyValueStoragePort`, `loadInventorySlotsState`/`saveInventorySlotsState`, `loadPlacedItemsState`/`savePlacedItemsState`).
+Stores reactivos del core (selector de zustand): `useSceneStore`, `useInventoryStateStore` (`slots`), `usePlacedItemsStateStore` (`items`), `useDialogStore`, `useInventoryUiStore` y, en 0.6.0, `useWorldStateStore` (`flags`, `visitedSceneIds`) y `useDialogueStore`. La persistencia va por puerto (`KeyValueStoragePort`).
 
 ## 7. SSR
 
@@ -178,10 +178,10 @@ Stores reactivos del core (selector de zustand, como en el ejemplo): `useSceneSt
 
 ## 8. Limitaciones conocidas
 
-- `inventory:pickup` e `inventory:drop` siguen sin executor (solo avisan por consola): recoger y soltar ocurre por la interacción del viewport.
+- `inventory:pickup` e `inventory:drop` tienen executor en 0.6.0 (solo cambian estado y emiten eventos; los textos los muestra el viewport).
+- El renderer no trae UI para combinar ítems: el host lanza `inventory:combine` (la demo lo hace en `GameTouchCanvas.tsx`).
 - Las puertas son de la demo (`apps/web-demo/app/lib/engine/runtime/useDoorSystem.ts`), no del motor.
 - Los registros de escenas, ítems y reglas son globales de módulo: un solo juego por página.
-- Algunos outcomes legacy (`rule-miss`, `on-player`, `pickup-blocked`, `item-interact`, `unknown-item`) siguen viajando como `item:dropped` con un `outcome` fuera del tipo; filtra por `outcome`.
 
 ## 9. Errores comunes
 
@@ -195,6 +195,6 @@ Stores reactivos del core (selector de zustand, como en el ejemplo): `useSceneSt
 
 ## 10. Ver también
 
-- [`LIBRARY_API_CONTRACT_V1.md`](LIBRARY_API_CONTRACT_V1.md) — Superficie soportada y novedades 0.5.0
+- [`LIBRARY_API_CONTRACT_V1.md`](LIBRARY_API_CONTRACT_V1.md) — Superficie soportada y novedades 0.5.0 y 0.6.0
 - [`architecture/02-public-api.md`](architecture/02-public-api.md) — Resumen de la API pública
 - [`architecture/05-bidirectional-communication.md`](architecture/05-bidirectional-communication.md) — Commands & Events

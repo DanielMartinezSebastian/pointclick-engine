@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] — Unreleased
+
+Phase 17: narrative primitives in the viewport. Requires
+`@pointclick-engine/engine-core` ^0.6.0. Additive over 0.5.0. The package
+version still reads `0.5.0` until the release. Guide:
+[`docs/authoring/`](../../docs/authoring/README.md).
+
+### Added — Hotspots, NPCs and conversations
+
+- Clickable hotspots: `SceneHotspots`, `useHotspotInteractions`,
+  `useVisibleHotspots`, `VerbMenu` (a single applicable verb runs on click,
+  several open the menu), item drops onto hotspots, and the engine texts
+  `ensureEngineTexts`, `ENGINE_VERB_LABEL_KEYS`, `ENGINE_NO_ACTION_KEY`
+  (Spanish and English defaults the host can override).
+- NPCs: `SceneNpcs`, `useVisibleNpcs`, `NpcSprite`, `selectNpcAnimation`,
+  `spriteScaleAtDepth`; the speech bubble goes over the NPC whose `id` matches
+  the line `speaker`. `GameSceneNpc.clickBox` adjusts the clickable box.
+- Conversations: `DialogueChoices` (keyboard: arrows, Enter/Space, 1-9) and
+  `useDialogue`.
+- New `GameViewport` / `GameViewportView` props: `characters` (character
+  definitions by `characterId`), `verbMenu`, `noActionDialogKey`,
+  `dialogueChoices`. The controller also returns `speechSpeaker`, `dialogue`,
+  `dialogueChoicesVisible`, `speechPersistent` and `onSpeechTypingDone`.
+- The renderer applies the declarative scene rules with the pure core
+  functions: `initialItems` when seeding, `onEnter` on entering a scene, and
+  `when` / `blocked` before a transition.
+- Path walks emit `player:walkCompleted` and `player:walkAborted`.
+
+### Changed
+
+- Closing the speech bubble goes through the `dialog:dismiss` command, so
+  `dialog:dismissed` is emitted (scripts waiting on a `say` rely on it).
+
+### Fixed
+
+- The walk clip no longer flickers between directions.
+
+### Deprecated
+
+- `canLeaveScene`, `onSceneEnter` and `getInitialPlacedItems` are not removed:
+  they stay as an advanced path and are evaluated after the declarative rules.
+  Prefer `transition.when` / `blocked`, `onEnter` and `initialItems`.
+
 ## [0.5.0] — Unreleased
 
 Phase 16: the playable game composition moves into this package. The demo

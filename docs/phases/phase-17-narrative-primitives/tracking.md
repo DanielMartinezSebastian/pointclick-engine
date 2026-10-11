@@ -43,7 +43,7 @@
 
 ## Ola G
 
-- [ ] [18-authoring-docs](tasks/18-authoring-docs.md) — haiku
+- [x] [18-authoring-docs](tasks/18-authoring-docs.md) — haiku
 - [ ] [19-validation-gate](tasks/19-validation-gate.md) — opus
 
 ## Gate final

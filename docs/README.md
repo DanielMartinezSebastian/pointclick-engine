@@ -17,6 +17,20 @@ Diseño del sistema. Lee antes de tocar arquitectura.
 - [`architecture/07-walls-with-openings.md`](architecture/07-walls-with-openings.md) — Walls with openings: pathfinding & rendering
 - [`architecture/08-scene-transitions.md`](architecture/08-scene-transitions.md) — Scene transitions as first-class primitives
 - [`architecture/09-multiplayer.md`](architecture/09-multiplayer.md) — Multijugador agnóstico (port + partición world/presence/private)
+- [`architecture/10-narrative-model.md`](architecture/10-narrative-model.md) — Modelo narrativo: estado de mundo → condiciones → ramas → secuenciador → comandos y eventos (0.6.0)
+
+---
+
+## ✍️ Authoring (guía para escribir una aventura)
+
+Escenas, puzzles y diálogos como datos. Empieza por el índice y sigue el orden.
+
+- [`authoring/README.md`](authoring/README.md) — Índice, ejemplos ejecutables y textos (`say`)
+- [`authoring/01-scenes-and-hotspots.md`](authoring/01-scenes-and-hotspots.md) — Escenas, transiciones, hotspots y verbos
+- [`authoring/02-conditions-and-actions.md`](authoring/02-conditions-and-actions.md) — Flags, condiciones, acciones, ramas y `call`
+- [`authoring/03-dialogues-and-npcs.md`](authoring/03-dialogues-and-npcs.md) — Diálogos con opciones y NPCs
+- [`authoring/04-items-and-combining.md`](authoring/04-items-and-combining.md) — Ítems, reglas de drop y combinaciones
+- [`authoring/05-saving-and-testing.md`](authoring/05-saving-and-testing.md) — Guardado, validación y `createPlaythrough`
 
 ---
 
@@ -97,6 +111,7 @@ Decisiones arquitectónicas registradas.
 - [`ROADMAP_FRAMEWORK_AGNOSTIC_REFACTORING.md`](ROADMAP_FRAMEWORK_AGNOSTIC_REFACTORING.md) — Plan high-level de 5 fases
 - [`LIBRARY_API_CONTRACT_V1.md`](LIBRARY_API_CONTRACT_V1.md) — Contrato v1 de API pública
 - [`LIBRARY_CONSUMPTION_GUIDE.md`](LIBRARY_CONSUMPTION_GUIDE.md) — Cómo consumir la librería
+- [`authoring/README.md`](authoring/README.md) — Cómo escribir escenas, puzzles y diálogos
 - [`_archive/`](_archive/) — Documentos reemplazados (referencia histórica)
 
 ---
