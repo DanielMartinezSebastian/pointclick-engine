@@ -2,7 +2,7 @@
 
 **Objetivo**: una aventura corta, completa y con historia, jugable de principio a fin en la demo.
 **Duración estimada**: 2 semanas de contenido, más el tiempo del arte
-**Estado**: next (desbloqueada: Fase 17 completada el 2026-10-11; premisa, arte y ruta decididos el 2026-10-10)
+**Estado**: active (diseño en [design.md](design.md), seguimiento en [tracking.md](tracking.md))
 **Owner**: Daniel Martínez Sebastián
 **Version target**: demo 1.0 sobre los paquetes 0.6.x
 
