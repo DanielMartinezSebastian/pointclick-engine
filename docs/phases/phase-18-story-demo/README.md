@@ -2,7 +2,7 @@
 
 **Objetivo**: una aventura corta, completa y con historia, jugable de principio a fin en la demo.
 **Duración estimada**: 2 semanas de contenido, más el tiempo del arte
-**Estado**: active (diseño en [design.md](design.md), seguimiento en [tracking.md](tracking.md))
+**Estado**: primera versión jugable (2026-10-12); pendiente de la lectura del owner y de la prueba con jugadores. Diseño en [design.md](design.md), seguimiento en [tracking.md](tracking.md)
 **Owner**: Daniel Martínez Sebastián
 **Version target**: demo 1.0 sobre los paquetes 0.6.x
 
@@ -76,3 +76,24 @@ Los pasos 1–5 no dependen del arte: el juego puede estar completo y probado co
 ## Fuera de alcance
 
 Multijugador (Fase 14), puertas como primitiva (Fase 7), cinemáticas con cámara, voces.
+
+## Estado al 2026-10-12
+
+La aventura se juega de la intro a los créditos en `/adventure`, con partida guardada propia, en `es` y `en`. Pasos 1–5 y 7–8 del plan hechos con arte provisional (iconos CC0 y la copia con glitch de David); quedan el 6 (arte y audio definitivos), el 9 (jugadores reales) y el 10 tras ellos.
+
+**Fallos del motor que destapó el contenido**
+
+- Corregido: un `say` dentro del `do` de una opción de diálogo dejaba la conversación colgada en el navegador.
+- Corregido: los NPCs no admitían `useItemDefault`.
+- Sin corregir: `approach` de un hotspot. El `walkTo` devuelve al jugador al punto de aparición de la escena. La aventura no usa `approach`.
+- Sin corregir: `spawnPosition` de una transición se ignora en el renderer; siempre se llega al `playerSpawn` de la escena destino.
+- Sin corregir: el jugador no pasa de z ≈ 23.8 aunque `ground.maxZ` sea mayor.
+
+Los tres sin corregir tocan el movimiento, que tiene dos sistemas distintos (deuda anotada en la Fase 17): conviene tratarlos juntos en una tarea propia.
+
+**Primitivas que echó en falta el contenido**
+
+- Una voz sin personaje: el Programador es un NPC sin sprite colocado en lo alto de la escena, y provoca un aviso por consola.
+- Que una frase salga sobre un NPC que desaparece en la misma rama, sin depender de poner el flag después del `say`.
+- Cerrar un bocadillo con un click (hoy el click solo salta la escritura): el smoke tarda unos 8 minutos por esas esperas.
+- Una transición bloqueada no aparta al jugador de la zona de forma consistente.
