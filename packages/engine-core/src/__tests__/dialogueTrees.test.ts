@@ -290,6 +290,28 @@ describe("opciones", () => {
     expect(events).toHaveLength(0);
   });
 
+  it("dialogue:advance cierra un say lanzado desde el do de una opcion", async () => {
+    boot([
+      def(
+        "sd",
+        "q",
+        n("q", {
+          line: "l.q",
+          choices: [c("c.ask", { do: [act.say("l.answer"), act.emit("answered")], next: "q" })],
+        }),
+      ),
+    ]);
+    await start("sd");
+    await choose(0);
+    // El say del `do` esta en pantalla: el cierre del bocadillo llega como dialogue:advance.
+    expect(customNames()).toEqual([]);
+    rt.executeCommand({ type: "dialogue:advance" });
+    await flush();
+    expect(customNames()).toEqual(["answered"]);
+    // De vuelta en el nodo, con su opcion ofrecida otra vez.
+    expect(idx()).toEqual([0]);
+  });
+
   it("opcion sin next termina el dialogo", async () => {
     boot([def("nn", "q", n("q", { choices: [c("c.bye")] }))]);
     await start("nn");

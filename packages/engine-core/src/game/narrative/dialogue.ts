@@ -212,8 +212,11 @@ export function registerDialogueCommands(
     s.chosen = cmd.index;
     s.waiting.release();
   });
+  // Cierra el bocadillo en curso salvo que el nodo este esperando una eleccion. Cubre la linea
+  // del nodo y tambien un `say` dentro del `do` de un nodo o de una opcion, que espera el
+  // mismo `dialog:dismissed`: sin esto la conversacion se quedaba colgada en ese `say`.
   commands.register("dialogue:advance", () => {
-    if (session?.waiting?.kind === "dismiss") session.ctx.env.execute({ type: "dialog:dismiss" });
+    if (session && session.waiting?.kind !== "choice") session.ctx.env.execute({ type: "dialog:dismiss" });
   });
   commands.register("dialogue:end", () => {
     if (session) finish(session, "ended");
