@@ -5,7 +5,7 @@
 - [x] [01-design](design.md) — opus — _pendiente de la lectura del owner (tono)_
 - [x] 02-art — opus — iconos de los packs CC0 y copia con glitch de David
 - [x] [03-content-and-playthrough](tasks/03-content-and-playthrough.md) — sonnet
-- [ ] [04-adventure-route](tasks/04-adventure-route.md) — sonnet
+- [x] [04-adventure-route](tasks/04-adventure-route.md) — sonnet
 - [ ] [05-validation-gate](tasks/05-validation-gate.md) — opus
 
 ## Gate final

@@ -32,7 +32,12 @@ const glitchFree = dialogue.define(
   dialogue.node("root", { speaker: "glitch-free", line: "glitch.free.line" }),
 );
 
-/** Helix: el puntero nulo se consigue una sola vez, hablando. */
+/**
+ * Helix: el puntero nulo se consigue una sola vez, hablando. Las respuestas son nodos con `line`
+ * y no un `say` dentro del `do` de la opcion: mientras el nodo activo ofrece opciones el renderer
+ * mantiene el bocadillo abierto (no se cierra solo), asi que un `say` ahi dentro dejaria la
+ * conversacion colgada. Un nodo sin opciones se cierra solo y vuelve a `root`.
+ */
 const helixTalk = dialogue.define(
   HELIX_DIALOGUE_ID,
   "root",
@@ -43,18 +48,17 @@ const helixTalk = dialogue.define(
       // 0: da el puntero nulo (una sola vez; el item se entrega antes de la frase).
       dialogue.choice("helix.c.home", {
         once: true,
-        do: [act.giveItem("null-pointer"), act.say("helix.null", "helix")],
-        next: "root",
+        do: [act.giveItem("null-pointer")],
+        next: "null",
       }),
       // 1: charla.
-      dialogue.choice("helix.c.here", {
-        do: [act.say("helix.here", "helix")],
-        next: "root",
-      }),
+      dialogue.choice("helix.c.here", { next: "here" }),
       // 2: despedida.
       dialogue.choice("helix.c.bye", { next: "bye" }),
     ],
   }),
+  dialogue.node("null", { speaker: "helix", line: "helix.null", next: "root" }),
+  dialogue.node("here", { speaker: "helix", line: "helix.here", next: "root" }),
   dialogue.node("bye", { speaker: "helix", line: "helix.bye" }),
 );
 

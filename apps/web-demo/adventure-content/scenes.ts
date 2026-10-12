@@ -1,8 +1,12 @@
 // Escenas de la aventura "No es un bug, es una feature".
 //
-// Geometria PROVISIONAL: suelo, spawn y muros se reutilizan de la escena de la demo que comparte
-// fondo (sin sus puertas ni sus interacciones). Las posiciones de hotspots, NPCs, items y zonas
-// de transicion son plausibles pero se afinan con capturas en la tarea 04.
+// Geometria: suelo, spawn y muros se reutilizan de la escena de la demo que comparte fondo (sin sus
+// puertas ni sus interacciones). Hotspots, NPCs, items y zonas de transicion estan colocados sobre
+// cada fondo y comprobados con capturas (viewport 1280x720, camara fija). Notas del renderer:
+//   - El jugador no pasa de z ~ 23.8 (borde inferior): las zonas del sur se ponen por debajo de eso.
+//   - `spawnPosition` de una transicion no tiene efecto (se llega al `playerSpawn` de la escena
+//     destino) y `approach` (walkTo con y = suelo) hace que el jugador reaparezca en el spawn: por eso
+//     no se usan; los hotspots actuan desde donde esta el jugador.
 //
 //   adv-room (inicial) <-> adv-town <-> adv-backlog
 //                              ^
@@ -150,8 +154,8 @@ const room: GameSceneConfig = {
     {
       id: "bed",
       label: "hotspot.bed",
-      position: [8, -0.5, 28],
-      halfSize: zone(2, 1, 1.5),
+      position: [9.9, -1.2, 7],
+      halfSize: zone(4, 2, 1.5),
       verbs: {
         look: [
           branch(cond.flag("semicolon.found"), act.say("bed.empty")),
@@ -168,7 +172,7 @@ const room: GameSceneConfig = {
   npcs: [programmer([0, 4, 15])],
   transitions: [
     // La puerta: sin `door.fixed` no lleva a ninguna parte.
-    collision("room-to-town", "adv-town", [-1.9, -1, 2.5], [1.9, 2.5, 2], [3, -2.1, 26], {
+    collision("room-to-town", "adv-town", [-1.9, -1, 2.5], [1.9, 2.5, 2], undefined, {
       when: cond.flag("door.fixed"),
       blocked: [act.say("door.blocked")],
     }),
@@ -183,7 +187,7 @@ const town: GameSceneConfig = {
   label: "scene.adv-town",
   background: "/assets/background/town.jpg",
   playerSpawn: [3.08, 1.05, 13.44],
-  ground: { minX: -12, maxX: 17, minZ: -15, maxZ: 30, y: -3.25 },
+  ground: { minX: -12, maxX: 17, minZ: -3.5, maxZ: 30, y: -3.25 },
   music: { trackUrl: "/assets/audio/music/town-loop.mp3", volume: 0.6, fadeMs: 800 },
   walls: [],
   interactions: [],
@@ -192,8 +196,8 @@ const town: GameSceneConfig = {
     {
       id: "mine-door",
       label: "hotspot.mine-door",
-      position: [2, -1, -9],
-      halfSize: zone(1.5, 2, 1),
+      position: [-5.5, -1.5, -0.9],
+      halfSize: zone(1.3, 3, 0.8),
       verbs: {
         look: [
           branch(cond.flag("backlog.open"), act.say("mine.open")),
@@ -260,12 +264,12 @@ const town: GameSceneConfig = {
     programmer([0, 3, 15]),
   ],
   transitions: [
-    collision("town-to-room", "adv-room", [3, -2.1, 28.5], [3, 2, 1.5], [-1.9, -1.1, 8]),
-    collision("town-to-backlog", "adv-backlog", [2, -1, -12.5], [3, 4, 1.5], undefined, {
+    collision("town-to-room", "adv-room", [3, -2.1, 22], [3, 2, 1.5]),
+    collision("town-to-backlog", "adv-backlog", [-5.5, -2.25, 4.4], [1.3, 2, 1], undefined, {
       when: cond.flag("backlog.open"),
       blocked: [act.say("mine.locked")],
     }),
-    collision("town-to-engine", "adv-engine", [15, -1, 2], [1.5, 3, 3], [0, -1.1, 66], {
+    collision("town-to-engine", "adv-engine", [9.5, -2.25, -2.3], [1.5, 2, 1.2], undefined, {
       when: cond.flag("glitch.fixed"),
       blocked: [act.say("glitch.welcome", "glitch"), act.say("glitch.blocked.david")],
     }),
@@ -282,14 +286,11 @@ const backlog: GameSceneConfig = {
   playerSpawn: [0, -1.1, 13.44],
   ground: { minX: -14.4, maxX: 15.8, minZ: -20.6, maxZ: 60.6, y: -3.15 },
   music: { trackUrl: "/assets/audio/music/dungeon-loop.mp3", volume: 0.5, fadeMs: 1200 },
-  // Los muros de la mazmorra, con la puerta ya abierta (aqui no hay puerta interactiva).
-  walls: DEMO_SCENES.dungeon.walls.map((wall) => ({
-    ...wall,
-    textureUrl: "/assets/walldoor/dungeon_wall_door_open.png",
-  })),
+  // Sin el muro con puerta de la demo: aqui no hay puerta interactiva y su textura no encaja.
+  walls: [],
   interactions: [],
   initialItems: [
-    { item: floorItem("coffee-beans-floor", "coffee-beans", "adv-backlog", [-6, -2.4, 25]) },
+    { item: floorItem("coffee-beans-floor", "coffee-beans", "adv-backlog", [-6, -2.4, 22]) },
     { item: floorItem("bucket-floor", "bucket", "adv-backlog", [6, -2.4, 22]) },
   ],
   npcs: [
@@ -319,7 +320,7 @@ const backlog: GameSceneConfig = {
   ],
   transitions: [
     // Salida al pueblo por el norte, como en la mazmorra de la demo.
-    collision("backlog-to-town", "adv-town", [0, -2.2, -9], [1, 1, 1], [2, -2.1, -6]),
+    collision("backlog-to-town", "adv-town", [0, -2.2, -9], [1, 1, 1]),
   ],
 };
 
@@ -338,8 +339,8 @@ const engine: GameSceneConfig = {
     {
       id: "console",
       label: "hotspot.console",
-      position: [0, -0.5, 5],
-      halfSize: zone(2, 1.5, 1),
+      position: [3.4, 0, 0.7],
+      halfSize: zone(4, 1.5, 1),
       verbs: {
         look: [otherwise(act.say("console.look"))],
         use: [
@@ -366,8 +367,8 @@ const engine: GameSceneConfig = {
     {
       id: "intercom",
       label: "hotspot.intercom",
-      position: [-8, 0, 6],
-      halfSize: zone(1, 1, 1),
+      position: [12.75, 0, -0.4],
+      halfSize: zone(1.2, 1.2, 1),
       verbs: {
         look: [otherwise(act.say("intercom.look"))],
         use: [
@@ -390,8 +391,8 @@ const engine: GameSceneConfig = {
   ],
   npcs: [programmer([0, 3, 15])],
   transitions: [
-    collision("engine-to-town", "adv-town", [0, -1, 69], [4, 2.5, 1.5], [12, -2.1, 4]),
-    collision("engine-to-heap", "adv-heap", [14, -1, 30], [1.5, 3, 4], [-12, -1.1, 30]),
+    collision("engine-to-town", "adv-town", [0, -1, 21], [5, 2.5, 1.5]),
+    collision("engine-to-heap", "adv-heap", [14.5, -1, 16], [1.5, 3, 5]),
   ],
 };
 
@@ -410,8 +411,8 @@ const heap: GameSceneConfig = {
     {
       id: "leak",
       label: "hotspot.leak",
-      position: [0, 0, 15],
-      halfSize: zone(2, 2, 1.5),
+      position: [6.3, 0, -4.9],
+      halfSize: zone(3, 2.5, 1.5),
       verbs: {
         look: [otherwise(act.say("leak.look"))],
         use: [
@@ -434,7 +435,7 @@ const heap: GameSceneConfig = {
     },
   ],
   npcs: [programmer([0, 3, 25])],
-  transitions: [collision("heap-to-engine", "adv-engine", [-14, -1, 30], [1.5, 3, 4], [12, -1.1, 30])],
+  transitions: [collision("heap-to-engine", "adv-engine", [-14, -1, 16], [1.5, 3, 5])],
 };
 
 export const adventureScenes: GameSceneConfig[] = [room, town, backlog, engine, heap];
